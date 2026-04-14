@@ -1,0 +1,73 @@
+name: Sync skills
+
+# Pulls the latest skills from the upstream indexes once a day and upserts them
+# into Supabase. Runs the same commands a human would run locally.
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL                — https://<project>.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY   — Supabase dashboard → Project Settings → API
+#
+# GITHUB_TOKEN is provided automatically and used to lift the GitHub REST API
+# rate limit for import-anthropic.ts (60 → 1,000 req/hr).
+
+on:
+  schedule:
+    # 06:00 UTC every day (= 14:00 Beijing time). Pick whatever suits.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which importer to run"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - antigravity
+          - anthropic
+
+concurrency:
+  group: sync-skills
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Import skills → Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install deps
+        # --ignore-scripts skips Expo's native postinstall hooks — the
+        # importers are pure Node and don't need them. Shaves ~90s off CI.
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Run importer(s)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET: ${{ github.event.inputs.target || 'all' }}
+        run: |
+          case "$TARGET" in
+            antigravity) npm run import:antigravity ;;
+            anthropic)   npm run import:anthropic ;;
+            all|"")      npm run import:all ;;
+            *) echo "Unknown target: $TARGET" && exit 1 ;;
+          esac
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "::error title=Skill sync failed::Check the run logs above. Verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY secrets, and confirm the upstream skills_index.json is still reachable."

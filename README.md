@@ -23,7 +23,7 @@ app/
     _layout.tsx            Tab bar
     index.tsx              Home — featured + search
     explore.tsx            Category browser
-    favorites.tsx          Local favorites (MMKV)
+    favorites.tsx          Local favorites (AsyncStorage)
     profile.tsx            Settings, links, status
   skill/
     [id].tsx               Detail: description, tags, install cmd, SKILL.md
@@ -31,7 +31,7 @@ components/                SkillCard, SearchBar, CategoryChip, EmptyState
 lib/
   supabase.ts              Supabase client (anon)
   skills.ts                Data queries (falls back to sample data)
-  favorites.ts             MMKV-backed favorites store + hooks
+  favorites.ts             AsyncStorage-backed favorites store + hooks
   sample-data.ts           Offline skills + categories
 types/
   skill.ts                 Skill / Category types
@@ -97,7 +97,23 @@ Reads on `skills` and `categories` are public via RLS. `favorites` is per-user.
   - `npm run import:all` runs both.
   - Curation (featured, rank, category overrides) lives in [`scripts/import/sources.json`](./scripts/import/sources.json) and is reapplied on every run.
   - See [`scripts/import/README.md`](./scripts/import/README.md) for details.
-- **Growth**: wire either importer into GitHub Actions cron to keep the catalog fresh.
+- **Growth**: [`.github/workflows/sync-skills.yml`](./.github/workflows/sync-skills.yml) runs `npm run import:all` every day at 06:00 UTC and can also be triggered manually with a target choice. See below for the one-time secret setup.
+
+## Automatic sync (GitHub Actions)
+
+[`.github/workflows/sync-skills.yml`](./.github/workflows/sync-skills.yml) runs the importers on a cron so the catalog stays fresh without any manual work.
+
+**One-time setup:**
+
+1. Push this repo to GitHub.
+2. Go to *Settings → Secrets and variables → Actions → New repository secret* and add:
+   - `SUPABASE_URL` — your project URL (e.g. `https://xxx.supabase.co`)
+   - `SUPABASE_SERVICE_ROLE_KEY` — from *Project Settings → API → service_role*
+3. Done. The workflow runs daily at 06:00 UTC.
+
+**Running manually:** *Actions → Sync skills → Run workflow*. You can pick `all`, `antigravity`, or `anthropic` as the target.
+
+The workflow uses the repo's automatic `GITHUB_TOKEN` to lift the GitHub REST API rate limit from 60 req/hr to 1,000 req/hr — no personal token required.
 
 ## Shipping
 
@@ -115,6 +131,7 @@ npx eas-cli submit --platform ios
 - [x] Skill detail with SKILL.md preview
 - [x] One-tap copy install command
 - [x] Local favorites
+- [x] Importers for community + official skills
+- [x] GitHub cron sync pipeline
 - [ ] Authenticated cloud favorites
-- [ ] GitHub cron sync pipeline
 - [ ] Push notifications for new skills
