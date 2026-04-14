@@ -16,8 +16,20 @@ import { fetchSkillById } from "@/lib/skills";
 import { useIsFavorite } from "@/lib/favorites";
 import type { Skill } from "@/types/skill";
 
-function installCommandFor(skill: Skill): string {
-  return `claude skill install ${skill.slug}`;
+type AgentId = "claude" | "codex" | "cursor";
+
+const AGENTS: { id: AgentId; label: string; command: (slug: string) => string }[] = [
+  { id: "claude", label: "Claude", command: (slug) => `claude skill install ${slug}` },
+  { id: "codex",  label: "Codex",  command: (slug) => `codex skill install ${slug}` },
+  { id: "cursor", label: "Cursor", command: (slug) => `cursor skill install ${slug}` },
+];
+
+function supportedAgents(skill: Skill): AgentId[] {
+  const tagSet = new Set(skill.tags);
+  // If no agent tags at all, default to Claude only
+  const known = AGENTS.map((a) => a.id);
+  const found = known.filter((id) => tagSet.has(id));
+  return found.length > 0 ? found : ["claude"];
 }
 
 export default function SkillDetailScreen() {
@@ -26,6 +38,7 @@ export default function SkillDetailScreen() {
   const [skill, setSkill] = useState<Skill | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<AgentId>("claude");
   const [favorited, toggleFavorited] = useIsFavorite(id ?? "");
 
   useEffect(() => {
@@ -35,9 +48,14 @@ export default function SkillDetailScreen() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  const agents = skill ? supportedAgents(skill) : (["claude"] as AgentId[]);
+  const activeAgent = agents.includes(selectedAgent) ? selectedAgent : agents[0];
+  const activeAgentDef = AGENTS.find((a) => a.id === activeAgent)!;
+  const installCommand = skill ? activeAgentDef.command(skill.slug) : "";
+
   const copy = async () => {
     if (!skill) return;
-    await Clipboard.setStringAsync(installCommandFor(skill));
+    await Clipboard.setStringAsync(installCommand);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -127,33 +145,62 @@ export default function SkillDetailScreen() {
             </View>
           </View>
 
-          <Pressable
-            onPress={copy}
-            className="mt-5 flex-row items-center justify-between rounded-xl border border-border bg-bg-card px-4 py-3.5 active:opacity-70"
-          >
-            <View className="flex-1 pr-3">
-              <Text className="text-[11px] uppercase tracking-wider text-text-subtle">
-                Install command
-              </Text>
-              <Text className="mt-1 font-mono text-sm text-text">
-                {installCommandFor(skill)}
-              </Text>
-            </View>
-            <View className="flex-row items-center">
-              <Ionicons
-                name={copied ? "checkmark-circle" : "copy-outline"}
-                size={18}
-                color={copied ? "#8AE6A6" : "#D97757"}
-              />
-              <Text
-                className={`ml-1 text-xs font-semibold ${
-                  copied ? "text-[#8AE6A6]" : "text-brand"
-                }`}
-              >
-                {copied ? "Copied" : "Copy"}
-              </Text>
-            </View>
-          </Pressable>
+          {/* Agent selector tabs */}
+          <View className="mt-5">
+            {agents.length > 1 && (
+              <View className="mb-2 flex-row rounded-xl border border-border bg-bg-card p-1">
+                {agents.map((agentId) => {
+                  const def = AGENTS.find((a) => a.id === agentId)!;
+                  const active = agentId === activeAgent;
+                  return (
+                    <Pressable
+                      key={agentId}
+                      onPress={() => { setSelectedAgent(agentId); setCopied(false); }}
+                      className={`flex-1 items-center rounded-lg py-1.5 ${
+                        active ? "bg-brand" : ""
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-semibold ${
+                          active ? "text-white" : "text-text-muted"
+                        }`}
+                      >
+                        {def.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+
+            <Pressable
+              onPress={copy}
+              className="flex-row items-center justify-between rounded-xl border border-border bg-bg-card px-4 py-3.5 active:opacity-70"
+            >
+              <View className="flex-1 pr-3">
+                <Text className="text-[11px] uppercase tracking-wider text-text-subtle">
+                  Install command
+                </Text>
+                <Text className="mt-1 font-mono text-sm text-text">
+                  {installCommand}
+                </Text>
+              </View>
+              <View className="flex-row items-center">
+                <Ionicons
+                  name={copied ? "checkmark-circle" : "copy-outline"}
+                  size={18}
+                  color={copied ? "#8AE6A6" : "#D97757"}
+                />
+                <Text
+                  className={`ml-1 text-xs font-semibold ${
+                    copied ? "text-[#8AE6A6]" : "text-brand"
+                  }`}
+                >
+                  {copied ? "Copied" : "Copy"}
+                </Text>
+              </View>
+            </Pressable>
+          </View>
 
           <Pressable
             onPress={() => Linking.openURL(skill.github_url)}

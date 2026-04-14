@@ -9,6 +9,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
+    "generate-assets": "tsx scripts/generate-assets.ts",
     "import:antigravity": "tsx scripts/import/import-antigravity.ts",
     "import:anthropic": "tsx scripts/import/import-anthropic.ts",
     "import:all": "npm run import:antigravity && npm run import:anthropic"

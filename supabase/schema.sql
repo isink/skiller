@@ -3,6 +3,7 @@
 -- or paste into the Supabase SQL editor.
 
 create extension if not exists "uuid-ossp";
+create extension if not exists pg_trgm;
 
 -- ---------------------------------------------------------------------------
 -- categories
@@ -40,8 +41,6 @@ create index if not exists skills_category_idx  on public.skills (category);
 create index if not exists skills_rank_idx      on public.skills (rank desc);
 create index if not exists skills_featured_idx  on public.skills (featured) where featured = true;
 create index if not exists skills_name_trgm_idx on public.skills using gin (name gin_trgm_ops);
-
-create extension if not exists pg_trgm;
 
 -- ---------------------------------------------------------------------------
 -- favorites (optional, per-user)
