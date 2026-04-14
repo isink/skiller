@@ -1,0 +1,89 @@
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { SearchBar } from "@/components/SearchBar";
+import { SkillCard } from "@/components/SkillCard";
+import { EmptyState } from "@/components/EmptyState";
+import { fetchFeaturedSkills, searchSkills } from "@/lib/skills";
+import type { SkillListItem } from "@/types/skill";
+
+export default function HomeScreen() {
+  const [query, setQuery] = useState("");
+  const [featured, setFeatured] = useState<SkillListItem[]>([]);
+  const [results, setResults] = useState<SkillListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchFeaturedSkills()
+      .then(setFeatured)
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+    searchSkills(query).then((r) => {
+      if (!cancelled) setResults(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [query]);
+
+  const showingSearch = query.trim().length > 0;
+  const data = useMemo(
+    () => (showingSearch ? results : featured),
+    [showingSearch, results, featured],
+  );
+
+  return (
+    <SafeAreaView edges={["bottom"]} className="flex-1 bg-bg">
+      <FlatList
+        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        ListHeaderComponent={
+          <View className="mb-4">
+            <SearchBar
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search skills, tags, authors"
+            />
+            {!showingSearch ? (
+              <Text className="mt-5 text-lg font-bold text-text">
+                Featured skills
+              </Text>
+            ) : (
+              <Text className="mt-5 text-sm text-text-muted">
+                {results.length} result{results.length === 1 ? "" : "s"} for
+                &quot;{query}&quot;
+              </Text>
+            )}
+          </View>
+        }
+        data={data}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <SkillCard skill={item} />}
+        ListEmptyComponent={
+          loading ? (
+            <View className="py-16">
+              <ActivityIndicator color="#D97757" />
+            </View>
+          ) : showingSearch ? (
+            <EmptyState
+              icon="search-outline"
+              title="No matches"
+              subtitle="Try a different keyword."
+            />
+          ) : (
+            <EmptyState
+              title="No skills yet"
+              subtitle="Featured skills will appear here."
+            />
+          )
+        }
+      />
+    </SafeAreaView>
+  );
+}
