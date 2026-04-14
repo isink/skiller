@@ -8,7 +8,10 @@
     "android": "expo start --android",
     "web": "expo start --web",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "import:antigravity": "tsx scripts/import/import-antigravity.ts",
+    "import:anthropic": "tsx scripts/import/import-anthropic.ts",
+    "import:all": "npm run import:antigravity && npm run import:anthropic"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",
@@ -40,8 +43,11 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@types/node": "^20.17.10",
     "@types/react": "~18.3.12",
+    "dotenv": "^16.4.7",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
     "typescript": "^5.3.3"
   },
   "private": true

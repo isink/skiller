@@ -37,7 +37,12 @@ types/
   skill.ts                 Skill / Category types
 supabase/
   schema.sql               Tables, RLS, triggers
-  seed.sql                 ~16 official Anthropic skills
+  seed.sql                 Categories + 16 hand-curated Anthropic skills (quick-start)
+scripts/import/
+  import-antigravity.ts    1,400+ community skills from skills_index.json
+  import-anthropic.ts      16 official skills with full SKILL.md bodies
+  sources.json             Curation overrides (featured, rank, category)
+  lib/                     Shared supabase client, slugify, category-map
 ```
 
 ## Getting started
@@ -85,8 +90,14 @@ Reads on `skills` and `categories` are public via RLS. `favorites` is per-user.
 
 ## Data strategy
 
-- **Bootstrap**: the ~16 Anthropic official skills are shipped in `seed.sql` and mirrored in `lib/sample-data.ts` for offline dev.
-- **Growth**: a cron scraper (separate repo) will pull community skills from GitHub and upsert them into `skills`. A human review flag (`featured` + `rank`) curates the home feed.
+- **Offline dev**: 16 official Anthropic skills live in `lib/sample-data.ts`, rendered whenever Supabase env vars are missing.
+- **Bootstrap (real data)**: no hand-rolled scraper — we piggyback on existing curated indexes.
+  - `npm run import:antigravity` pulls ~1,400 community skills from [`sickn33/antigravity-awesome-skills`](https://github.com/sickn33/antigravity-awesome-skills)' `skills_index.json`.
+  - `npm run import:anthropic` pulls the 16 official skills from [`anthropics/skills`](https://github.com/anthropics/skills), including the full `SKILL.md` body for the detail screen.
+  - `npm run import:all` runs both.
+  - Curation (featured, rank, category overrides) lives in [`scripts/import/sources.json`](./scripts/import/sources.json) and is reapplied on every run.
+  - See [`scripts/import/README.md`](./scripts/import/README.md) for details.
+- **Growth**: wire either importer into GitHub Actions cron to keep the catalog fresh.
 
 ## Shipping
 

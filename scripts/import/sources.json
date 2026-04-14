@@ -1,0 +1,49 @@
+{
+  "comment": "Curation overrides applied after every import run. Slugs here receive the given rank / featured flag. Anything not listed keeps whatever rank the importer assigned.",
+  "featured": [
+    "pdf",
+    "docx",
+    "xlsx",
+    "pptx",
+    "canva",
+    "artifacts-builder",
+    "webapp-testing",
+    "mcp-builder",
+    "financial-analysis",
+    "data-analyst",
+    "skill-creator",
+    "research-writer"
+  ],
+  "ranks": {
+    "skill-creator": 100,
+    "pdf": 99,
+    "docx": 98,
+    "xlsx": 97,
+    "pptx": 96,
+    "artifacts-builder": 95,
+    "webapp-testing": 94,
+    "mcp-builder": 93,
+    "data-analyst": 92,
+    "financial-analysis": 91,
+    "research-writer": 90,
+    "canva": 89
+  },
+  "categoryOverrides": {
+    "pdf": "office",
+    "docx": "office",
+    "xlsx": "office",
+    "pptx": "office",
+    "skill-creator": "official",
+    "mcp-builder": "devops",
+    "artifacts-builder": "code",
+    "webapp-testing": "code",
+    "data-analyst": "data",
+    "financial-analysis": "data",
+    "research-writer": "research",
+    "canva": "design",
+    "brand-guidelines": "design",
+    "slack-gif-creator": "design",
+    "algorithmic-art": "design",
+    "internal-comms": "docs"
+  }
+}

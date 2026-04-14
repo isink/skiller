@@ -10,7 +10,8 @@ insert into public.categories (slug, name, icon) values
   ('office',    'Office',         'briefcase'),
   ('design',    'Design',         'color-palette'),
   ('devops',    'DevOps',         'git-branch'),
-  ('research',  'Research',       'search')
+  ('research',  'Research',       'search'),
+  ('misc',      'Misc',           'ellipsis-horizontal')
 on conflict (slug) do update set
   name = excluded.name,
   icon = excluded.icon;

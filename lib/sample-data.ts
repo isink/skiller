@@ -12,6 +12,7 @@ export const SAMPLE_CATEGORIES: Category[] = [
   { id: "cat_design", slug: "design", name: "Design", icon: "color-palette" },
   { id: "cat_devops", slug: "devops", name: "DevOps", icon: "git-branch" },
   { id: "cat_research", slug: "research", name: "Research", icon: "search" },
+  { id: "cat_misc", slug: "misc", name: "Misc", icon: "ellipsis-horizontal" },
 ];
 
 const now = "2026-01-01T00:00:00.000Z";
