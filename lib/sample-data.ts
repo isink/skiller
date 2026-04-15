@@ -27,7 +27,6 @@ function skill(partial: Partial<Skill> & Pick<Skill, "id" | "slug" | "name">): S
     author: "anthropics",
     github_url: `https://github.com/anthropics/skills/tree/main/${partial.slug}`,
     skill_md_content: null,
-    github_stars: null,
     rank: 0,
     score: 0,
     install_count: 0,
