@@ -57,36 +57,36 @@ export default function ProfileScreen() {
           </View>
           <Text className="mt-3 text-xl font-bold text-text">Iskill</Text>
           <Text className="mt-1 text-xs text-text-subtle">
-            Browse skills for Claude
+            发现并安装 Claude AI 技能
           </Text>
         </View>
 
         <Section
-          title="Data"
+          title="数据"
           rows={[
             {
               icon: isSupabaseConfigured ? "cloud-done" : "cloud-offline",
-              title: isSupabaseConfigured ? "Connected to Supabase" : "Offline sample data",
+              title: isSupabaseConfigured ? "已连接 Supabase" : "离线示例数据",
               subtitle: isSupabaseConfigured
-                ? "Live skills synced from Supabase."
-                : "Set EXPO_PUBLIC_SUPABASE_URL to go live.",
+                ? "技能数据实时同步自 Supabase"
+                : "设置 EXPO_PUBLIC_SUPABASE_URL 以启用在线模式",
             },
           ]}
         />
 
         <Section
-          title="Community"
+          title="社区"
           rows={[
             {
               icon: "logo-github",
-              title: "Anthropic Skills",
+              title: "Anthropic 官方技能库",
               subtitle: "github.com/anthropics/skills",
               onPress: () =>
                 Linking.openURL("https://github.com/anthropics/skills"),
             },
             {
               icon: "book",
-              title: "Claude Skills docs",
+              title: "Claude Skills 文档",
               onPress: () =>
                 Linking.openURL(
                   "https://docs.anthropic.com/claude/docs/skills",
@@ -96,11 +96,11 @@ export default function ProfileScreen() {
         />
 
         <Section
-          title="About"
+          title="关于"
           rows={[
             {
               icon: "information-circle",
-              title: "Version",
+              title: "版本",
               subtitle: version,
             },
           ]}

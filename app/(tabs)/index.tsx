@@ -48,16 +48,15 @@ export default function HomeScreen() {
             <SearchBar
               value={query}
               onChangeText={setQuery}
-              placeholder="Search skills, tags, authors"
+              placeholder="搜索技能、标签、作者"
             />
             {!showingSearch ? (
               <Text className="mt-5 text-lg font-bold text-text">
-                Featured skills
+                精选技能
               </Text>
             ) : (
               <Text className="mt-5 text-sm text-text-muted">
-                {results.length} result{results.length === 1 ? "" : "s"} for
-                &quot;{query}&quot;
+                找到 {results.length} 个关于 &quot;{query}&quot; 的结果
               </Text>
             )}
           </View>
@@ -73,13 +72,13 @@ export default function HomeScreen() {
           ) : showingSearch ? (
             <EmptyState
               icon="search-outline"
-              title="No matches"
-              subtitle="Try a different keyword."
+              title="没有匹配结果"
+              subtitle="试试其他关键词"
             />
           ) : (
             <EmptyState
-              title="No skills yet"
-              subtitle="Featured skills will appear here."
+              title="暂无技能"
+              subtitle="精选技能将在这里显示"
             />
           )
         }

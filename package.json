@@ -12,7 +12,8 @@
     "generate-assets": "tsx scripts/generate-assets.ts",
     "import:antigravity": "tsx scripts/import/import-antigravity.ts",
     "import:anthropic": "tsx scripts/import/import-anthropic.ts",
-    "import:all": "npm run import:antigravity && npm run import:anthropic"
+    "import:all": "npm run import:antigravity && npm run import:anthropic",
+    "enrich:skills": "tsx scripts/enrich/enrich-skills.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -44,6 +45,7 @@
     "react-native-web": "^0.21.0"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@babel/core": "^7.25.2",
     "@types/node": "^20.17.10",
     "@types/react": "~19.1.10",

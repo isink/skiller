@@ -33,8 +33,8 @@ export default function FavoritesScreen() {
           <View className="mt-12">
             <EmptyState
               icon="heart-outline"
-              title="No favorites yet"
-              subtitle="Tap the heart on any skill to save it here."
+              title="还没有收藏"
+              subtitle="点击技能卡片上的心形图标即可收藏"
             />
           </View>
         }

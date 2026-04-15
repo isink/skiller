@@ -10,6 +10,7 @@
  */
 
 import { db } from "./lib/supabase";
+import { env } from "./lib/env";
 import { idToDisplayName } from "./lib/slugify";
 import { mapCategory, CURATED_CATEGORIES } from "./lib/category-map";
 import { applyOverrides } from "./lib/overrides";
@@ -43,11 +44,52 @@ type InsertSkill = {
   tags: string[];
   author: string;
   github_url: string;
+  skill_md_content: string | null;
   rank: number;
   score: number;
   install_count: number;
   featured: boolean;
 };
+
+const RAW_BASE =
+  "https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/";
+
+const githubHeaders: Record<string, string> = env.githubToken
+  ? { Authorization: `Bearer ${env.githubToken}` }
+  : {};
+
+/** Fetch SKILL.md for a skill path. Returns null on 404 or error. */
+async function fetchSkillMd(path: string): Promise<string | null> {
+  try {
+    const url = `${RAW_BASE}${path}/SKILL.md`;
+    const res = await fetch(url, { headers: githubHeaders });
+    if (!res.ok) return null;
+    // Strip null bytes — PostgreSQL text columns reject \u0000
+    return (await res.text()).replace(/\u0000/g, "");
+  } catch {
+    return null;
+  }
+}
+
+/** Fetch SKILL.md for all skills with concurrency limit. */
+async function fetchAllSkillMd(
+  rows: Array<{ slug: string; path: string }>
+): Promise<Map<string, string | null>> {
+  const CONCURRENCY = 10;
+  const results = new Map<string, string | null>();
+  for (let i = 0; i < rows.length; i += CONCURRENCY) {
+    const batch = rows.slice(i, i + CONCURRENCY);
+    const fetched = await Promise.all(
+      batch.map(({ slug, path }) =>
+        fetchSkillMd(path).then((md) => ({ slug, md }))
+      )
+    );
+    for (const { slug, md } of fetched) results.set(slug, md);
+    process.stdout.write(`  ↳ fetched SKILL.md ${Math.min(i + CONCURRENCY, rows.length)}/${rows.length}\r`);
+  }
+  process.stdout.write("\n");
+  return results;
+}
 
 function authorFromSource(source: string): string {
   if (!source || source === "personal" || source === "community") {
@@ -67,7 +109,7 @@ function deriveTags(upstream: UpstreamSkill): string[] {
   return Array.from(tags).slice(0, 8);
 }
 
-function mapSkill(upstream: UpstreamSkill): InsertSkill {
+function mapSkill(upstream: UpstreamSkill, skillMd: string | null = null): InsertSkill {
   return {
     slug: upstream.id,
     name: idToDisplayName(upstream.name || upstream.id),
@@ -76,6 +118,7 @@ function mapSkill(upstream: UpstreamSkill): InsertSkill {
     tags: deriveTags(upstream),
     author: authorFromSource(upstream.source),
     github_url: REPO_TREE_BASE + upstream.path,
+    skill_md_content: skillMd,
     rank: 0,
     score: 0,
     install_count: 0,
@@ -130,12 +173,19 @@ async function main() {
 
   // Deduplicate by slug — upstream is usually clean but be defensive.
   const seen = new Set<string>();
-  const rows: InsertSkill[] = [];
+  const deduped: UpstreamSkill[] = [];
   for (const u of upstream) {
     if (!u.id || seen.has(u.id)) continue;
     seen.add(u.id);
-    rows.push(mapSkill(u));
+    deduped.push(u);
   }
+
+  console.log(`→ Fetching SKILL.md for ${deduped.length} skills`);
+  const mdMap = await fetchAllSkillMd(
+    deduped.map((u) => ({ slug: u.id, path: u.path }))
+  );
+
+  const rows: InsertSkill[] = deduped.map((u) => mapSkill(u, mdMap.get(u.id) ?? null));
 
   console.log(`→ Upserting ${rows.length} skills`);
   await upsertBatch(rows);

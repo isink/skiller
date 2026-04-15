@@ -10,8 +10,10 @@ export type Skill = {
   slug: string;
   name: string;
   description: string;
+  description_zh: string | null;
   category: string;
   tags: string[];
+  use_cases: string[];
   author: string;
   github_url: string;
   skill_md_content: string | null;
@@ -29,8 +31,10 @@ export type SkillListItem = Pick<
   | "slug"
   | "name"
   | "description"
+  | "description_zh"
   | "category"
   | "tags"
+  | "use_cases"
   | "author"
   | "rank"
   | "score"

@@ -15,7 +15,7 @@ export function SearchBar({ value, onChangeText, placeholder }: Props) {
         className="ml-2 flex-1 text-base text-text"
         value={value}
         onChangeText={onChangeText}
-        placeholder={placeholder ?? "Search skills"}
+        placeholder={placeholder ?? "搜索技能"}
         placeholderTextColor="#6B6B78"
         autoCapitalize="none"
         autoCorrect={false}

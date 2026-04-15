@@ -88,3 +88,23 @@ create policy "categories read" on public.categories
 drop policy if exists "favorites owner" on public.favorites;
 create policy "favorites owner" on public.favorites
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
+-- Chinese enrichment columns (added for CN market)
+-- ---------------------------------------------------------------------------
+alter table public.skills
+  add column if not exists description_zh text,
+  add column if not exists use_cases      text[] not null default '{}';
+
+-- ---------------------------------------------------------------------------
+-- install_count RPC (callable by anon to increment on copy)
+-- ---------------------------------------------------------------------------
+create or replace function public.increment_install_count(skill_id uuid)
+returns void
+language sql
+security definer
+as $$
+  update public.skills set install_count = install_count + 1 where id = skill_id;
+$$;
+
+grant execute on function public.increment_install_count(uuid) to anon;

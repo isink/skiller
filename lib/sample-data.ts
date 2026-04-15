@@ -20,8 +20,10 @@ const now = "2026-01-01T00:00:00.000Z";
 function skill(partial: Partial<Skill> & Pick<Skill, "id" | "slug" | "name">): Skill {
   return {
     description: "",
+    description_zh: null,
     category: "official",
     tags: [],
+    use_cases: [],
     author: "anthropics",
     github_url: `https://github.com/anthropics/skills/tree/main/${partial.slug}`,
     skill_md_content: null,

@@ -3,7 +3,7 @@ import { SAMPLE_CATEGORIES, SAMPLE_SKILLS } from "./sample-data";
 import type { Category, Skill, SkillListItem } from "@/types/skill";
 
 const SKILL_LIST_COLUMNS =
-  "id, slug, name, description, category, tags, author, rank, score, install_count, featured";
+  "id, slug, name, description, description_zh, category, tags, use_cases, author, rank, score, install_count, featured";
 
 export async function fetchFeaturedSkills(
   limit = 20,

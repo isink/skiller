@@ -43,12 +43,12 @@ export function SkillCard({ skill }: { skill: SkillListItem }) {
           className="mt-2 text-sm leading-5 text-text-muted"
           numberOfLines={2}
         >
-          {skill.description}
+          {skill.description_zh ?? skill.description}
         </Text>
 
         <View className="mt-3 flex-row items-center justify-between">
           <View className="flex-row flex-wrap gap-1.5">
-            {skill.tags.slice(0, 3).map((tag) => (
+            {skill.tags.filter((t) => !["claude", "codex", "cursor"].includes(t)).slice(0, 3).map((tag) => (
               <View
                 key={tag}
                 className="rounded-full bg-bg-elevated px-2 py-0.5"

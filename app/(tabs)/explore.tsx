@@ -31,7 +31,7 @@ export default function ExploreScreen() {
   const header = useMemo(
     () => (
       <View className="mb-2">
-        <Text className="mb-3 text-lg font-bold text-text">Categories</Text>
+        <Text className="mb-3 text-lg font-bold text-text">分类</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -67,7 +67,7 @@ export default function ExploreScreen() {
           ) : (
             <EmptyState
               icon="grid-outline"
-              title="No skills in this category"
+              title="该分类暂无技能"
             />
           )
         }

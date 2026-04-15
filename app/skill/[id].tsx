@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Linking,
   Pressable,
   ScrollView,
+  Share,
   Text,
   View,
 } from "react-native";
@@ -14,6 +14,7 @@ import * as Clipboard from "expo-clipboard";
 import Markdown from "react-native-markdown-display";
 import { fetchSkillById } from "@/lib/skills";
 import { useIsFavorite } from "@/lib/favorites";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { Skill } from "@/types/skill";
 
 type AgentId = "claude" | "codex" | "cursor";
@@ -58,6 +59,17 @@ export default function SkillDetailScreen() {
     await Clipboard.setStringAsync(installCommand);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
+    if (isSupabaseConfigured) {
+      supabase.rpc("increment_install_count", { skill_id: skill.id }).then();
+    }
+  };
+
+  const share = async () => {
+    if (!skill) return;
+    await Share.share({
+      title: skill.name,
+      message: `${skill.name} — ${skill.description_zh ?? skill.description}\n\n安装命令：${installCommand}`,
+    });
   };
 
   if (loading) {
@@ -72,12 +84,12 @@ export default function SkillDetailScreen() {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-bg">
         <Ionicons name="alert-circle-outline" size={40} color="#6B6B78" />
-        <Text className="mt-3 text-base text-text-muted">Skill not found</Text>
+        <Text className="mt-3 text-base text-text-muted">技能未找到</Text>
         <Pressable
           onPress={() => router.back()}
           className="mt-4 rounded-full border border-border bg-bg-elevated px-4 py-2"
         >
-          <Text className="text-sm text-text">Go back</Text>
+          <Text className="text-sm text-text">返回</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -97,7 +109,7 @@ export default function SkillDetailScreen() {
                 {skill.name}
               </Text>
               <Text className="mt-1 text-sm text-text-muted">
-                by {skill.author}
+                作者：{skill.author}
               </Text>
             </View>
             <Pressable
@@ -114,7 +126,7 @@ export default function SkillDetailScreen() {
           </View>
 
           <Text className="mt-4 text-base leading-6 text-text-muted">
-            {skill.description}
+            {skill.description_zh ?? skill.description}
           </Text>
 
           {skill.tags.length > 0 ? (
@@ -134,7 +146,7 @@ export default function SkillDetailScreen() {
             <View className="flex-row items-center">
               <Ionicons name="download-outline" size={14} color="#9A9AA8" />
               <Text className="ml-1 text-xs text-text-muted">
-                {skill.install_count.toLocaleString()} installs
+                {skill.install_count.toLocaleString()} 次安装
               </Text>
             </View>
             <View className="flex-row items-center">
@@ -179,7 +191,7 @@ export default function SkillDetailScreen() {
             >
               <View className="flex-1 pr-3">
                 <Text className="text-[11px] uppercase tracking-wider text-text-subtle">
-                  Install command
+                  安装命令
                 </Text>
                 <Text className="mt-1 font-mono text-sm text-text">
                   {installCommand}
@@ -196,35 +208,53 @@ export default function SkillDetailScreen() {
                     copied ? "text-[#8AE6A6]" : "text-brand"
                   }`}
                 >
-                  {copied ? "Copied" : "Copy"}
+                  {copied ? "已复制" : "复制"}
                 </Text>
               </View>
             </Pressable>
           </View>
 
           <Pressable
-            onPress={() => Linking.openURL(skill.github_url)}
+            onPress={share}
             className="mt-3 flex-row items-center justify-center rounded-xl border border-border-subtle bg-bg-elevated px-4 py-3 active:opacity-70"
           >
-            <Ionicons name="logo-github" size={18} color="#F5F5F7" />
+            <Ionicons name="share-outline" size={18} color="#F5F5F7" />
             <Text className="ml-2 text-sm font-medium text-text">
-              View on GitHub
+              分享
             </Text>
           </Pressable>
         </SafeAreaView>
 
-        <View className="mt-8 px-5">
+        {skill.use_cases && skill.use_cases.length > 0 && (
+          <View className="mt-6 px-5">
+            <Text className="mb-3 text-xs uppercase tracking-widest text-text-subtle">
+              适用场景
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {skill.use_cases.map((uc) => (
+                <View
+                  key={uc}
+                  className="rounded-full border border-brand/40 bg-brand/10 px-3 py-1"
+                >
+                  <Text className="text-xs font-medium text-brand">{uc}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        <View className="mt-6 px-5">
           <Text className="mb-3 text-xs uppercase tracking-widest text-text-subtle">
             SKILL.md
           </Text>
           <View className="rounded-2xl border border-border-subtle bg-bg-card p-4">
             {skill.skill_md_content ? (
               <Markdown style={markdownStyles}>
-                {skill.skill_md_content}
+                {skill.skill_md_content.replace(/^---[\s\S]*?---\n?/, "").trimStart()}
               </Markdown>
             ) : (
               <Text className="text-sm italic text-text-subtle">
-                No SKILL.md content available yet.
+                暂无 SKILL.md 内容
               </Text>
             )}
           </View>
