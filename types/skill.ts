@@ -17,6 +17,7 @@ export type Skill = {
   author: string;
   github_url: string;
   skill_md_content: string | null;
+  github_stars: number | null;
   rank: number;
   score: number;
   install_count: number;

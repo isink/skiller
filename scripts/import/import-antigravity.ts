@@ -14,6 +14,7 @@ import { env } from "./lib/env";
 import { idToDisplayName } from "./lib/slugify";
 import { mapCategory, CURATED_CATEGORIES } from "./lib/category-map";
 import { applyOverrides } from "./lib/overrides";
+import { fetchRepoStars } from "./lib/github";
 
 const SOURCE_URL =
   "https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/skills_index.json";
@@ -45,6 +46,7 @@ type InsertSkill = {
   author: string;
   github_url: string;
   skill_md_content: string | null;
+  github_stars: number | null;
   rank: number;
   score: number;
   install_count: number;
@@ -109,7 +111,7 @@ function deriveTags(upstream: UpstreamSkill): string[] {
   return Array.from(tags).slice(0, 8);
 }
 
-function mapSkill(upstream: UpstreamSkill, skillMd: string | null = null): InsertSkill {
+function mapSkill(upstream: UpstreamSkill, skillMd: string | null = null, githubStars: number | null = null): InsertSkill {
   return {
     slug: upstream.id,
     name: idToDisplayName(upstream.name || upstream.id),
@@ -119,6 +121,7 @@ function mapSkill(upstream: UpstreamSkill, skillMd: string | null = null): Inser
     author: authorFromSource(upstream.source),
     github_url: REPO_TREE_BASE + upstream.path,
     skill_md_content: skillMd,
+    github_stars: githubStars,
     rank: 0,
     score: 0,
     install_count: 0,
@@ -169,6 +172,11 @@ async function upsertBatch(rows: InsertSkill[]): Promise<void> {
 
 async function main() {
   await ensureCategories();
+
+  console.log("→ Fetching GitHub stars for antigravity repo");
+  const repoStars = await fetchRepoStars("sickn33", "antigravity-awesome-skills");
+  console.log(`✓ Stars: ${repoStars ?? "n/a"}`);
+
   const upstream = await fetchUpstream();
 
   // Deduplicate by slug — upstream is usually clean but be defensive.
@@ -185,7 +193,7 @@ async function main() {
     deduped.map((u) => ({ slug: u.id, path: u.path }))
   );
 
-  const rows: InsertSkill[] = deduped.map((u) => mapSkill(u, mdMap.get(u.id) ?? null));
+  const rows: InsertSkill[] = deduped.map((u) => mapSkill(u, mdMap.get(u.id) ?? null, repoStars));
 
   console.log(`→ Upserting ${rows.length} skills`);
   await upsertBatch(rows);

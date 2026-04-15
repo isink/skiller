@@ -29,6 +29,7 @@ create table if not exists public.skills (
   author           text not null default '',
   github_url       text not null default '',
   skill_md_content text,
+  github_stars     integer,
   rank             integer not null default 0,
   score            integer not null default 0,
   install_count    integer not null default 0,

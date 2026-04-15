@@ -19,6 +19,7 @@ import { env } from "./lib/env";
 import { idToDisplayName } from "./lib/slugify";
 import { mapCategory } from "./lib/category-map";
 import { applyOverrides } from "./lib/overrides";
+import { fetchRepoStars } from "./lib/github";
 
 const OWNER = "anthropics";
 const REPO = "skills";
@@ -139,6 +140,10 @@ const KNOWN_CATEGORIES: Record<string, string> = {
 };
 
 async function main() {
+  console.log(`→ Fetching GitHub stars for ${OWNER}/${REPO}`);
+  const repoStars = await fetchRepoStars(OWNER, REPO);
+  console.log(`✓ Stars: ${repoStars ?? "n/a"}`);
+
   console.log(`→ Listing ${OWNER}/${REPO} skill directories`);
   const dirs = await listSkillDirs();
   console.log(`✓ Found ${dirs.length} directories`);
@@ -186,6 +191,7 @@ async function main() {
       author: "anthropics",
       github_url: `https://github.com/${OWNER}/${REPO}/tree/${BRANCH}/${dir}`,
       skill_md_content: md,
+      github_stars: repoStars,
       rank: 80, // baseline for official skills; sources.json can override
       score: 95,
       install_count: 0,

@@ -149,12 +149,14 @@ export default function SkillDetailScreen() {
                 {skill.install_count.toLocaleString()} 次安装
               </Text>
             </View>
-            <View className="flex-row items-center">
-              <Ionicons name="star" size={14} color="#D97757" />
-              <Text className="ml-1 text-xs text-text-muted">
-                {skill.score}
-              </Text>
-            </View>
+            {skill.github_stars != null && (
+              <View className="flex-row items-center">
+                <Ionicons name="star" size={14} color="#D97757" />
+                <Text className="ml-1 text-xs text-text-muted">
+                  {skill.github_stars.toLocaleString()} GitHub Stars
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Agent selector tabs */}
