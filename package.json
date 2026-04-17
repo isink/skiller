@@ -12,8 +12,10 @@
     "generate-assets": "tsx scripts/generate-assets.ts",
     "import:antigravity": "tsx scripts/import/import-antigravity.ts",
     "import:anthropic": "tsx scripts/import/import-anthropic.ts",
-    "import:all": "npm run import:antigravity && npm run import:anthropic",
-    "enrich:skills": "tsx scripts/enrich/enrich-skills.ts"
+    "import:discover": "tsx scripts/import/import-github-search.ts",
+    "import:all": "npm run import:antigravity && npm run import:anthropic && npm run import:discover",
+    "enrich:skills": "tsx scripts/enrich/enrich-skills.ts",
+    "sync": "npm run import:all && npm run enrich:skills"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
