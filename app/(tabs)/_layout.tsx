@@ -20,7 +20,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "首页",
-          headerTitle: "Iskill",
+          headerTitle: "Skiller",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="sparkles" size={size} color={color} />
           ),

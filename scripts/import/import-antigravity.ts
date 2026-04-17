@@ -49,7 +49,6 @@ type InsertSkill = {
   github_stars: number | null;
   rank: number;
   score: number;
-  install_count: number;
   featured: boolean;
 };
 
@@ -124,7 +123,6 @@ function mapSkill(upstream: UpstreamSkill, skillMd: string | null = null, github
     github_stars: githubStars,
     rank: 0,
     score: 0,
-    install_count: 0,
     featured: false,
   };
 }

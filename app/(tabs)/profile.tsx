@@ -3,6 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { useFavoriteIds } from "@/lib/favorites";
 
 type Row = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -47,6 +48,7 @@ function Section({ title, rows }: { title: string; rows: Row[] }) {
 
 export default function ProfileScreen() {
   const version = Constants.expoConfig?.version ?? "0.1.0";
+  const favoriteIds = useFavoriteIds();
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-bg">
@@ -55,24 +57,26 @@ export default function ProfileScreen() {
           <View className="h-16 w-16 items-center justify-center rounded-2xl bg-brand/20">
             <Ionicons name="sparkles" size={28} color="#D97757" />
           </View>
-          <Text className="mt-3 text-xl font-bold text-text">Iskill</Text>
+          <Text className="mt-3 text-xl font-bold text-text">Skiller</Text>
           <Text className="mt-1 text-xs text-text-subtle">
             发现并安装 Claude AI 技能
           </Text>
+          <View className="mt-5 rounded-2xl border border-border-subtle bg-bg-card px-10 py-4">
+            {favoriteIds.length > 0 ? (
+              <View className="items-center">
+                <Text className="text-2xl font-bold text-text">{favoriteIds.length}</Text>
+                <Text className="mt-0.5 text-xs text-text-subtle">已收藏技能</Text>
+              </View>
+            ) : (
+              <View className="items-center gap-1.5">
+                <Ionicons name="heart-outline" size={20} color="#6B6B78" />
+                <Text className="text-center text-xs text-text-subtle">
+                  还没有收藏，去探索喜欢的技能吧
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
-
-        <Section
-          title="数据"
-          rows={[
-            {
-              icon: isSupabaseConfigured ? "cloud-done" : "cloud-offline",
-              title: isSupabaseConfigured ? "已连接 Supabase" : "离线示例数据",
-              subtitle: isSupabaseConfigured
-                ? "技能数据实时同步自 Supabase"
-                : "设置 EXPO_PUBLIC_SUPABASE_URL 以启用在线模式",
-            },
-          ]}
-        />
 
         <Section
           title="社区"
@@ -88,9 +92,19 @@ export default function ProfileScreen() {
               icon: "book",
               title: "Claude Skills 文档",
               onPress: () =>
-                Linking.openURL(
-                  "https://docs.anthropic.com/claude/docs/skills",
-                ),
+                Linking.openURL("https://docs.anthropic.com/en/docs/claude-code/skills-and-packages"),
+            },
+          ]}
+        />
+
+        <Section
+          title="支持"
+          rows={[
+            {
+              icon: "shield-checkmark",
+              title: "隐私政策",
+              onPress: () =>
+                Linking.openURL("https://isink.github.io/iskill_ios/privacy.html"),
             },
           ]}
         />
@@ -102,6 +116,11 @@ export default function ProfileScreen() {
               icon: "information-circle",
               title: "版本",
               subtitle: version,
+            },
+            {
+              icon: isSupabaseConfigured ? "cloud-done" : "cloud-offline",
+              title: isSupabaseConfigured ? "数据已同步" : "当前为离线模式",
+              subtitle: isSupabaseConfigured ? undefined : "部分内容使用示例数据",
             },
           ]}
         />

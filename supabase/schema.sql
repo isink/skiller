@@ -32,7 +32,6 @@ create table if not exists public.skills (
   github_stars     integer,
   rank             integer not null default 0,
   score            integer not null default 0,
-  install_count    integer not null default 0,
   featured         boolean not null default false,
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
@@ -97,15 +96,3 @@ alter table public.skills
   add column if not exists description_zh text,
   add column if not exists use_cases      text[] not null default '{}';
 
--- ---------------------------------------------------------------------------
--- install_count RPC (callable by anon to increment on copy)
--- ---------------------------------------------------------------------------
-create or replace function public.increment_install_count(skill_id uuid)
-returns void
-language sql
-security definer
-as $$
-  update public.skills set install_count = install_count + 1 where id = skill_id;
-$$;
-
-grant execute on function public.increment_install_count(uuid) to anon;

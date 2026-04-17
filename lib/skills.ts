@@ -3,7 +3,62 @@ import { SAMPLE_CATEGORIES, SAMPLE_SKILLS } from "./sample-data";
 import type { Category, Skill, SkillListItem } from "@/types/skill";
 
 const SKILL_LIST_COLUMNS =
-  "id, slug, name, description, description_zh, category, tags, use_cases, author, rank, score, install_count, featured";
+  "id, slug, name, description, description_zh, category, tags, use_cases, author, rank, score, featured, created_at, published_at";
+
+export async function fetchCategoryCounts(): Promise<Record<string, number>> {
+  if (!isSupabaseConfigured) {
+    const counts: Record<string, number> = {};
+    for (const s of SAMPLE_SKILLS) counts[s.category] = (counts[s.category] ?? 0) + 1;
+    return counts;
+  }
+  const { data, error } = await supabase.from("skills").select("category").limit(9999);
+  if (error) throw error;
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    counts[row.category] = (counts[row.category] ?? 0) + 1;
+  }
+  return counts;
+}
+
+export async function fetchOfficialSkills(offset = 0, limit = 50): Promise<SkillListItem[]> {
+  if (!isSupabaseConfigured) {
+    return SAMPLE_SKILLS.filter((s) => s.featured).slice(offset, offset + limit);
+  }
+  const { data, error } = await supabase
+    .from("skills")
+    .select(SKILL_LIST_COLUMNS)
+    .eq("featured", true)
+    .order("rank", { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) throw error;
+  return (data ?? []) as SkillListItem[];
+}
+
+export async function fetchAllSkills(offset = 0, limit = 50): Promise<SkillListItem[]> {
+  if (!isSupabaseConfigured) return SAMPLE_SKILLS.slice(offset, offset + limit);
+  const { data, error } = await supabase
+    .from("skills")
+    .select(SKILL_LIST_COLUMNS)
+    .order("rank", { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) throw error;
+  return (data ?? []) as SkillListItem[];
+}
+
+export async function fetchNewSkills(limit = 10): Promise<SkillListItem[]> {
+  if (!isSupabaseConfigured) {
+    return SAMPLE_SKILLS.slice(0, limit);
+  }
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("skills")
+    .select(SKILL_LIST_COLUMNS)
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as SkillListItem[];
+}
 
 export async function fetchFeaturedSkills(
   limit = 20,
@@ -23,17 +78,18 @@ export async function fetchFeaturedSkills(
 
 export async function fetchSkillsByCategory(
   category: string,
+  offset = 0,
   limit = 50,
 ): Promise<SkillListItem[]> {
   if (!isSupabaseConfigured) {
-    return SAMPLE_SKILLS.filter((s) => s.category === category).slice(0, limit);
+    return SAMPLE_SKILLS.filter((s) => s.category === category).slice(offset, offset + limit);
   }
   const { data, error } = await supabase
     .from("skills")
     .select(SKILL_LIST_COLUMNS)
     .eq("category", category)
     .order("rank", { ascending: false })
-    .limit(limit);
+    .range(offset, offset + limit - 1);
   if (error) throw error;
   return (data ?? []) as SkillListItem[];
 }

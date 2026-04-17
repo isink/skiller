@@ -17,8 +17,8 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": ""
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gphynosbfjcyexhkgctf.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwaHlub3NiZmpjeWV4aGtnY3RmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNzg3ODQsImV4cCI6MjA5MTc1NDc4NH0.0QtUhSnGn0wPwVjyjkPdCIaebIaCvvcVw9AAjtEY9_8"
       }
     },
     "production": {
@@ -27,17 +27,17 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": ""
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gphynosbfjcyexhkgctf.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwaHlub3NiZmpjeWV4aGtnY3RmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNzg3ODQsImV4cCI6MjA5MTc1NDc4NH0.0QtUhSnGn0wPwVjyjkPdCIaebIaCvvcVw9AAjtEY9_8"
       }
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "appleId": "",
-        "ascAppId": "",
-        "appleTeamId": ""
+        "appleId": "2040522600@qq.com",
+        "ascAppId": "6762261849",
+        "appleTeamId": "49P8MCK543"
       }
     }
   }

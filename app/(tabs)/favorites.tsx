@@ -13,7 +13,7 @@ export default function FavoritesScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all(ids.map((id) => fetchSkillById(id))).then((results) => {
+    Promise.all([...ids].reverse().map((id) => fetchSkillById(id))).then((results) => {
       if (cancelled) return;
       setSkills(results.filter((s): s is Skill => s !== null));
     });
@@ -28,7 +28,7 @@ export default function FavoritesScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         data={skills}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <SkillCard skill={item} />}
+        renderItem={({ item }) => <SkillCard skill={item} showInstall />}
         ListEmptyComponent={
           <View className="mt-12">
             <EmptyState

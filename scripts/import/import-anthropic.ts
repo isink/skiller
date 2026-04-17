@@ -67,6 +67,17 @@ async function listSkillDirs(): Promise<string[]> {
     .map((e) => e.name);
 }
 
+async function fetchFirstCommitDate(dir: string): Promise<string | null> {
+  // GitHub commits API, order=asc + per_page=1 gives the first commit touching this path
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/commits?path=${dir}&order=asc&per_page=1`;
+  try {
+    const commits = await ghJson<{ commit: { author: { date: string } } }[]>(url);
+    return commits[0]?.commit?.author?.date ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchSkillMd(dir: string): Promise<string | null> {
   // Raw URL is cheaper than going through the API again.
   const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${dir}/SKILL.md`;
@@ -152,7 +163,10 @@ async function main() {
   let skipped = 0;
 
   for (const dir of dirs) {
-    const md = await fetchSkillMd(dir);
+    const [md, publishedAt] = await Promise.all([
+      fetchSkillMd(dir),
+      fetchFirstCommitDate(dir),
+    ]);
     if (!md) {
       skipped++;
       continue;
@@ -194,8 +208,8 @@ async function main() {
       github_stars: repoStars,
       rank: 80, // baseline for official skills; sources.json can override
       score: 95,
-      install_count: 0,
       featured: true,
+      ...(publishedAt ? { published_at: publishedAt } : {}),
     };
 
     const { error } = await db

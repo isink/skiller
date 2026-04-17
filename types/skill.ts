@@ -17,9 +17,10 @@ export type Skill = {
   author: string;
   github_url: string;
   skill_md_content: string | null;
+  skill_md_summary_zh: string | null;
+  published_at: string | null;
   rank: number;
   score: number;
-  install_count: number;
   featured: boolean;
   created_at: string;
   updated_at: string;
@@ -38,6 +39,7 @@ export type SkillListItem = Pick<
   | "author"
   | "rank"
   | "score"
-  | "install_count"
   | "featured"
+  | "created_at"
+  | "published_at"
 >;

@@ -1,0 +1,30 @@
+app_identifier "com.iskill.app"
+team_id "49P8MCK543"
+api_key_path "./fastlane/asc_key.json"
+
+
+metadata_path "./fastlane/metadata"
+screenshots_path "./fastlane/screenshots"
+
+primary_first_sub_category "DEVELOPER_TOOLS"
+primary_second_sub_category "PRODUCTIVITY"
+
+languages ["zh-Hans"]
+
+skip_screenshots false
+skip_binary_upload true
+force true
+skip_app_version_update false
+
+copyright "2026 Handong Wen"
+automatic_release false
+submit_for_review false
+precheck_include_in_app_purchases false
+
+app_review_information({
+  first_name: "Handong",
+  last_name: "Wen",
+  phone_number: "+8617724830454",
+  email_address: "2040522600@qq.com",
+  notes: "This is a Claude AI Skills browser app for Chinese users. Users can browse, search and favorite Claude AI skills. No login required."
+})

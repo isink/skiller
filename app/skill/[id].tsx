@@ -13,9 +13,21 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import Markdown from "react-native-markdown-display";
 import { fetchSkillById } from "@/lib/skills";
+import { categoryName } from "@/lib/categories";
 import { useIsFavorite } from "@/lib/favorites";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { Skill } from "@/types/skill";
+
+function formatAuthor(author: string): string {
+  if (author === "anthropics") return "Anthropic";
+  if (author === "community") return "社区";
+  return author;
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月`;
+}
 
 type AgentId = "claude" | "codex" | "cursor";
 
@@ -39,6 +51,7 @@ export default function SkillDetailScreen() {
   const [skill, setSkill] = useState<Skill | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [copiedRaw, setCopiedRaw] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<AgentId>("claude");
   const [favorited, toggleFavorited] = useIsFavorite(id ?? "");
 
@@ -59,15 +72,23 @@ export default function SkillDetailScreen() {
     await Clipboard.setStringAsync(installCommand);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
-    if (isSupabaseConfigured) {
-      supabase.rpc("increment_install_count", { skill_id: skill.id }).then();
-    }
+
+  };
+
+  const copyRawMd = async () => {
+    if (!skill?.skill_md_content) return;
+    const body = skill.skill_md_content.replace(/^---[\s\S]*?---\n?/, "").trimStart();
+    await Clipboard.setStringAsync(body);
+    setCopiedRaw(true);
+    setTimeout(() => setCopiedRaw(false), 2500);
   };
 
   const share = async () => {
     if (!skill) return;
     await Share.share({
       title: skill.name,
+      // iOS: url 字段让微信显示为链接卡片而非纯文本
+      url: skill.github_url,
       message: `${skill.name} — ${skill.description_zh ?? skill.description}\n\n安装命令：${installCommand}`,
     });
   };
@@ -97,20 +118,25 @@ export default function SkillDetailScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <Stack.Screen options={{ title: "" }} />
+      <Stack.Screen options={{ title: "", headerBackTitle: "返回" }} />
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         <SafeAreaView edges={["top"]} className="px-5 pt-12">
           <View className="flex-row items-start justify-between">
             <View className="flex-1 pr-4">
               <Text className="text-xs uppercase tracking-widest text-text-subtle">
-                {skill.category}
+                {categoryName(skill.category)}
               </Text>
               <Text className="mt-1 text-3xl font-bold text-text">
                 {skill.name}
               </Text>
               <Text className="mt-1 text-sm text-text-muted">
-                作者：{skill.author}
+                作者：{formatAuthor(skill.author)}
               </Text>
+              {skill.published_at && (
+                <Text className="mt-0.5 text-xs text-text-subtle">
+                  发布于 {formatDate(skill.published_at)}
+                </Text>
+              )}
             </View>
             <Pressable
               hitSlop={12}
@@ -141,15 +167,6 @@ export default function SkillDetailScreen() {
               ))}
             </View>
           ) : null}
-
-          <View className="mt-5 flex-row items-center gap-3">
-            <View className="flex-row items-center">
-              <Ionicons name="download-outline" size={14} color="#9A9AA8" />
-              <Text className="ml-1 text-xs text-text-muted">
-                {skill.install_count.toLocaleString()} 次安装
-              </Text>
-            </View>
-          </View>
 
           {/* Agent selector tabs */}
           <View className="mt-5">
@@ -237,10 +254,43 @@ export default function SkillDetailScreen() {
           </View>
         )}
 
+        {skill.skill_md_summary_zh ? (
+          <View className="mt-6 px-5">
+            <Text className="mb-3 text-xs uppercase tracking-widest text-text-subtle">
+              中文摘要
+            </Text>
+            <View className="rounded-2xl border border-border-subtle bg-bg-card p-4">
+              <Text className="text-sm leading-6 text-text-muted">
+                {skill.skill_md_summary_zh}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         <View className="mt-6 px-5">
-          <Text className="mb-3 text-xs uppercase tracking-widest text-text-subtle">
-            SKILL.md
-          </Text>
+          <View className="mb-3 flex-row items-center justify-between">
+            <Text className="text-xs uppercase tracking-widest text-text-subtle">
+              SKILL.md
+            </Text>
+            {skill.skill_md_content ? (
+              <Pressable
+                onPress={copyRawMd}
+                hitSlop={8}
+                className="flex-row items-center active:opacity-60"
+              >
+                <Ionicons
+                  name={copiedRaw ? "checkmark-circle" : "copy-outline"}
+                  size={14}
+                  color={copiedRaw ? "#8AE6A6" : "#9A9AA8"}
+                />
+                <Text
+                  className={`ml-1 text-xs ${copiedRaw ? "text-[#8AE6A6]" : "text-text-muted"}`}
+                >
+                  {copiedRaw ? "已复制，可粘贴至翻译软件" : "复制原文"}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
           <View className="rounded-2xl border border-border-subtle bg-bg-card p-4">
             {skill.skill_md_content ? (
               <Markdown style={markdownStyles}>
@@ -282,7 +332,21 @@ const markdownStyles = {
     marginBottom: 4,
   },
   paragraph: { color: "#D8D8E0", marginTop: 4, marginBottom: 8 },
+  strong: { color: "#F5F5F7", fontWeight: "700" as const },
+  em: { color: "#D8D8E0", fontStyle: "italic" as const },
   bullet_list: { marginBottom: 8 },
+  ordered_list: { marginBottom: 8 },
+  list_item: { color: "#D8D8E0" },
+  blockquote: {
+    backgroundColor: "#14141B",
+    borderLeftColor: "#D97757",
+    borderLeftWidth: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginVertical: 8,
+    borderRadius: 4,
+  },
+  hr: { backgroundColor: "#2A2A35", height: 1, marginVertical: 12 },
   code_inline: {
     backgroundColor: "#14141B",
     color: "#E8A084",
@@ -291,19 +355,23 @@ const markdownStyles = {
     fontSize: 13,
   },
   code_block: {
-    backgroundColor: "#0B0B0F",
+    backgroundColor: "#14141B",
     color: "#F5F5F7",
     borderRadius: 8,
     padding: 12,
     fontSize: 13,
   },
   fence: {
-    backgroundColor: "#0B0B0F",
+    backgroundColor: "#14141B",
     color: "#F5F5F7",
     borderRadius: 8,
     padding: 12,
     fontSize: 13,
   },
   link: { color: "#D97757" },
-  list_item: { color: "#D8D8E0" },
+  table: { borderColor: "#2A2A35", marginVertical: 8 },
+  thead: { backgroundColor: "#14141B" },
+  th: { color: "#F5F5F7", fontWeight: "700" as const, padding: 8, borderColor: "#2A2A35" },
+  td: { color: "#D8D8E0", padding: 8, borderColor: "#2A2A35" },
+  tr: { borderColor: "#2A2A35" },
 };

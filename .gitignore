@@ -39,3 +39,9 @@ expo-env.d.ts
 
 # Misc
 coverage/
+
+# Sensitive credentials
+fastlane/asc_key.json
+
+# Archives
+*.zip

@@ -29,7 +29,6 @@ function skill(partial: Partial<Skill> & Pick<Skill, "id" | "slug" | "name">): S
     skill_md_content: null,
     rank: 0,
     score: 0,
-    install_count: 0,
     featured: false,
     created_at: now,
     updated_at: now,
