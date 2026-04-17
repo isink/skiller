@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const KEY = "iskill.favorites.v1";
+const KEY = "skiller.favorites.v1";
 
 // In-memory cache so reads stay synchronous once hydrated.
 let cached: string[] | null = null;

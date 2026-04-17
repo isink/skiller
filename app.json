@@ -4,7 +4,7 @@
     "slug": "skiller",
     "version": "0.1.0",
     "orientation": "portrait",
-    "scheme": "iskill",
+    "scheme": "skiller",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "icon": "./assets/icon.png",
@@ -14,14 +14,14 @@
     "ios": {
       "icon": "./assets/icon.png",
       "supportsTablet": true,
-      "bundleIdentifier": "com.iskill.app",
+      "bundleIdentifier": "com.skiller.app",
       "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.iskill.app",
+      "package": "com.skiller.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

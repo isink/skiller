@@ -45,7 +45,7 @@ function authHeaders(): HeadersInit {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
-    "User-Agent": "iskill-importer",
+    "User-Agent": "skiller-importer",
   };
   if (env.githubToken) headers.Authorization = `Bearer ${env.githubToken}`;
   return headers;

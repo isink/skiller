@@ -3,7 +3,7 @@ import { env } from "./env";
 function authHeaders(): Record<string, string> {
   const h: Record<string, string> = {
     Accept: "application/vnd.github+json",
-    "User-Agent": "iskill-importer",
+    "User-Agent": "skiller-importer",
     "X-GitHub-Api-Version": "2022-11-28",
   };
   if (env.githubToken) h.Authorization = `Bearer ${env.githubToken}`;

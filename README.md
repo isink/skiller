@@ -1,6 +1,6 @@
-# Iskill
+# Skiller
 
-A native mobile app for browsing [Claude Skills](https://docs.anthropic.com/claude/docs/skills). There isn't a dedicated mobile app in the ecosystem — the existing platforms (SkillHub, SkillsMP, etc.) are all web. Iskill fills that gap.
+A native mobile app for browsing [Claude Skills](https://docs.anthropic.com/claude/docs/skills). There isn't a dedicated mobile app in the ecosystem — the existing platforms (SkillHub, SkillsMP, etc.) are all web. Skiller fills that gap.
 
 ## Stack
 

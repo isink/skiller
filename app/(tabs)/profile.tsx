@@ -104,7 +104,7 @@ export default function ProfileScreen() {
               icon: "shield-checkmark",
               title: "隐私政策",
               onPress: () =>
-                Linking.openURL("https://isink.github.io/iskill_ios/privacy.html"),
+                Linking.openURL("https://isink.github.io/skiller/privacy.html"),
             },
           ]}
         />
