@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { FlatList, ScrollView, Text, View } from "react-native";
+import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { SearchBar } from "@/components/SearchBar";
 import { SkillCard } from "@/components/SkillCard";
 import { HotSkillCard } from "@/components/HotSkillCard";
@@ -107,14 +108,23 @@ export default function HomeScreen() {
 
   const hotSection = useMemo(() => (
     <View className="mb-2">
-      <View className="flex-row items-center gap-1.5 mb-3">
-        <Ionicons name="flame-outline" size={16} color="#D97757" />
-        <Text className="text-base font-bold text-text">热门技能</Text>
+      <View className="flex-row items-center justify-between mb-3">
+        <View className="flex-row items-center gap-1.5">
+          <Ionicons name="flame-outline" size={16} color="#D97757" />
+          <Text className="text-base font-bold text-text">热门技能</Text>
+        </View>
+        <Pressable
+          onPress={() => router.push("/(tabs)/explore")}
+          className="flex-row items-center gap-0.5 active:opacity-60"
+        >
+          <Text className="text-xs text-text-subtle">更多</Text>
+          <Ionicons name="chevron-forward" size={13} color="#6B6B78" />
+        </Pressable>
       </View>
       {loading ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {[...Array(4)].map((_, i) => (
-            <View key={i} className="mr-3 h-48 w-[220px] rounded-2xl bg-bg-elevated" />
+            <View key={i} className="mr-2.5 h-44 w-[160px] rounded-2xl bg-bg-elevated" />
           ))}
         </ScrollView>
       ) : (

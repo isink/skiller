@@ -4,76 +4,68 @@ import { Link } from "expo-router";
 import type { SkillListItem } from "@/types/skill";
 import { categoryName, categoryIcon } from "@/lib/categories";
 
-const CATEGORY_COLORS: Record<string, { bg: string; text: string; icon: string }> = {
-  official: { bg: "#3D2E1E", text: "#F5A07A", icon: "#D97757" },
-  code:     { bg: "#1A2535", text: "#7EB8F7", icon: "#5B9BD5" },
-  devops:   { bg: "#1E2A1E", text: "#8AE6A6", icon: "#5EC97A" },
-  data:     { bg: "#2A1E35", text: "#C4A8F0", icon: "#9B6FD4" },
-  design:   { bg: "#35201E", text: "#F0A8C4", icon: "#D46F9B" },
-  docs:     { bg: "#1E2A2A", text: "#7EE0E0", icon: "#3DBDBD" },
-  office:   { bg: "#2A2A1E", text: "#E0D87E", icon: "#BDBD3D" },
-  research: { bg: "#1E2535", text: "#7EB8F7", icon: "#5B9BD5" },
-  misc:     { bg: "#252525", text: "#A0A0A8", icon: "#6B6B78" },
+const CATEGORY_COLORS: Record<string, { bg: string; accent: string }> = {
+  official: { bg: "#2A1E14", accent: "#D97757" },
+  code:     { bg: "#111C2A", accent: "#5B9BD5" },
+  devops:   { bg: "#141F14", accent: "#5EC97A" },
+  data:     { bg: "#1E1428", accent: "#9B6FD4" },
+  design:   { bg: "#28141E", accent: "#D46F9B" },
+  docs:     { bg: "#141F1F", accent: "#3DBDBD" },
+  office:   { bg: "#1F1F14", accent: "#BDBD3D" },
+  research: { bg: "#141C28", accent: "#5B9BD5" },
+  misc:     { bg: "#1A1A1A", accent: "#6B6B78" },
 };
 
 function formatStars(n: number | null): string | null {
-  if (n === null || n === undefined) return null;
+  if (n == null) return null;
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
   return String(n);
 }
 
 export function HotSkillCard({ skill, rank }: { skill: SkillListItem; rank: number }) {
-  const colors = CATEGORY_COLORS[skill.category] ?? CATEGORY_COLORS.misc;
+  const { bg, accent } = CATEGORY_COLORS[skill.category] ?? CATEGORY_COLORS.misc;
   const stars = formatStars(skill.github_stars);
-  const desc = skill.description_zh ?? skill.description;
 
   return (
     <Link href={`/skill/${skill.id}`} asChild>
       <Pressable
-        style={{ width: 220 }}
-        className="mr-3 rounded-2xl border border-border-subtle p-4 active:opacity-70"
-        // inline style so backgroundColor supports dynamic value
-        // (NativeWind arbitrary values require extra config)
+        style={{ width: 160, backgroundColor: bg }}
+        className="mr-2.5 rounded-2xl border border-white/8 p-3.5 active:opacity-70"
       >
-        <View
-          style={{ backgroundColor: colors.bg }}
-          className="absolute inset-0 rounded-2xl"
-        />
-
-        {/* Rank badge */}
-        <View className="mb-3 flex-row items-center justify-between">
-          <View className="rounded-full bg-white/10 px-2 py-0.5">
-            <Text className="text-[11px] font-bold text-white/60">#{rank}</Text>
-          </View>
+        {/* Top row: rank + stars */}
+        <View className="mb-2.5 flex-row items-center justify-between">
+          <Text className="text-[10px] font-bold" style={{ color: `${accent}99` }}>
+            #{rank}
+          </Text>
           {stars && (
-            <View className="flex-row items-center gap-1">
-              <Ionicons name="star" size={11} color="#F5C842" />
-              <Text className="text-[11px] text-white/60">{stars}</Text>
+            <View className="flex-row items-center gap-0.5">
+              <Ionicons name="star" size={9} color="#F5C842" />
+              <Text className="text-[10px] text-white/40">{stars}</Text>
             </View>
           )}
         </View>
 
-        {/* Category icon */}
+        {/* Icon */}
         <View
-          className="mb-3 h-10 w-10 items-center justify-center rounded-xl"
-          style={{ backgroundColor: `${colors.icon}25` }}
+          className="mb-2.5 h-8 w-8 items-center justify-center rounded-xl"
+          style={{ backgroundColor: `${accent}22` }}
         >
-          <Ionicons name={categoryIcon(skill.category) as any} size={20} color={colors.icon} />
+          <Ionicons name={categoryIcon(skill.category) as any} size={16} color={accent} />
         </View>
 
         {/* Name */}
-        <Text className="text-sm font-bold text-white" numberOfLines={1}>
+        <Text className="text-[13px] font-semibold text-white/90" numberOfLines={1}>
           {skill.name}
         </Text>
 
-        {/* Category label */}
-        <Text style={{ color: colors.text }} className="mt-0.5 text-[11px] font-medium">
+        {/* Category */}
+        <Text className="mt-0.5 text-[10px] font-medium" style={{ color: accent }} numberOfLines={1}>
           {categoryName(skill.category)}
         </Text>
 
         {/* Description */}
-        <Text className="mt-2 text-xs leading-4 text-white/50" numberOfLines={3}>
-          {desc}
+        <Text className="mt-1.5 text-[11px] leading-[15px] text-white/40" numberOfLines={3}>
+          {skill.description_zh ?? skill.description}
         </Text>
       </Pressable>
     </Link>
