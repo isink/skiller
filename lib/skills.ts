@@ -128,6 +128,22 @@ export async function fetchSkillById(id: string): Promise<Skill | null> {
   return (data ?? null) as Skill | null;
 }
 
+export async function fetchNewCountsByCategory(
+  since: string,
+): Promise<Record<string, number>> {
+  if (!isSupabaseConfigured) return {};
+  const { data, error } = await supabase
+    .from("skills")
+    .select("category")
+    .gt("created_at", since);
+  if (error) throw error;
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    counts[row.category] = (counts[row.category] ?? 0) + 1;
+  }
+  return counts;
+}
+
 export async function fetchCategories(): Promise<Category[]> {
   if (!isSupabaseConfigured) {
     return SAMPLE_CATEGORIES;

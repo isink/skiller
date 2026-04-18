@@ -5,11 +5,12 @@ type Props = {
   label: string;
   icon?: string;
   count?: number;
+  newCount?: number;
   active?: boolean;
   onPress?: () => void;
 };
 
-export function CategoryChip({ label, icon, count, active, onPress }: Props) {
+export function CategoryChip({ label, icon, count, newCount, active, onPress }: Props) {
   const iconColor = active ? "#F5A07A" : "#6B6B78";
   return (
     <Pressable
@@ -47,6 +48,13 @@ export function CategoryChip({ label, icon, count, active, onPress }: Props) {
             }`}
           >
             {count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count}
+          </Text>
+        </View>
+      )}
+      {newCount !== undefined && newCount > 0 && (
+        <View className="ml-1 rounded-full bg-green-500/90 px-1.5 py-0.5">
+          <Text className="text-[10px] font-bold text-white">
+            +{newCount >= 1000 ? `${(newCount / 1000).toFixed(1)}k` : newCount}
           </Text>
         </View>
       )}

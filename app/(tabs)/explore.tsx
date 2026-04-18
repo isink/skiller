@@ -11,7 +11,9 @@ import {
   fetchSkillsByCategory,
   fetchAllSkills,
   fetchCategoryCounts,
+  fetchNewCountsByCategory,
 } from "@/lib/skills";
+import { getLastSeenAt, updateLastSeenAt } from "@/lib/lastSeen";
 import type { Category, SkillListItem } from "@/types/skill";
 
 const ALL_SLUG = "__all__";
@@ -20,6 +22,7 @@ const PAGE_SIZE = 50;
 export default function ExploreScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [newCounts, setNewCounts] = useState<Record<string, number>>({});
   const [active, setActive] = useState<string>(ALL_SLUG);
   const [skills, setSkills] = useState<SkillListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,10 +32,22 @@ export default function ExploreScreen() {
   const loadingMoreRef = useRef(false);
 
   useEffect(() => {
-    Promise.all([fetchCategories(), fetchCategoryCounts()]).then(([c, cnt]) => {
+    async function load() {
+      const [c, cnt, lastSeen] = await Promise.all([
+        fetchCategories(),
+        fetchCategoryCounts(),
+        getLastSeenAt(),
+      ]);
       setCategories(c);
       setCounts(cnt);
-    });
+      if (lastSeen) {
+        const nc = await fetchNewCountsByCategory(lastSeen);
+        setNewCounts(nc);
+      }
+      // Update lastSeenAt after loading so next open shows newer items
+      updateLastSeenAt();
+    }
+    load();
   }, []);
 
   const loadPage = useCallback(async (slug: string, offset: number) => {
@@ -98,6 +113,7 @@ export default function ExploreScreen() {
               label={categoryName(c.slug)}
               icon={categoryIcon(c.slug)}
               count={counts[c.slug]}
+              newCount={newCounts[c.slug]}
               active={c.slug === active}
               onPress={() => setActive(c.slug)}
             />
