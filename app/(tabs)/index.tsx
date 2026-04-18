@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { SearchBar } from "@/components/SearchBar";
 import { SkillCard } from "@/components/SkillCard";
+import { HotSkillCard } from "@/components/HotSkillCard";
 import { SkillListSkeleton } from "@/components/SkillCardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { fetchHotSkills, fetchHomeStats, searchSkills, type HomeStats } from "@/lib/skills";
@@ -111,9 +112,21 @@ export default function HomeScreen() {
         <Text className="text-base font-bold text-text">热门技能</Text>
       </View>
       {loading ? (
-        <SkillListSkeleton count={5} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {[...Array(4)].map((_, i) => (
+            <View key={i} className="mr-3 h-48 w-[220px] rounded-2xl bg-bg-elevated" />
+          ))}
+        </ScrollView>
       ) : (
-        hotSkills.map((skill) => <SkillCard key={skill.id} skill={skill} />)
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingRight: 16 }}
+        >
+          {hotSkills.map((skill, i) => (
+            <HotSkillCard key={skill.id} skill={skill} rank={i + 1} />
+          ))}
+        </ScrollView>
       )}
     </View>
   ), [hotSkills, loading]);
