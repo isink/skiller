@@ -6,7 +6,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { SkillCard } from "@/components/SkillCard";
 import { SkillListSkeleton } from "@/components/SkillCardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
-import { fetchHotSkills, fetchNewSkills, fetchHomeStats, searchSkills, type HomeStats } from "@/lib/skills";
+import { fetchHotSkills, fetchHomeStats, searchSkills, type HomeStats } from "@/lib/skills";
 import type { SkillListItem } from "@/types/skill";
 
 function timeAgoShort(dateStr: string): string {
@@ -39,7 +39,6 @@ function StatCard({ icon, value, label, accent }: {
 export default function HomeScreen() {
   const [query, setQuery] = useState("");
   const [hotSkills, setHotSkills] = useState<SkillListItem[]>([]);
-  const [newSkills, setNewSkills] = useState<SkillListItem[]>([]);
   const [stats, setStats] = useState<HomeStats | null>(null);
   const [results, setResults] = useState<SkillListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,11 +46,9 @@ export default function HomeScreen() {
   useEffect(() => {
     Promise.all([
       fetchHotSkills(20),
-      fetchNewSkills(10),
       fetchHomeStats(),
-    ]).then(([hot, newest, s]) => {
+    ]).then(([hot, s]) => {
       setHotSkills(hot);
-      setNewSkills(newest);
       setStats(s);
     }).finally(() => setLoading(false));
   }, []);
@@ -121,20 +118,7 @@ export default function HomeScreen() {
     </View>
   ), [hotSkills, loading]);
 
-  const newSection = useMemo(() => {
-    if (newSkills.length === 0) return null;
-    return (
-      <View className="mb-2 mt-4">
-        <View className="flex-row items-center gap-1.5 mb-3">
-          <Ionicons name="time-outline" size={16} color="#6B6B78" />
-          <Text className="text-base font-bold text-text">最近添加</Text>
-        </View>
-        {newSkills.map((skill) => <SkillCard key={skill.id} skill={skill} />)}
-      </View>
-    );
-  }, [newSkills]);
-
-  if (showingSearch) {
+if (showingSearch) {
     return (
       <SafeAreaView edges={["bottom"]} className="flex-1 bg-bg">
         <FlatList
@@ -166,7 +150,6 @@ export default function HomeScreen() {
       >
         {banner}
         {hotSection}
-        {newSection}
       </ScrollView>
     </SafeAreaView>
   );
