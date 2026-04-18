@@ -3,7 +3,7 @@ import { SAMPLE_CATEGORIES, SAMPLE_SKILLS } from "./sample-data";
 import type { Category, Skill, SkillListItem } from "@/types/skill";
 
 const SKILL_LIST_COLUMNS =
-  "id, slug, name, description, description_zh, category, tags, use_cases, author, rank, score, featured, created_at, published_at";
+  "id, slug, name, description, description_zh, category, tags, use_cases, author, github_stars, rank, score, featured, created_at, published_at";
 
 export async function fetchCategoryCounts(): Promise<Record<string, number>> {
   if (!isSupabaseConfigured) {
@@ -169,8 +169,7 @@ export async function fetchHotSkills(limit = 20): Promise<SkillListItem[]> {
   const { data, error } = await supabase
     .from("skills")
     .select(SKILL_LIST_COLUMNS)
-    .order("rank", { ascending: false })
-    .order("score", { ascending: false })
+    .order("github_stars", { ascending: false, nullsFirst: false })
     .limit(limit);
   if (error) throw error;
   return (data ?? []) as SkillListItem[];

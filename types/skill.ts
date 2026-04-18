@@ -19,6 +19,7 @@ export type Skill = {
   skill_md_content: string | null;
   skill_md_summary_zh: string | null;
   published_at: string | null;
+  github_stars: number | null;
   rank: number;
   score: number;
   featured: boolean;
@@ -37,6 +38,7 @@ export type SkillListItem = Pick<
   | "tags"
   | "use_cases"
   | "author"
+  | "github_stars"
   | "rank"
   | "score"
   | "featured"
