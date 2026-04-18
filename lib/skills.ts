@@ -11,11 +11,11 @@ export async function fetchCategoryCounts(): Promise<Record<string, number>> {
     for (const s of SAMPLE_SKILLS) counts[s.category] = (counts[s.category] ?? 0) + 1;
     return counts;
   }
-  const { data, error } = await supabase.from("skills").select("category").limit(9999);
+  const { data, error } = await supabase.rpc("get_category_counts");
   if (error) throw error;
   const counts: Record<string, number> = {};
-  for (const row of data ?? []) {
-    counts[row.category] = (counts[row.category] ?? 0) + 1;
+  for (const row of (data ?? []) as { category: string; count: number }[]) {
+    counts[row.category] = Number(row.count);
   }
   return counts;
 }
