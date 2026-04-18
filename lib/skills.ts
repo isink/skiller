@@ -128,6 +128,54 @@ export async function fetchSkillById(id: string): Promise<Skill | null> {
   return (data ?? null) as Skill | null;
 }
 
+export type HomeStats = {
+  total: number;
+  newToday: number;
+  lastSyncAt: string | null;
+};
+
+export async function fetchHomeStats(): Promise<HomeStats> {
+  if (!isSupabaseConfigured) {
+    return { total: SAMPLE_SKILLS.length, newToday: 0, lastSyncAt: null };
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [{ count: total }, { count: newToday }, lastRow] = await Promise.all([
+    supabase.from("skills").select("*", { count: "exact", head: true }),
+    supabase
+      .from("skills")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", today.toISOString()),
+    supabase
+      .from("skills")
+      .select("created_at")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  return {
+    total: total ?? 0,
+    newToday: newToday ?? 0,
+    lastSyncAt: lastRow.data?.created_at ?? null,
+  };
+}
+
+export async function fetchHotSkills(limit = 20): Promise<SkillListItem[]> {
+  if (!isSupabaseConfigured) {
+    return [...SAMPLE_SKILLS].sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0)).slice(0, limit);
+  }
+  const { data, error } = await supabase
+    .from("skills")
+    .select(SKILL_LIST_COLUMNS)
+    .order("rank", { ascending: false })
+    .order("score", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as SkillListItem[];
+}
+
 export async function fetchNewCountsByCategory(
   since: string,
 ): Promise<Record<string, number>> {
