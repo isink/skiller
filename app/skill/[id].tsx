@@ -12,7 +12,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import Markdown from "react-native-markdown-display";
-import { fetchSkillById } from "@/lib/skills";
+import { fetchSkillById, incrementInstallCount } from "@/lib/skills";
 import { categoryName } from "@/lib/categories";
 import { useIsFavorite } from "@/lib/favorites";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
@@ -72,7 +72,7 @@ export default function SkillDetailScreen() {
     await Clipboard.setStringAsync(installCommand);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
-
+    incrementInstallCount(skill.id);
   };
 
   const copyRawMd = async () => {

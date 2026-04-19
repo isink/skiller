@@ -5,6 +5,7 @@ import { Link } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import type { SkillListItem } from "@/types/skill";
 import { useIsFavorite } from "@/lib/favorites";
+import { incrementInstallCount } from "@/lib/skills";
 
 function timeAgo(dateStr: string): string {
   const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
@@ -41,6 +42,7 @@ export function SkillCard({
     await Clipboard.setStringAsync(installCommand);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
+    incrementInstallCount(skill.id);
   };
 
   return (

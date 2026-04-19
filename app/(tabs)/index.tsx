@@ -56,10 +56,13 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
     if (!query.trim()) { setResults([]); return; }
-    searchSkills(query).then((r) => { if (!cancelled) setResults(r); });
-    return () => { cancelled = true; };
+    const timer = setTimeout(() => {
+      let cancelled = false;
+      searchSkills(query).then((r) => { if (!cancelled) setResults(r); });
+      return () => { cancelled = true; };
+    }, 300);
+    return () => clearTimeout(timer);
   }, [query]);
 
   const showingSearch = query.trim().length > 0;

@@ -23,6 +23,7 @@ export type Skill = {
   rank: number;
   score: number;
   featured: boolean;
+  install_count: number;
   created_at: string;
   updated_at: string;
 };

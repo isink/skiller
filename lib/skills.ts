@@ -108,7 +108,7 @@ export async function searchSkills(query: string): Promise<SkillListItem[]> {
   const { data, error } = await supabase
     .from("skills")
     .select(SKILL_LIST_COLUMNS)
-    .or(`name.ilike.%${q}%,description.ilike.%${q}%`)
+    .or(`name.ilike.%${q}%,description.ilike.%${q}%,description_zh.ilike.%${q}%,author.ilike.%${q}%`)
     .order("rank", { ascending: false })
     .limit(50);
   if (error) throw error;
@@ -179,17 +179,44 @@ export async function fetchNewCountsByCategory(
   since: string,
 ): Promise<Record<string, number>> {
   if (!isSupabaseConfigured) return {};
-  const { data, error } = await supabase
+  // Use server-side RPC when available, fall back to a lightweight select
+  const { data, error } = await supabase.rpc("get_new_counts_by_category", { since });
+  if (!error && data) {
+    const counts: Record<string, number> = {};
+    for (const row of data as { category: string; count: number }[]) {
+      counts[row.category] = Number(row.count);
+    }
+    return counts;
+  }
+  // Fallback: fetch only the category column (lightweight)
+  const { data: rows } = await supabase
     .from("skills")
     .select("category")
-    .gt("created_at", since);
-  if (error) throw error;
+    .gt("created_at", since)
+    .limit(2000);
   const counts: Record<string, number> = {};
-  for (const row of data ?? []) {
+  for (const row of rows ?? []) {
     counts[row.category] = (counts[row.category] ?? 0) + 1;
   }
   return counts;
 }
+
+export async function incrementInstallCount(id: string): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  // Try RPC first (atomic increment); fall back to read-modify-write
+  const { error } = await supabase.rpc("increment_install_count", { skill_id: id });
+  if (error) {
+    const { data } = await supabase.from("skills").select("install_count").eq("id", id).maybeSingle();
+    if (data) {
+      await supabase.from("skills").update({ install_count: (data.install_count ?? 0) + 1 }).eq("id", id);
+    }
+  }
+}
+
+const CATEGORY_ORDER = [
+  "official", "ai", "code", "data", "devops", "security",
+  "design", "docs", "office", "research", "misc",
+];
 
 export async function fetchCategories(): Promise<Category[]> {
   if (!isSupabaseConfigured) {
@@ -197,8 +224,12 @@ export async function fetchCategories(): Promise<Category[]> {
   }
   const { data, error } = await supabase
     .from("categories")
-    .select("id, slug, name, icon")
-    .order("name", { ascending: true });
+    .select("id, slug, name, icon");
   if (error) throw error;
-  return (data ?? []) as Category[];
+  const rows = (data ?? []) as Category[];
+  return rows.sort(
+    (a, b) =>
+      (CATEGORY_ORDER.indexOf(a.slug) + 1 || 999) -
+      (CATEGORY_ORDER.indexOf(b.slug) + 1 || 999),
+  );
 }
