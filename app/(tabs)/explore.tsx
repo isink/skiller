@@ -30,6 +30,7 @@ export default function ExploreScreen() {
   const [hasMore, setHasMore] = useState(true);
   const offsetRef = useRef(0);
   const loadingMoreRef = useRef(false);
+  const genRef = useRef(0);
 
   useEffect(() => {
     async function load() {
@@ -57,12 +58,14 @@ export default function ExploreScreen() {
 
   // Reset and load first page when active tab changes
   useEffect(() => {
+    const gen = ++genRef.current;
     setLoading(true);
     setSkills([]);
     setHasMore(true);
     offsetRef.current = 0;
     loadingMoreRef.current = false;
     loadPage(active, 0).then((page) => {
+      if (gen !== genRef.current) return;
       setSkills(page);
       setHasMore(page.length === PAGE_SIZE);
       offsetRef.current = page.length;
@@ -73,8 +76,14 @@ export default function ExploreScreen() {
   const loadMore = useCallback(() => {
     if (loadingMoreRef.current || !hasMore) return;
     loadingMoreRef.current = true;
+    const gen = genRef.current;
     setLoadingMore(true);
     loadPage(active, offsetRef.current).then((page) => {
+      if (gen !== genRef.current) {
+        loadingMoreRef.current = false;
+        setLoadingMore(false);
+        return;
+      }
       setSkills((prev) => {
         const existingIds = new Set(prev.map((s) => s.id));
         const fresh = page.filter((s) => !existingIds.has(s.id));

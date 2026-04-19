@@ -105,10 +105,12 @@ export async function searchSkills(query: string): Promise<SkillListItem[]> {
         s.tags.some((t) => t.toLowerCase().includes(q)),
     );
   }
+  const safe = q.replace(/[,()*"]/g, " ").replace(/\s+/g, " ").trim();
+  if (!safe) return [];
   const { data, error } = await supabase
     .from("skills")
     .select(SKILL_LIST_COLUMNS)
-    .or(`name.ilike.%${q}%,description.ilike.%${q}%,description_zh.ilike.%${q}%,author.ilike.%${q}%`)
+    .or(`name.ilike.%${safe}%,description.ilike.%${safe}%,description_zh.ilike.%${safe}%,author.ilike.%${safe}%`)
     .order("rank", { ascending: false })
     .limit(50);
   if (error) throw error;

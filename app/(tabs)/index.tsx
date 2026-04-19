@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -44,25 +44,29 @@ export default function HomeScreen() {
   const [stats, setStats] = useState<HomeStats | null>(null);
   const [results, setResults] = useState<SkillListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
-    Promise.all([
-      fetchHotSkills(20),
-      fetchHomeStats(),
-    ]).then(([hot, s]) => {
-      setHotSkills(hot);
-      setStats(s);
-    }).finally(() => setLoading(false));
+  const loadHome = useCallback(() => {
+    setLoading(true);
+    setLoadError(false);
+    Promise.all([fetchHotSkills(20), fetchHomeStats()])
+      .then(([hot, s]) => {
+        setHotSkills(hot);
+        setStats(s);
+      })
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadHome(); }, [loadHome]);
 
   useEffect(() => {
     if (!query.trim()) { setResults([]); return; }
+    let cancelled = false;
     const timer = setTimeout(() => {
-      let cancelled = false;
       searchSkills(query).then((r) => { if (!cancelled) setResults(r); });
-      return () => { cancelled = true; };
     }, 300);
-    return () => clearTimeout(timer);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [query]);
 
   const showingSearch = query.trim().length > 0;
@@ -130,6 +134,18 @@ export default function HomeScreen() {
             <View key={i} className="mr-2.5 h-44 w-[160px] rounded-2xl bg-bg-elevated" />
           ))}
         </ScrollView>
+      ) : loadError ? (
+        <View className="items-center rounded-2xl border border-border-subtle bg-bg-card px-4 py-6">
+          <Ionicons name="cloud-offline-outline" size={28} color="#9A9AA8" />
+          <Text className="mt-2 text-sm text-text-muted">加载失败，请检查网络</Text>
+          <Pressable
+            onPress={loadHome}
+            className="mt-3 flex-row items-center gap-1 rounded-full bg-brand px-4 py-2 active:opacity-70"
+          >
+            <Ionicons name="refresh" size={14} color="#fff" />
+            <Text className="text-xs font-semibold text-white">重试</Text>
+          </Pressable>
+        </View>
       ) : (
         <ScrollView
           horizontal
@@ -142,7 +158,7 @@ export default function HomeScreen() {
         </ScrollView>
       )}
     </View>
-  ), [hotSkills, loading]);
+  ), [hotSkills, loading, loadError, loadHome]);
 
 if (showingSearch) {
     return (
