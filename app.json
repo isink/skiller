@@ -2,7 +2,7 @@
   "expo": {
     "name": "Skiller",
     "slug": "skiller",
-    "version": "0.2.0",
+    "version": "1.2",
     "orientation": "portrait",
     "scheme": "skiller",
     "userInterfaceStyle": "automatic",
@@ -15,7 +15,7 @@
       "icon": "./assets/icon.png",
       "supportsTablet": true,
       "bundleIdentifier": "com.iskill.app",
-      "buildNumber": "8",
+      "buildNumber": "11",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
