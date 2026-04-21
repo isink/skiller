@@ -45,3 +45,8 @@ fastlane/asc_key.json
 
 # Archives
 *.zip
+*.tar.gz
+
+# Local build artifacts
+Skiller.app/
+build-*.tar.gz

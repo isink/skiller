@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import Markdown from "react-native-markdown-display";
 import { fetchSkillById, incrementInstallCount } from "@/lib/skills";
+import BannerAdView from "@/components/BannerAdView";
 import { categoryName } from "@/lib/categories";
 import { useIsFavorite } from "@/lib/favorites";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
@@ -234,6 +235,10 @@ export default function SkillDetailScreen() {
               分享
             </Text>
           </Pressable>
+
+          <View className="mt-4">
+            <BannerAdView />
+          </View>
         </SafeAreaView>
 
         {skill.use_cases && skill.use_cases.length > 0 && (
