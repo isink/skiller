@@ -50,3 +50,4 @@ fastlane/asc_key.json
 # Local build artifacts
 Skiller.app/
 build-*.tar.gz
+logs/

@@ -22,6 +22,12 @@ function formatAuthor(author: string): string {
   return author;
 }
 
+function formatStars(n: number): string {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return `${n}`;
+}
+
 export function SkillCard({
   skill,
   showInstall = false,
@@ -60,9 +66,20 @@ export function SkillCard({
                 </View>
               )}
             </View>
-            <Text className="mt-0.5 text-xs text-text-subtle">
-              {formatAuthor(skill.author)} · {timeAgo(skill.published_at ?? skill.created_at)}
-            </Text>
+            <View className="mt-0.5 flex-row items-center gap-1">
+              {skill.github_stars != null && skill.github_stars > 0 && (
+                <>
+                  <Ionicons name="star" size={11} color="#F5B400" />
+                  <Text className="text-xs text-text-subtle">
+                    {formatStars(skill.github_stars)}
+                  </Text>
+                  <Text className="text-xs text-text-subtle">·</Text>
+                </>
+              )}
+              <Text className="text-xs text-text-subtle">
+                {formatAuthor(skill.author)} · {timeAgo(skill.published_at ?? skill.created_at)}
+              </Text>
+            </View>
           </View>
           <Pressable
             hitSlop={12}

@@ -1,17 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { categoryName, categoryIcon } from "@/lib/categories";
-import { ActivityIndicator, FlatList, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
 import { SkillCard } from "@/components/SkillCard";
+import { RepoGroupCard } from "@/components/RepoGroupCard";
 import { CategoryChip } from "@/components/CategoryChip";
 import { SkillListSkeleton } from "@/components/SkillCardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import {
   fetchCategories,
   fetchSkillsByCategory,
-  fetchAllSkills,
+  fetchRepoGroups,
   fetchCategoryCounts,
   fetchNewCountsByCategory,
+  type RepoGroupSummary,
 } from "@/lib/skills";
 import { getLastSeenAt, updateLastSeenAt } from "@/lib/lastSeen";
 import type { Category, SkillListItem } from "@/types/skill";
@@ -19,18 +23,32 @@ import type { Category, SkillListItem } from "@/types/skill";
 const ALL_SLUG = "__all__";
 const PAGE_SIZE = 50;
 
+type Item =
+  | { kind: "group"; data: RepoGroupSummary }
+  | { kind: "skill"; data: SkillListItem };
+
 export default function ExploreScreen() {
+  const params = useLocalSearchParams<{ category?: string }>();
   const [categories, setCategories] = useState<Category[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [newCounts, setNewCounts] = useState<Record<string, number>>({});
-  const [active, setActive] = useState<string>(ALL_SLUG);
-  const [skills, setSkills] = useState<SkillListItem[]>([]);
+  const [active, setActive] = useState<string>(params.category ?? ALL_SLUG);
+
+  useEffect(() => {
+    if (params.category && params.category !== active) {
+      setActive(params.category);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.category]);
+  const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const offsetRef = useRef(0);
   const loadingMoreRef = useRef(false);
   const genRef = useRef(0);
+  const listRef = useRef<FlatList<Item>>(null);
+  const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -45,28 +63,30 @@ export default function ExploreScreen() {
         const nc = await fetchNewCountsByCategory(lastSeen);
         setNewCounts(nc);
       }
-      // Update lastSeenAt after loading so next open shows newer items
       updateLastSeenAt();
     }
     load();
   }, []);
 
-  const loadPage = useCallback(async (slug: string, offset: number) => {
-    if (slug === ALL_SLUG) return fetchAllSkills(offset, PAGE_SIZE);
-    return fetchSkillsByCategory(slug, offset, PAGE_SIZE);
+  const loadPage = useCallback(async (slug: string, offset: number): Promise<Item[]> => {
+    if (slug === ALL_SLUG) {
+      const groups = await fetchRepoGroups(offset, PAGE_SIZE);
+      return groups.map((g) => ({ kind: "group", data: g } as Item));
+    }
+    const skills = await fetchSkillsByCategory(slug, offset, PAGE_SIZE);
+    return skills.map((s) => ({ kind: "skill", data: s } as Item));
   }, []);
 
-  // Reset and load first page when active tab changes
   useEffect(() => {
     const gen = ++genRef.current;
     setLoading(true);
-    setSkills([]);
+    setItems([]);
     setHasMore(true);
     offsetRef.current = 0;
     loadingMoreRef.current = false;
     loadPage(active, 0).then((page) => {
       if (gen !== genRef.current) return;
-      setSkills(page);
+      setItems(page);
       setHasMore(page.length === PAGE_SIZE);
       offsetRef.current = page.length;
       setLoading(false);
@@ -84,9 +104,13 @@ export default function ExploreScreen() {
         setLoadingMore(false);
         return;
       }
-      setSkills((prev) => {
-        const existingIds = new Set(prev.map((s) => s.id));
-        const fresh = page.filter((s) => !existingIds.has(s.id));
+      setItems((prev) => {
+        const seen = new Set(
+          prev.map((x) => (x.kind === "group" ? `g:${x.data.repo}` : `s:${x.data.id}`)),
+        );
+        const fresh = page.filter(
+          (x) => !seen.has(x.kind === "group" ? `g:${x.data.repo}` : `s:${x.data.id}`),
+        );
         return [...prev, ...fresh];
       });
       setHasMore(page.length === PAGE_SIZE);
@@ -130,19 +154,33 @@ export default function ExploreScreen() {
         </ScrollView>
       </View>
     ),
-    [categories, counts, active, totalCount],
+    [categories, counts, active, totalCount, newCounts],
   );
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-bg">
       <FlatList
+        ref={listRef}
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         ListHeaderComponent={header}
-        data={skills}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <SkillCard skill={item} />}
+        data={items}
+        keyExtractor={(item) =>
+          item.kind === "group" ? `g:${item.data.repo}` : `s:${item.data.id}`
+        }
+        renderItem={({ item }) =>
+          item.kind === "group" ? (
+            <RepoGroupCard group={item.data} />
+          ) : (
+            <SkillCard skill={item.data} />
+          )
+        }
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
+        onScroll={(e) => {
+          const y = e.nativeEvent.contentOffset.y;
+          setShowTop(y > 600);
+        }}
+        scrollEventThrottle={200}
         ListFooterComponent={
           loadingMore ? (
             <View className="py-4">
@@ -158,6 +196,14 @@ export default function ExploreScreen() {
           )
         }
       />
+      {showTop && (
+        <Pressable
+          onPress={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })}
+          className="absolute bottom-6 right-4 h-11 w-11 items-center justify-center rounded-full bg-brand shadow-lg active:opacity-70"
+        >
+          <Ionicons name="arrow-up" size={22} color="#fff" />
+        </Pressable>
+      )}
     </SafeAreaView>
   );
 }

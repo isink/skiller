@@ -15,8 +15,11 @@
     "import:discover": "tsx scripts/import/import-github-search.ts",
     "import:all": "npm run import:antigravity && npm run import:anthropic && npm run import:discover",
     "enrich:skills": "tsx scripts/enrich/enrich-skills.ts",
+    "backfill:stars": "tsx scripts/enrich/backfill-github-stars.ts",
+    "backfill:stars:local": "https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 npm run backfill:stars",
     "reclassify": "tsx scripts/import/reclassify-misc.ts",
-    "sync": "npm run import:all && npm run reclassify && npm run enrich:skills"
+    "sync": "npm run import:all && npm run reclassify && npm run enrich:skills",
+    "sync:local": "https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 npm run sync"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

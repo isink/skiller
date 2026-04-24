@@ -3,7 +3,7 @@ import { SAMPLE_CATEGORIES, SAMPLE_SKILLS } from "./sample-data";
 import type { Category, Skill, SkillListItem } from "@/types/skill";
 
 const SKILL_LIST_COLUMNS =
-  "id, slug, name, description, description_zh, category, tags, use_cases, author, github_stars, rank, score, featured, created_at, published_at";
+  "id, slug, name, description, description_zh, category, tags, use_cases, author, github_url, github_stars, rank, score, featured, created_at, published_at";
 
 export async function fetchCategoryCounts(): Promise<Record<string, number>> {
   if (!isSupabaseConfigured) {
@@ -34,12 +34,73 @@ export async function fetchOfficialSkills(offset = 0, limit = 50): Promise<Skill
   return (data ?? []) as SkillListItem[];
 }
 
-export async function fetchAllSkills(offset = 0, limit = 50): Promise<SkillListItem[]> {
-  if (!isSupabaseConfigured) return SAMPLE_SKILLS.slice(offset, offset + limit);
+export type RepoGroupSummary = {
+  repo: string;
+  author: string;
+  stars: number | null;
+  skill_count: number;
+  rep_skill_id: string;
+};
+
+export async function fetchRepoGroups(
+  offset = 0,
+  limit = 30,
+): Promise<RepoGroupSummary[]> {
+  if (!isSupabaseConfigured) {
+    const byRepo = new Map<string, RepoGroupSummary>();
+    for (const s of SAMPLE_SKILLS) {
+      const m = (s.github_url ?? "").match(/github\.com\/([^/]+\/[^/?#]+)/);
+      const repo = m ? m[1].replace(/\.git$/, "") : s.id;
+      const g = byRepo.get(repo);
+      if (g) {
+        g.skill_count += 1;
+      } else {
+        byRepo.set(repo, {
+          repo,
+          author: s.author,
+          stars: s.github_stars,
+          skill_count: 1,
+          rep_skill_id: s.id,
+        });
+      }
+    }
+    return [...byRepo.values()]
+      .sort((a, b) => (b.stars ?? 0) - (a.stars ?? 0))
+      .slice(offset, offset + limit);
+  }
+  const { data, error } = await supabase.rpc("get_repo_groups", {
+    p_category: null,
+    p_offset: offset,
+    p_limit: limit,
+  });
+  if (error) throw error;
+  return (data ?? []) as RepoGroupSummary[];
+}
+
+export async function fetchSkillsInRepo(repo: string): Promise<SkillListItem[]> {
+  if (!isSupabaseConfigured) {
+    return SAMPLE_SKILLS.filter((s) => (s.github_url ?? "").includes(`github.com/${repo}`));
+  }
   const { data, error } = await supabase
     .from("skills")
     .select(SKILL_LIST_COLUMNS)
-    .order("rank", { ascending: false })
+    .ilike("github_url", `%github.com/${repo}/%`)
+    .order("featured", { ascending: false })
+    .order("rank", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as SkillListItem[];
+}
+
+export async function fetchAllSkills(offset = 0, limit = 50): Promise<SkillListItem[]> {
+  if (!isSupabaseConfigured) {
+    return [...SAMPLE_SKILLS]
+      .sort((a, b) => (b.github_stars ?? 0) - (a.github_stars ?? 0))
+      .slice(offset, offset + limit);
+  }
+  const { data, error } = await supabase
+    .from("skills")
+    .select(SKILL_LIST_COLUMNS)
+    .order("github_stars", { ascending: false, nullsFirst: false })
     .range(offset, offset + limit - 1);
   if (error) throw error;
   return (data ?? []) as SkillListItem[];
@@ -82,13 +143,15 @@ export async function fetchSkillsByCategory(
   limit = 50,
 ): Promise<SkillListItem[]> {
   if (!isSupabaseConfigured) {
-    return SAMPLE_SKILLS.filter((s) => s.category === category).slice(offset, offset + limit);
+    return SAMPLE_SKILLS.filter((s) => s.category === category)
+      .sort((a, b) => (b.github_stars ?? 0) - (a.github_stars ?? 0))
+      .slice(offset, offset + limit);
   }
   const { data, error } = await supabase
     .from("skills")
     .select(SKILL_LIST_COLUMNS)
     .eq("category", category)
-    .order("rank", { ascending: false })
+    .order("github_stars", { ascending: false, nullsFirst: false })
     .range(offset, offset + limit - 1);
   if (error) throw error;
   return (data ?? []) as SkillListItem[];

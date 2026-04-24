@@ -40,6 +40,7 @@ export type SkillListItem = Pick<
   | "use_cases"
   | "author"
   | "github_stars"
+  | "github_url"
   | "rank"
   | "score"
   | "featured"
