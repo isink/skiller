@@ -160,3 +160,6 @@ targets:
         product: MarkdownUI
       - package: GoogleMobileAds
         product: GoogleMobileAds
+    scheme:
+      testTargets: []
+      gatherCoverageData: false
