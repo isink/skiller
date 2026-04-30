@@ -4,6 +4,7 @@ struct HomeView: View {
     @State private var query = ""
     @State private var debouncedQuery = ""
     @State private var fresh: [Skill] = []
+    @State private var community: [Skill] = []
     @State private var stats: HomeStats? = nil
     @State private var results: [Skill] = []
     @State private var loading = true
@@ -42,6 +43,10 @@ struct HomeView: View {
                     newSectionError
                 } else if !fresh.isEmpty {
                     newSection
+                }
+                if !loading && !loadError {
+                    communitySection
+                        .padding(.top, 24)
                 }
             }
             .padding(.horizontal, 16)
@@ -191,12 +196,82 @@ struct HomeView: View {
                     ForEach(fresh.prefix(10)) { skill in
                         HotSkillCard(
                             skill: skill,
-                            kicker: Format.timeAgo(skill.publishedAt ?? skill.createdAt)
+                            kicker: "@\(Format.author(skill.author)) · \(Format.timeAgo(skill.publishedAt ?? skill.createdAt))"
                         )
                     }
                 }
             }
         }
+    }
+
+    // MARK: Community section
+    private var communitySectionHeader: some View {
+        HStack {
+            HStack(spacing: 6) {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.brand)
+                Text("社区贡献")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(Color.textPrimary)
+            }
+            Spacer()
+            NavigationLink(value: SkillRoute.submit) {
+                HStack(spacing: 2) {
+                    Text("提交").font(.system(size: 12)).foregroundStyle(Color.textSubtle)
+                    Image(systemName: "chevron.right").font(.system(size: 11)).foregroundStyle(Color.textSubtle)
+                }
+            }.buttonStyle(.plain)
+        }
+    }
+
+    private var communitySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            communitySectionHeader
+            if community.isEmpty {
+                communityEmptyCard
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(community.prefix(10)) { skill in
+                            HotSkillCard(
+                                skill: skill,
+                                kicker: "@\(skill.author)"
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var communityEmptyCard: some View {
+        NavigationLink(value: SkillRoute.submit) {
+            HStack(spacing: 12) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 22))
+                    .foregroundStyle(Color.brand)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("成为第一个贡献者")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.textPrimary)
+                    Text("提交你的 GitHub skill 仓库，审核通过后展示在这里")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.textSubtle)
+                        .lineLimit(2)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.textSubtle)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity)
+            .background(Color.bgCard)
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.borderSubtle, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: Loading
@@ -208,18 +283,22 @@ struct HomeView: View {
         let cache = SkillsCache.shared
         let (sStale, sFresh) = await cache.homeStats(force: refresh)
         let (nStale, nFresh) = await cache.newSkills(limit: 10, force: refresh)
+        let (cStale, cFresh) = await cache.communitySkills(limit: 10, force: refresh)
 
         if let v = sStale { stats = v }
         if let v = nStale { fresh = v }
+        if let v = cStale { community = v }
 
         let hadStale = (sStale != nil) || (nStale != nil)
         if hadStale { loading = false } else { loading = true }
 
         let s = await sFresh.value
         let n = await nFresh.value
+        let c = await cFresh.value
 
         if let s { stats = s }
         if let n { fresh = n }
+        if let c { community = c }
 
         if !hadStale && s == nil && n == nil { loadError = true }
         loading = false

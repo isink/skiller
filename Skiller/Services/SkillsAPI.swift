@@ -42,18 +42,42 @@ enum SkillsAPI {
             .value
     }
 
-    static func fetchNewSkills(limit: Int = 10) async throws -> [Skill] {
-        let since = ISO8601DateFormatter().string(
-            from: Date().addingTimeInterval(-30 * 24 * 60 * 60)
-        )
-        return try await supabase
+    static func fetchCommunitySkills(limit: Int = 10) async throws -> [Skill] {
+        try await supabase
             .from("skills")
             .select(LIST_COLUMNS)
-            .gte("created_at", value: since)
+            .contains("tags", value: ["user-submission"])
             .order("created_at", ascending: false)
             .limit(limit)
             .execute()
             .value
+    }
+
+    static func fetchNewSkills(limit: Int = 10) async throws -> [Skill] {
+        let since = ISO8601DateFormatter().string(
+            from: Date().addingTimeInterval(-30 * 24 * 60 * 60)
+        )
+        // Pull a wider slice and dedupe on (author, name) — same author publishing
+        // the identical skill multiple times in different subdirs is not actually
+        // distinct content.
+        let rows: [Skill] = try await supabase
+            .from("skills")
+            .select(LIST_COLUMNS)
+            .gte("created_at", value: since)
+            .order("created_at", ascending: false)
+            .limit(limit * 4)
+            .execute()
+            .value
+        var seen = Set<String>()
+        var deduped: [Skill] = []
+        for s in rows {
+            let key = "\(s.author.lowercased())|\(s.name.lowercased())"
+            if seen.insert(key).inserted {
+                deduped.append(s)
+                if deduped.count >= limit { break }
+            }
+        }
+        return deduped
     }
 
     /// "最新收录"整批：拉 created_at 降序的近期记录，再用时间间隔切出最新一次同步的整批。
@@ -242,6 +266,35 @@ enum SkillsAPI {
                 submitter_email: email,
                 note: note,
                 submitter_user_id: userId
+            ))
+            .execute()
+    }
+
+    static func submitReport(
+        skillId: String,
+        skillSlug: String,
+        skillName: String,
+        reason: String,
+        note: String?,
+        userId: UUID?
+    ) async throws {
+        struct Row: Encodable {
+            let skill_id: String
+            let skill_slug: String
+            let skill_name: String
+            let reason: String
+            let note: String?
+            let reporter_user_id: UUID?
+        }
+        try await supabase
+            .from("skill_reports")
+            .insert(Row(
+                skill_id: skillId,
+                skill_slug: skillSlug,
+                skill_name: skillName,
+                reason: reason,
+                note: note,
+                reporter_user_id: userId
             ))
             .execute()
     }

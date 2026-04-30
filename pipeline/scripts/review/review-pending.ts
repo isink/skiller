@@ -261,7 +261,7 @@ async function upsertSkill(
     typeof frontmatter.category === "string" ? frontmatter.category : null,
   );
 
-  const tags: string[] = ["community"];
+  const tags: string[] = ["community", "user-submission"];
   if (Array.isArray(frontmatter.tags)) {
     for (const t of frontmatter.tags) if (typeof t === "string") tags.push(t);
   }

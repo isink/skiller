@@ -11,6 +11,7 @@ struct SkillDetailView: View {
     @State private var selectedAgent: AgentId = .claude
     @State private var copiedCommand = false
     @State private var copiedRaw = false
+    @State private var showReportSheet = false
 
     enum AgentId: String, CaseIterable, Hashable {
         case claude, codex, cursor
@@ -68,9 +69,26 @@ struct SkillDetailView: View {
                             .foregroundStyle(Color.textMuted)
                     }
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button {
+                            showReportSheet = true
+                        } label: {
+                            Label("举报此技能", systemImage: "flag")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .foregroundStyle(Color.textMuted)
+                    }
+                }
             }
         }
         .task { await load() }
+        .sheet(isPresented: $showReportSheet) {
+            if let skill {
+                ReportSkillSheet(skill: skill)
+            }
+        }
     }
 
     @ViewBuilder
@@ -178,7 +196,8 @@ struct SkillDetailView: View {
     }
 
     private func markdownBlock(_ md: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let body = stripFrontmatter(md)
+        return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("SKILL.md")
                     .font(.system(size: 13, weight: .semibold))
@@ -194,11 +213,22 @@ struct SkillDetailView: View {
                 }.buttonStyle(.plain)
             }
 
-            Markdown(md)
+            Markdown(body)
                 .markdownTheme(.skiller)
                 .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// SKILL.md 顶部的 YAML frontmatter（`--- ... ---`）是给 Claude 解析用的元数据，
+    /// 在 UI 上展示属于噪音，渲染前剥掉。复制按钮仍传原始内容。
+    private func stripFrontmatter(_ md: String) -> String {
+        guard md.hasPrefix("---") else { return md }
+        let pattern = #"^---\s*\n[\s\S]*?\n---\s*\n?"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return md }
+        let range = NSRange(md.startIndex..., in: md)
+        let stripped = regex.stringByReplacingMatches(in: md, options: [], range: range, withTemplate: "")
+        return stripped.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func metaBlock(_ skill: Skill) -> some View {

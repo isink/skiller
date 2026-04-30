@@ -70,6 +70,14 @@ final class AuthService: ObservableObject {
         try? await supabase.auth.signOut()
     }
 
+    /// Deletes the current user's auth.users row via a SECURITY DEFINER RPC
+    /// (gated on auth.uid()), then signs out locally. Required by App Store
+    /// guideline 5.1.1(v).
+    func deleteAccount() async throws {
+        try await supabase.rpc("delete_my_account").execute()
+        try? await supabase.auth.signOut()
+    }
+
     /// Called from SceneDelegate / onOpenURL to complete OAuth.
     func handle(url: URL) async {
         do {

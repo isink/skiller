@@ -138,18 +138,21 @@ struct SubmitSkillView: View {
             } label: {
                 HStack(spacing: 8) {
                     if signingIn {
-                        ProgressView().tint(.white)
+                        ProgressView().tint(.black)
                     } else {
-                        Image(systemName: "chevron.left.forwardslash.chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
+                        Image("GitHubMark")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
                     }
                     Text(signingIn ? "登录中…" : "使用 GitHub 登录")
                         .font(.system(size: 14, weight: .semibold))
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
-                .foregroundStyle(.white)
-                .background(Color.textPrimary)
+                .foregroundStyle(.black)
+                .background(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)

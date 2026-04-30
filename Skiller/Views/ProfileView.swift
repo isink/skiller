@@ -9,6 +9,8 @@ struct ProfileView: View {
     @State private var signingIn = false
     @State private var authError: String? = nil
     @State private var appleNonce: String? = nil
+    @State private var showDeleteConfirm = false
+    @State private var deleting = false
 
     private var topCategorySlug: String? {
         guard !recents.isEmpty else { return nil }
@@ -148,36 +150,83 @@ struct ProfileView: View {
     }
 
     private func signedInCard(_ identity: AuthService.UserIdentity) -> some View {
-        HStack(spacing: 12) {
-            avatar(identity.avatarUrl)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(identity.displayName)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color.textPrimary)
-                Text("@\(identity.login)")
-                    .font(.system(size: 12))
-                    .foregroundStyle(Color.textSubtle)
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                avatar(identity.avatarUrl)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(identity.displayName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.textPrimary)
+                    Text("@\(identity.login)")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.textSubtle)
+                }
+                Spacer()
+                Button {
+                    Task { await auth.signOut() }
+                } label: {
+                    Text("退出")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Color.textSubtle)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.bg)
+                        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.borderSubtle, lineWidth: 1))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
             }
-            Spacer()
-            Button {
-                Task { await auth.signOut() }
-            } label: {
-                Text("退出")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color.textSubtle)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.bg)
-                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.borderSubtle, lineWidth: 1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            HStack {
+                Spacer()
+                Button {
+                    showDeleteConfirm = true
+                } label: {
+                    HStack(spacing: 4) {
+                        if deleting { ProgressView().tint(.red).scaleEffect(0.7) }
+                        Text(deleting ? "删除中…" : "删除账号")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.red)
+                            .underline(true, color: .red.opacity(0.5))
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(deleting)
             }
-            .buttonStyle(.plain)
+
+            if let msg = authError {
+                Text(msg)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.red)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.bgCard)
         .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.borderSubtle, lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .alert("删除账号？", isPresented: $showDeleteConfirm) {
+            Button("删除", role: .destructive) {
+                Task { await deleteAccount() }
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("将永久删除你的 Skiller 账号信息。本地收藏不会被删除；已通过审核的提交记录会保留但与你的账号解除关联。此操作不可撤销。")
+        }
+    }
+
+    @MainActor
+    private func deleteAccount() async {
+        deleting = true
+        authError = nil
+        do {
+            try await auth.deleteAccount()
+        } catch {
+            print("Delete account failed: \(error)")
+            authError = "删除失败，请稍后重试或联系 handwanly@gmail.com"
+        }
+        deleting = false
     }
 
     @ViewBuilder
@@ -390,10 +439,22 @@ struct ProfileView: View {
 
     // MARK: Privacy footnote
     private var privacyFootnote: some View {
-        HStack {
+        HStack(spacing: 16) {
             Spacer()
             Link(destination: URL(string: "https://isink.github.io/skiller/privacy.html")!) {
                 Text("隐私政策")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.textSubtle)
+                    .underline(true, color: Color.textSubtle.opacity(0.5))
+            }
+            Link(destination: URL(string: "https://isink.github.io/skiller/terms.html")!) {
+                Text("使用条款")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.textSubtle)
+                    .underline(true, color: Color.textSubtle.opacity(0.5))
+            }
+            Link(destination: URL(string: "mailto:handwanly@gmail.com?subject=Skiller%20%E5%8F%8D%E9%A6%88")!) {
+                Text("意见反馈")
                     .font(.system(size: 11))
                     .foregroundStyle(Color.textSubtle)
                     .underline(true, color: Color.textSubtle.opacity(0.5))
