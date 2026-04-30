@@ -78,8 +78,46 @@ struct SubmitSkillView: View {
         case .signedOut:
             loginGate
         case .signedIn(let identity):
-            picker(identity: identity)
+            if identity.provider == .github {
+                picker(identity: identity)
+            } else {
+                githubRequiredCard
+            }
         }
+    }
+
+    private var githubRequiredCard: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "chevron.left.forwardslash.chevron.right")
+                .font(.system(size: 28))
+                .foregroundStyle(Color.brand)
+            Text("提交需要 GitHub 账号")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(Color.textPrimary)
+            Text("请退出当前账号后改用 GitHub 登录，再来提交仓库")
+                .font(.system(size: 12))
+                .foregroundStyle(Color.textSubtle)
+                .multilineTextAlignment(.center)
+            Button {
+                Task { await auth.signOut() }
+            } label: {
+                Text("退出当前账号")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 10)
+                    .background(Color.textPrimary)
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 32)
+        .padding(.horizontal, 16)
+        .background(Color.bgCard)
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.borderSubtle, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
     // MARK: - Login gate
@@ -139,7 +177,7 @@ struct SubmitSkillView: View {
 
     // MARK: - Repo picker
     @ViewBuilder
-    private func picker(identity: AuthService.GitHubIdentity) -> some View {
+    private func picker(identity: AuthService.UserIdentity) -> some View {
         if loading && repos.isEmpty {
             HStack {
                 Spacer()

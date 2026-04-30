@@ -38,6 +38,7 @@ targets:
       - path: Skiller
         excludes:
           - "Resources/Info.plist"
+          - "Resources/Skiller.entitlements"
     resources:
       - path: Skiller/Resources/Assets.xcassets
     info:
@@ -153,6 +154,7 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
+        CODE_SIGN_ENTITLEMENTS: Skiller/Resources/Skiller.entitlements
     dependencies:
       - package: Supabase
         product: Supabase

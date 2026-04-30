@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftData
 import SwiftUI
 
@@ -7,6 +8,7 @@ struct ProfileView: View {
     @Query private var recents: [RecentView]
     @State private var signingIn = false
     @State private var authError: String? = nil
+    @State private var appleNonce: String? = nil
 
     private var topCategorySlug: String? {
         guard !recents.isEmpty else { return nil }
@@ -90,6 +92,23 @@ struct ProfileView: View {
             Text("登录后可推荐 GitHub 仓库")
                 .font(.system(size: 13))
                 .foregroundStyle(Color.textSubtle)
+
+            SignInWithAppleButton(
+                .signIn,
+                onRequest: { request in
+                    let nonce = AuthService.makeRawNonce()
+                    appleNonce = nonce
+                    request.requestedScopes = [.fullName, .email]
+                    request.nonce = AuthService.sha256Hex(nonce)
+                },
+                onCompletion: { result in
+                    Task { await handleAppleResult(result) }
+                }
+            )
+            .signInWithAppleButtonStyle(.white)
+            .frame(height: 44)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
             Button {
                 Task { await signIn() }
             } label: {
@@ -111,6 +130,7 @@ struct ProfileView: View {
             }
             .buttonStyle(.plain)
             .disabled(signingIn)
+
             if let msg = authError {
                 Text(msg)
                     .font(.system(size: 11))
@@ -124,7 +144,7 @@ struct ProfileView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    private func signedInCard(_ identity: AuthService.GitHubIdentity) -> some View {
+    private func signedInCard(_ identity: AuthService.UserIdentity) -> some View {
         HStack(spacing: 12) {
             avatar(identity.avatarUrl)
             VStack(alignment: .leading, spacing: 2) {
@@ -197,10 +217,45 @@ struct ProfileView: View {
         signingIn = false
     }
 
+    @MainActor
+    private func handleAppleResult(_ result: Result<ASAuthorization, Error>) async {
+        switch result {
+        case .success(let authResult):
+            guard
+                let credential = authResult.credential as? ASAuthorizationAppleIDCredential,
+                let tokenData = credential.identityToken,
+                let token = String(data: tokenData, encoding: .utf8),
+                let nonce = appleNonce
+            else {
+                authError = "苹果登录失败，请稍后重试"
+                return
+            }
+            do {
+                try await auth.signInWithApple(idToken: token, nonce: nonce)
+                authError = nil
+            } catch {
+                print("Apple sign-in failed: \(error)")
+                authError = "苹果登录失败，请稍后重试"
+            }
+        case .failure(let error):
+            print("Apple sign-in failed: \(error)")
+            if !isUserCancelled(error) {
+                authError = "苹果登录失败，请稍后重试"
+            }
+        }
+        appleNonce = nil
+    }
+
     private func isUserCancelled(_ error: Error) -> Bool {
         let ns = error as NSError
-        return ns.domain == "com.apple.AuthenticationServices.WebAuthenticationSession"
-            && ns.code == 1
+        if ns.domain == "com.apple.AuthenticationServices.WebAuthenticationSession" && ns.code == 1 {
+            return true
+        }
+        if ns.domain == ASAuthorizationError.errorDomain
+            && ns.code == ASAuthorizationError.canceled.rawValue {
+            return true
+        }
+        return false
     }
 
     // MARK: Footprint
