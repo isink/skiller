@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" rx="224" fill="#0E0E10"/>
+  <rect x="404" y="68" width="104" height="104" fill="#FF7A33"/>
+  <rect x="516" y="68" width="104" height="104" fill="#FF7A33"/>
+  <rect x="404" y="180" width="104" height="104" fill="#FF7A33"/>
+  <rect x="516" y="180" width="104" height="104" fill="#FF7A33"/>
+  <rect x="292" y="292" width="104" height="104" fill="#FF7A33"/>
+  <rect x="404" y="292" width="104" height="104" fill="#FF7A33"/>
+  <rect x="516" y="292" width="104" height="104" fill="#FF7A33"/>
+  <rect x="628" y="292" width="104" height="104" fill="#FF7A33"/>
+  <rect x="68" y="404" width="104" height="104" fill="#FF7A33"/>
+  <rect x="180" y="404" width="104" height="104" fill="#FF7A33"/>
+  <rect x="292" y="404" width="104" height="104" fill="#FF7A33"/>
+  <rect x="404" y="404" width="104" height="104" fill="#FF7A33"/>
+  <rect x="516" y="404" width="104" height="104" fill="#FF7A33"/>
+  <rect x="628" y="404" width="104" height="104" fill="#FF7A33"/>
+  <rect x="740" y="404" width="104" height="104" fill="#FF7A33"/>
+  <rect x="852" y="404" width="104" height="104" fill="#FF7A33"/>
+  <rect x="68" y="516" width="104" height="104" fill="#FF7A33"/>
+  <rect x="180" y="516" width="104" height="104" fill="#FF7A33"/>
+  <rect x="292" y="516" width="104" height="104" fill="#FF7A33"/>
+  <rect x="404" y="516" width="104" height="104" fill="#FF7A33"/>
+  <rect x="516" y="516" width="104" height="104" fill="#FF7A33"/>
+  <rect x="628" y="516" width="104" height="104" fill="#FF7A33"/>
+  <rect x="740" y="516" width="104" height="104" fill="#FF7A33"/>
+  <rect x="852" y="516" width="104" height="104" fill="#FF7A33"/>
+  <rect x="292" y="628" width="104" height="104" fill="#FF7A33"/>
+  <rect x="404" y="628" width="104" height="104" fill="#FF7A33"/>
+  <rect x="516" y="628" width="104" height="104" fill="#FF7A33"/>
+  <rect x="628" y="628" width="104" height="104" fill="#FF7A33"/>
+  <rect x="404" y="740" width="104" height="104" fill="#FF7A33"/>
+  <rect x="516" y="740" width="104" height="104" fill="#FF7A33"/>
+  <rect x="404" y="852" width="104" height="104" fill="#FF7A33"/>
+  <rect x="516" y="852" width="104" height="104" fill="#FF7A33"/>
+</svg>
