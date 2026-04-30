@@ -7,6 +7,10 @@ Skiller.xcodeproj/*
 !Skiller.xcodeproj/xcshareddata/
 !Skiller.xcodeproj/xcshareddata/xcschemes/
 !Skiller.xcodeproj/xcshareddata/xcschemes/*.xcscheme
+!Skiller.xcodeproj/project.xcworkspace/
+!Skiller.xcodeproj/project.xcworkspace/xcshareddata/
+!Skiller.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+!Skiller.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
 ## Build artifacts
 build/
@@ -18,7 +22,6 @@ DerivedData/
 
 ## SwiftPM
 .swiftpm/
-Package.resolved
 
 ## OS
 .DS_Store
