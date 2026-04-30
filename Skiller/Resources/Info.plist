@@ -30,13 +30,11 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>20</string>
+	<string>21</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-8372639947150676~7301160730</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>我们使用此权限向你展示更相关的广告，你可以选择不允许，也不影响 Skiller 的使用。</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>

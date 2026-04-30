@@ -46,7 +46,7 @@ targets:
       properties:
         CFBundleDisplayName: Skiller
         CFBundleShortVersionString: "1.4"
-        CFBundleVersion: "20"
+        CFBundleVersion: "21"
         UILaunchScreen:
           UIColorName: BgColor
         UISupportedInterfaceOrientations:
@@ -141,12 +141,11 @@ targets:
           - SKAdNetworkIdentifier: e5fvkxwrpn.skadnetwork
           - SKAdNetworkIdentifier: cj5566h2ga.skadnetwork
           - SKAdNetworkIdentifier: 2q88pptqos.skadnetwork
-        NSUserTrackingUsageDescription: 我们使用此权限向你展示更相关的广告，你可以选择不允许，也不影响 Skiller 的使用。
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.iskill.app
         MARKETING_VERSION: "1.4"
-        CURRENT_PROJECT_VERSION: 20
+        CURRENT_PROJECT_VERSION: 21
         TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
