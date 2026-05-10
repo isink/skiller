@@ -1,218 +1,121 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>隐私政策 – Skiller</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy — Skiller</title>
   <style>
-    :root {
-      --bg: #0b0b0f;
-      --surface: #14141b;
-      --border: #2a2a35;
-      --text: #f5f5f7;
-      --muted: #9a9aa8;
-      --brand: #d97757;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { color-scheme: dark light; }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif;
-      line-height: 1.75;
-      padding: 0 1rem 4rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #fafafa;
     }
-    header {
-      border-bottom: 1px solid var(--border);
-      padding: 2rem 0 1.5rem;
-      max-width: 680px;
-      margin: 0 auto;
+    @media (prefers-color-scheme: dark) {
+      body { color: #e6e6e6; background: #0f0f12; }
+      a { color: #d97757; }
+      h1, h2 { color: #f4f4f6; }
+      hr { border-color: #2a2a30; }
     }
-    header h1 { font-size: 1.5rem; }
-    header h1 span { color: var(--brand); }
-    header p { color: var(--muted); font-size: 0.875rem; margin-top: 0.25rem; }
-    main {
-      max-width: 680px;
-      margin: 2.5rem auto 0;
-    }
-    h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-top: 2rem;
-      margin-bottom: 0.5rem;
-      color: var(--text);
-    }
-    h3 {
-      font-size: 0.9375rem;
-      font-weight: 600;
-      margin-top: 1.25rem;
-      margin-bottom: 0.25rem;
-      color: var(--text);
-    }
-    p, li { font-size: 0.9375rem; color: var(--muted); }
-    ul { padding-left: 1.25rem; margin: 0.25rem 0 0.5rem; }
-    li { margin-bottom: 0.25rem; }
-    a { color: var(--brand); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    strong { color: var(--text); font-weight: 600; }
-    .divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 2.5rem 0;
-    }
-    .meta {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      color: var(--muted);
-      font-size: 0.8125rem;
-      margin-top: 0.5rem;
-    }
+    h1 { font-size: 28px; margin-bottom: 4px; }
+    h2 { font-size: 18px; margin-top: 32px; }
+    .updated { color: #888; font-size: 13px; }
+    a { color: #c9582a; }
+    ul { padding-left: 20px; }
+    li { margin: 6px 0; }
+    code { background: rgba(127,127,127,0.15); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
   </style>
 </head>
 <body>
-  <header>
-    <h1><span>Skiller</span> 隐私政策</h1>
-    <div class="meta">
-      <span>生效日期：2026-04-22</span>
-      <span>更新日期：2026-04-30</span>
-      <span>版本：1.3</span>
-    </div>
-  </header>
-  <main>
-    <p>
-      欢迎使用 Skiller（以下简称"本应用"）。本应用是一款供用户浏览、搜索、收藏
-      Claude AI Skills 的移动应用。我们深知个人信息对您的重要性，并严格遵守
-      《中华人民共和国个人信息保护法》《中华人民共和国网络安全法》《中华人民共和国数据安全法》
-      等相关法律法规。本政策说明我们如何收集、使用、存储和保护您的个人信息。
-    </p>
 
-    <p>
-      <strong>使用本应用前请仔细阅读本政策。</strong>您开始使用本应用即视为您已阅读并同意本政策全部内容。
-      如您不同意本政策任一条款，请立即停止使用本应用。
-    </p>
+<h1>Privacy Policy</h1>
+<p class="updated">Last updated: May 10, 2026</p>
 
-    <h2>一、我们收集的信息</h2>
+<p>This Privacy Policy describes how Skiller ("we", "the app") handles your information when you use our iOS application. We're committed to keeping data collection to a minimum and being transparent about everything we do.</p>
 
-    <h3>1.1 您主动提供的信息</h3>
-    <p>本应用<strong>核心浏览功能无需登录即可使用</strong>。仅当您主动选择以下功能时，我们才会收集相应账户信息：</p>
-    <ul>
-      <li><strong>使用 GitHub 登录：</strong>我们通过 OAuth 流程获取您的 GitHub 用户名、头像 URL、公开邮箱（如有），用于在"提交 Skill"等需要身份的场景标识您。我们不会获取您的 GitHub 密码。</li>
-      <li><strong>使用 Apple 登录（Sign in with Apple）：</strong>我们获取 Apple 提供的用户唯一标识符及您选择共享的姓名/邮箱（您可使用 Apple Private Relay 转发邮箱以保护真实邮箱）。我们不会获取您的 Apple ID 密码。</li>
-      <li><strong>提交 Skill：</strong>当您从"我的 → 提交 Skill"提交 GitHub 仓库时，我们会保存您填写的仓库链接、可选邮箱、备注，以及您当前的登录用户标识，用于人工审核与可能的后续沟通。</li>
-    </ul>
-    <p>登录与提交均为可选；您随时可在"我的"页退出登录。退出登录不会自动删除已提交的内容，如需删除请通过下方联系方式申请。</p>
+<h2>1. Information We Collect</h2>
 
-    <h3>1.2 本地存储的信息</h3>
-    <ul>
-      <li><strong>收藏记录、搜索历史、主题偏好：</strong>仅存储于您的设备本地（通过 iOS SwiftData / UserDefaults），不会上传至服务器。</li>
-      <li><strong>登录会话凭证：</strong>登录后，Supabase 颁发的会话令牌通过 iOS 系统 Keychain 加密存储于您的设备，用于在应用重启后保持登录状态。卸载应用即清除。</li>
-    </ul>
+<p><strong>Account information (only if you sign in)</strong></p>
+<ul>
+  <li><strong>GitHub sign-in:</strong> your GitHub username, display name, avatar URL, and a short-lived OAuth token used to list your public repositories when you choose to submit one.</li>
+  <li><strong>Sign in with Apple:</strong> your Apple-relayed email address (or private relay address) and the display name you choose to share at first sign-in.</li>
+</ul>
 
-    <h3>1.3 自动收集的信息</h3>
-    <ul>
-      <li><strong>安装/浏览计数：</strong>当您查看或安装某个 Skill 时，我们会更新一个匿名的累计计数。该计数不与任何个人标识符关联。</li>
-      <li><strong>广告相关信息：</strong>为向您展示广告，我们接入的 Google AdMob SDK 可能收集设备标识（IDFV）、设备型号、操作系统版本、粗略位置（国家/地区级别）、广告交互行为等。本应用使用<strong>非个性化广告（npa=1）</strong>模式，不会用您的信息构建跨 App 用户画像。详见下方"第三方 SDK 说明"。</li>
-      <li><strong>崩溃与性能数据：</strong>我们可能收集匿名的崩溃堆栈信息以改进稳定性，不含个人身份信息。</li>
-    </ul>
+<p><strong>Submission data</strong></p>
+<ul>
+  <li>If you submit a Skill, we store the GitHub repository URL you selected, an anonymous user ID, and timestamps for review purposes.</li>
+</ul>
 
-    <h2>二、我们如何使用信息</h2>
-    <ul>
-      <li>向您提供 Skill 浏览、搜索、收藏等核心功能</li>
-      <li>统计 Skill 的流行度（匿名聚合）</li>
-      <li>展示广告以支持本应用持续运营</li>
-      <li>改进产品稳定性与用户体验</li>
-      <li>法律法规要求的其他用途</li>
-    </ul>
-    <p>我们<strong>不会</strong>将您的信息用于自动化决策、用户画像或向您发送商业推广短信/邮件。</p>
+<p><strong>On-device data (never leaves your device)</strong></p>
+<ul>
+  <li>Your favorited Skills and recently viewed Skills are stored locally using Apple's SwiftData framework.</li>
+</ul>
 
-    <h2>三、第三方 SDK 与服务说明</h2>
-    <p>为实现特定功能，本应用集成以下第三方服务。您使用本应用即代表您同意这些第三方按其隐私政策处理相关信息：</p>
+<p><strong>What we do <em>not</em> collect</strong></p>
+<ul>
+  <li>No location data.</li>
+  <li>No contacts, photos, or other device content.</li>
+  <li>No third-party analytics SDKs are integrated.</li>
+  <li>No personal advertising identifier — Skiller serves only non-personalized ads (see Section 3).</li>
+</ul>
 
-    <h3>3.1 Supabase（后端数据库与认证）</h3>
-    <ul>
-      <li>服务提供方：Supabase Inc.</li>
-      <li>用途：存储与分发 Skill 内容、匿名使用统计、用户身份认证（GitHub / Apple OAuth）、UGC 提交存储</li>
-      <li>收集信息：匿名安装计数、请求 IP（用于防滥用，短期保留）；登录后保存 OAuth 提供方返回的用户标识、邮箱、用户名等基本信息</li>
-      <li>隐私政策：<a href="https://supabase.com/privacy" target="_blank" rel="noopener">https://supabase.com/privacy</a></li>
-    </ul>
+<h2>2. Third-Party Services</h2>
 
-    <h3>3.2 Google AdMob（广告 SDK）</h3>
-    <ul>
-      <li>服务提供方：Google LLC</li>
-      <li>用途：在 Skill 详情页展示横幅广告</li>
-      <li>收集信息：广告标识符（IDFV）、设备型号、OS 版本、粗略位置、广告点击/曝光</li>
-      <li>广告模式：<strong>非个性化广告（npa=1）</strong>，不基于您的兴趣画像投放</li>
-      <li>隐私政策：<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">https://policies.google.com/privacy</a></li>
-    </ul>
+<p>Skiller relies on the following third parties to operate. Each has its own privacy policy:</p>
 
-    <h3>3.3 Sign in with Apple（Apple 登录）</h3>
-    <ul>
-      <li>服务提供方：Apple Inc.</li>
-      <li>用途：为您提供使用 Apple ID 一键登录的能力</li>
-      <li>收集信息：Apple 提供的用户唯一标识符；姓名/邮箱由您选择是否共享，可使用 Private Relay 隐藏真实邮箱</li>
-      <li>隐私政策：<a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">https://www.apple.com/legal/privacy/</a></li>
-    </ul>
+<ul>
+  <li><strong>Supabase</strong> — hosts our authentication system and Skills database. <a href="https://supabase.com/privacy">supabase.com/privacy</a></li>
+  <li><strong>GitHub</strong> — provides OAuth sign-in and repository listing. <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">GitHub Privacy Statement</a></li>
+  <li><strong>Apple</strong> — provides Sign in with Apple. <a href="https://www.apple.com/legal/privacy/">apple.com/legal/privacy</a></li>
+  <li><strong>Google AdMob</strong> — serves banner advertisements in non-personalized mode. <a href="https://policies.google.com/privacy">policies.google.com/privacy</a></li>
+</ul>
 
-    <h3>3.4 GitHub OAuth（GitHub 登录）</h3>
-    <ul>
-      <li>服务提供方：GitHub, Inc.</li>
-      <li>用途：为您提供使用 GitHub 账号登录的能力，便于 Skill 提交流程与作者归属识别</li>
-      <li>收集信息：GitHub 用户名、头像 URL、公开邮箱（如您在 GitHub 设置为公开）</li>
-      <li>隐私政策：<a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub Privacy Statement</a></li>
-    </ul>
+<h2>3. Advertising</h2>
 
-    <h3>3.5 关于 App Tracking Transparency（ATT）</h3>
-    <p>本应用使用<strong>非个性化广告</strong>模式，<strong>不会主动弹出 ATT 跟踪授权请求</strong>，也不会跨 App 跟踪您。您无需进行任何授权操作即可正常使用本应用。</p>
+<p>Skiller displays banner ads provided by Google AdMob. We have explicitly opted into <strong>non-personalized advertising</strong> (the <code>npa=1</code> flag), which means:</p>
+<ul>
+  <li>Ads are not targeted using your personal browsing history or interests.</li>
+  <li>We do not request the App Tracking Transparency permission.</li>
+  <li>AdMob may still process limited contextual data (such as approximate location and device type) to comply with regional advertising regulations and to prevent fraud. See AdMob's policy linked above.</li>
+</ul>
 
-    <h2>四、信息存储与保护</h2>
-    <ul>
-      <li><strong>存储位置：</strong>后端数据存储于 Supabase 服务器（位于海外）；本地数据存储于您的设备。</li>
-      <li><strong>存储期限：</strong>匿名聚合数据长期保留；设备本地数据由您控制，您可通过卸载应用随时清除。</li>
-      <li><strong>安全措施：</strong>我们采用 HTTPS 加密传输，并对后端接口实施访问控制与防滥用限制。尽管如此，互联网环境非绝对安全，我们将尽商业合理努力保护您的信息。</li>
-    </ul>
+<h2>4. How Long We Keep Your Data</h2>
 
-    <h2>五、您的权利</h2>
-    <p>根据《个人信息保护法》，您对自己的个人信息享有以下权利：</p>
-    <ul>
-      <li><strong>知情权、决定权：</strong>本政策即为我们履行告知义务的方式。</li>
-      <li><strong>查阅、复制权：</strong>本应用本地存储的数据可在应用内直接查看。</li>
-      <li><strong>删除权：</strong>卸载本应用即可清除所有本地数据。如需删除后端匿名数据，请通过下方联系方式联系我们。</li>
-      <li><strong>撤回同意：</strong>您可通过系统设置撤回广告跟踪授权；卸载应用即视为撤回对本政策的同意。</li>
-      <li><strong>投诉举报：</strong>您可通过下方联系方式向我们投诉，或向所在地网信、工信、公安等监管部门投诉举报。</li>
-    </ul>
+<ul>
+  <li><strong>Account data:</strong> retained while your account exists. Deleted within 30 days of account deletion.</li>
+  <li><strong>Approved submissions:</strong> retained indefinitely as part of the public Skills directory, but detached from your user identifier upon account deletion.</li>
+  <li><strong>On-device data:</strong> stays on your device until you delete the app.</li>
+</ul>
 
-    <h2>六、未成年人保护</h2>
-    <p>
-      本应用主要面向成年用户。我们不会在知情的情况下收集 14 周岁以下儿童的个人信息。
-      若您是未成年人的监护人，发现被监护人在未经同意的情况下使用本应用，请通过下方联系方式联系我们，我们将及时采取措施删除相关信息。
-    </p>
+<h2>5. Deleting Your Account</h2>
 
-    <h2>七、数据的跨境传输</h2>
-    <p>
-      由于本应用后端服务（Supabase）与广告服务（AdMob）部署于中国境外，相关信息会传输至境外服务器。
-      我们已对境外接收方进行合理评估，并要求其提供符合法律法规要求的保护水平。您使用本应用即表示您同意此种跨境传输安排。
-    </p>
+<p>You can permanently delete your Skiller account at any time:</p>
+<ol>
+  <li>Open the app and go to the <strong>Profile</strong> tab.</li>
+  <li>Tap <strong>Delete account</strong> below your profile card.</li>
+  <li>Confirm the action.</li>
+</ol>
+<p>This permanently deletes your account credentials and detaches you from any approved submissions. Local favorites stored on your device are not affected. The action cannot be undone.</p>
 
-    <h2>八、政策更新</h2>
-    <p>
-      我们可能适时更新本政策。更新后我们会通过应用内提示、更新日志或其他合理方式通知您。
-      若您不同意更新后的政策，请停止使用本应用；继续使用即视为接受更新后的政策。
-    </p>
+<h2>6. Children's Privacy</h2>
 
-    <h2>九、联系我们</h2>
-    <p>
-      如对本政策有任何疑问、建议或投诉，请通过以下方式联系我们：
-    </p>
-    <ul>
-      <li>邮箱：<a href="mailto:handwanly@gmail.com">handwanly@gmail.com</a></li>
-      <li>GitHub Issues：<a href="https://github.com/isink/skiller/issues" target="_blank" rel="noopener">github.com/isink/skiller/issues</a></li>
-    </ul>
-    <p>我们将在收到您的请求后 15 个工作日内回复。</p>
+<p>Skiller is not directed at children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided us with personal information, please contact us and we will promptly delete it.</p>
 
-    <hr class="divider" />
-    <p style="font-size:0.8125rem;">
-      © 2026 Skiller. 本政策最终解释权归 Skiller 开发者所有。
-    </p>
-  </main>
+<h2>7. Your Rights</h2>
+
+<p>Depending on where you live, you may have the right to access, correct, or delete the personal information we hold about you, or to object to certain processing. You can exercise these rights by emailing us at the address below.</p>
+
+<h2>8. Changes to This Policy</h2>
+
+<p>We may update this policy from time to time. Significant changes will be reflected by updating the "Last updated" date at the top of this page. Your continued use of Skiller after a change indicates acceptance of the revised policy.</p>
+
+<h2>9. Contact</h2>
+
+<p>Questions about this policy or your data? Email us at <a href="mailto:handwanly@gmail.com">handwanly@gmail.com</a>.</p>
+
 </body>
 </html>

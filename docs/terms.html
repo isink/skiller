@@ -1,189 +1,113 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>服务条款 – Skiller</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terms of Use — Skiller</title>
   <style>
-    :root {
-      --bg: #0b0b0f;
-      --surface: #14141b;
-      --border: #2a2a35;
-      --text: #f5f5f7;
-      --muted: #9a9aa8;
-      --brand: #d97757;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { color-scheme: dark light; }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif;
-      line-height: 1.75;
-      padding: 0 1rem 4rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #fafafa;
     }
-    header {
-      border-bottom: 1px solid var(--border);
-      padding: 2rem 0 1.5rem;
-      max-width: 680px;
-      margin: 0 auto;
+    @media (prefers-color-scheme: dark) {
+      body { color: #e6e6e6; background: #0f0f12; }
+      a { color: #d97757; }
+      h1, h2 { color: #f4f4f6; }
+      hr { border-color: #2a2a30; }
     }
-    header h1 { font-size: 1.5rem; }
-    header h1 span { color: var(--brand); }
-    header p { color: var(--muted); font-size: 0.875rem; margin-top: 0.25rem; }
-    main {
-      max-width: 680px;
-      margin: 2.5rem auto 0;
-    }
-    h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-top: 2rem;
-      margin-bottom: 0.5rem;
-      color: var(--text);
-    }
-    p, li { font-size: 0.9375rem; color: var(--muted); }
-    ul { padding-left: 1.25rem; margin: 0.25rem 0 0.5rem; }
-    li { margin-bottom: 0.25rem; }
-    a { color: var(--brand); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    strong { color: var(--text); font-weight: 600; }
-    .divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 2.5rem 0;
-    }
-    .meta {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      color: var(--muted);
-      font-size: 0.8125rem;
-      margin-top: 0.5rem;
-    }
+    h1 { font-size: 28px; margin-bottom: 4px; }
+    h2 { font-size: 18px; margin-top: 32px; }
+    .updated { color: #888; font-size: 13px; }
+    a { color: #c9582a; }
+    ul { padding-left: 20px; }
+    li { margin: 6px 0; }
   </style>
 </head>
 <body>
-  <header>
-    <h1><span>Skiller</span> 服务条款</h1>
-    <div class="meta">
-      <span>生效日期：2026-04-22</span>
-      <span>更新日期：2026-04-30</span>
-      <span>版本：1.3</span>
-    </div>
-  </header>
-  <main>
-    <p>
-      本《服务条款》（以下简称"本条款"）是您与 Skiller 开发者（以下简称"我们"）就使用 Skiller 移动应用
-      （以下简称"本应用"）所订立的协议。<strong>请您在使用本应用前仔细阅读本条款，特别是涉及免责、
-      责任限制、争议解决的条款。</strong>您一旦开始使用本应用，即视为您已阅读并同意本条款全部内容。
-    </p>
 
-    <h2>一、服务内容</h2>
-    <p>
-      本应用是一款面向个人用户的 Claude AI Skills 浏览与管理工具，主要功能包括：
-    </p>
-    <ul>
-      <li>浏览、搜索和分类查看来自公开来源的 Skill 内容</li>
-      <li>将 Skill 收藏到本地设备</li>
-      <li>查看 Skill 的详细说明与使用方式</li>
-      <li>使用 GitHub 或 Apple 账号登录，并向我们提交开源 Skill 仓库供审核收录</li>
-      <li>我们根据业务需要可能新增、调整或下线的其他功能</li>
-    </ul>
+<h1>Terms of Use</h1>
+<p class="updated">Last updated: May 10, 2026</p>
 
-    <h2>二、使用规则</h2>
-    <p>您承诺在使用本应用时遵守中华人民共和国法律法规，并不从事以下行为：</p>
-    <ul>
-      <li>发布、传播违反宪法、法律、行政法规的内容</li>
-      <li>发布危害国家安全、泄露国家秘密、颠覆国家政权的内容</li>
-      <li>发布煽动民族仇恨、破坏民族团结的内容</li>
-      <li>发布淫秽、色情、赌博、暴力、凶杀、恐怖或教唆犯罪的内容</li>
-      <li>发布侮辱、诽谤他人或侵害他人合法权益的内容</li>
-      <li>利用本应用从事商业推广、发送垃圾信息等行为</li>
-      <li>通过技术手段攻击、干扰、破坏本应用及其服务</li>
-      <li>未经许可爬取、复制、传播本应用内容用于商业目的</li>
-      <li>其他违反法律法规或公序良俗的行为</li>
-    </ul>
-    <p>若您违反上述规则，我们有权采取包括但不限于限制功能、停止服务、配合监管部门调查等措施，由此产生的法律责任由您自行承担。</p>
+<p>Welcome to Skiller. By downloading or using the app, you agree to these Terms of Use. If you don't agree, please don't use the app.</p>
 
-    <h2>二之二、用户提交内容（UGC）</h2>
-    <p>当您使用"提交 Skill"功能向我们推荐 GitHub 仓库时，您声明并保证：</p>
-    <ul>
-      <li>您提交的仓库为您本人所有，或您已获得仓库权利人的明确许可；</li>
-      <li>仓库内容遵循开源协议，且不包含恶意代码、后门、违法或侵权内容；</li>
-      <li>您授予我们一项免费的、非独占的、全球范围的许可，使我们可以在本应用与相关页面中展示该仓库的元数据（名称、描述、链接、标签）以及 SKILL.md 内容；</li>
-      <li>我们对提交内容拥有最终审核权，可依据《使用规则》及内部标准批准、拒绝或下架任何提交，且无需说明理由；</li>
-      <li>若您希望删除已审核通过的 Skill，请通过下方联系方式申请，我们将在合理时间内处理。</li>
-    </ul>
+<h2>1. About Skiller</h2>
 
-    <h2>三、知识产权</h2>
-    <ul>
-      <li><strong>本应用权利：</strong>本应用的名称、图标、界面设计、源代码、文案、UI 元素等均归我们所有，受著作权法及相关法律保护。</li>
-      <li><strong>Skill 内容权利：</strong>本应用展示的 Skill 内容来自公开的开源社区（主要为 GitHub 公开仓库），其版权归原作者所有。本应用仅做聚合展示，不对 Skill 内容本身主张著作权。</li>
-      <li><strong>用户使用许可：</strong>在您遵守本条款的前提下，我们授予您一项个人的、非商业的、不可转让的、可撤销的有限许可，允许您在自己的移动设备上使用本应用。</li>
-    </ul>
+<p>Skiller is a community-driven directory of AI Skills compatible with Anthropic's Claude, OpenAI's Codex, Cursor, and similar AI agents. We aggregate publicly available Skills from sources including the official Anthropic skills repository and GitHub repositories submitted by the community.</p>
 
-    <h2>四、广告与第三方服务</h2>
-    <p>
-      本应用包含由 Google AdMob 提供的广告。广告内容由第三方广告主提供，我们不对广告内容的真实性、
-      合法性、准确性负责。您与广告主之间的任何交易行为均属您与该广告主之间的独立行为，由此产生的
-      任何纠纷由您与该广告主自行解决。
-    </p>
-    <p>本应用使用的第三方服务及其数据处理方式详见
-      <a href="./privacy.html">《隐私政策》</a>。
-    </p>
+<p>Skiller is an independent project and is <strong>not affiliated with, endorsed by, or sponsored by Anthropic, OpenAI, Cursor, or any other third-party AI provider</strong>.</p>
 
-    <h2>五、免责声明</h2>
-    <ul>
-      <li>本应用按"现状"提供，我们不对服务的及时性、无中断、无错误作明示或暗示的保证。</li>
-      <li>因不可抗力（包括但不限于网络故障、服务器故障、政府行为、自然灾害等）导致的服务中断或数据丢失，我们不承担责任。</li>
-      <li>Skill 内容由第三方创作，我们不对其质量、准确性、合法性、适用性作任何保证。您基于 Skill 内容作出的任何决策或行为，后果由您自行承担。</li>
-      <li>Skill 在 Claude 客户端中的运行效果取决于 Claude 本身及第三方 SDK，我们不提供技术支持。</li>
-      <li>我们可能随时修改、暂停或终止部分或全部服务，无需事先通知。</li>
-    </ul>
+<h2>2. Eligibility</h2>
 
-    <h2>六、责任限制</h2>
-    <p>
-      在适用法律允许的最大范围内，我们对您因使用或无法使用本应用而产生的任何直接、间接、偶然、
-      特殊或后果性损失（包括但不限于利润损失、数据丢失、业务中断等）不承担责任。
-      若法律要求我们必须承担责任，我们承担的总责任金额不超过您在过去 12 个月内就使用本应用而向我们支付的费用总额（若有）。
-    </p>
+<p>You must be at least 13 years old to use Skiller. By using the app, you represent that you meet this requirement.</p>
 
-    <h2>七、服务变更与终止</h2>
-    <ul>
-      <li>我们有权根据业务需要随时修改、暂停或终止服务，并通过应用内提示、版本更新等方式通知您。</li>
-      <li>若您违反本条款，我们有权单方面终止对您的服务，且无需退款或赔偿（若有）。</li>
-      <li>您可以随时卸载本应用以终止使用。</li>
-    </ul>
+<h2>3. Your Account</h2>
 
-    <h2>八、条款变更</h2>
-    <p>
-      我们可能适时更新本条款。更新后的条款将在本页面公示，并通过应用内提示等方式通知您。
-      重大变更生效前至少 7 天通知。若您不同意更新后的条款，请停止使用本应用；继续使用即视为接受更新后的条款。
-    </p>
+<p>You may use most of Skiller without an account. To submit a Skill for inclusion in the community library, you'll need to sign in with GitHub or Apple. You're responsible for keeping your sign-in credentials secure and for any activity that occurs under your account.</p>
 
-    <h2>九、法律适用与争议解决</h2>
-    <p>
-      本条款的订立、生效、解释、履行及争议解决均适用中华人民共和国大陆地区法律（不含涉外冲突法规则）。
-      因本条款产生的任何争议，双方应友好协商解决；协商不成的，任何一方均可向开发者所在地有管辖权的人民法院提起诉讼。
-    </p>
+<h2>4. User Submissions</h2>
 
-    <h2>十、其他</h2>
-    <ul>
-      <li>本条款构成您与我们之间就使用本应用达成的完整协议，取代双方此前就此达成的所有口头或书面约定。</li>
-      <li>若本条款的任一条款被认定为无效或不可执行，不影响其他条款的效力。</li>
-      <li>本条款中的标题仅为方便阅读，不影响条款的解释。</li>
-    </ul>
+<p>When you submit a GitHub repository as a Skill, you confirm that:</p>
+<ul>
+  <li>The repository is public and accessible.</li>
+  <li>You have the right to make it publicly available.</li>
+  <li>The repository's content does not violate the rights of any third party (including copyright, trademark, or privacy rights).</li>
+  <li>The repository does not contain malicious code, illegal content, hate speech, sexually explicit material, or content that promotes violence.</li>
+</ul>
 
-    <h2>十一、联系我们</h2>
-    <ul>
-      <li>邮箱：<a href="mailto:handwanly@gmail.com">handwanly@gmail.com</a></li>
-      <li>GitHub Issues：<a href="https://github.com/isink/skiller/issues" target="_blank" rel="noopener">github.com/isink/skiller/issues</a></li>
-    </ul>
+<p>By submitting a repository, you grant Skiller a non-exclusive, worldwide, royalty-free license to display, link to, and describe the repository within the app and on related promotional surfaces.</p>
 
-    <hr class="divider" />
-    <p style="font-size:0.8125rem;">
-      © 2026 Skiller. 本条款最终解释权归 Skiller 开发者所有。
-    </p>
-  </main>
+<p>We reserve the right to refuse, remove, or hide any submission at our sole discretion, with or without notice.</p>
+
+<h2>5. Acceptable Use</h2>
+
+<p>You agree not to:</p>
+<ul>
+  <li>Use the app for any unlawful purpose.</li>
+  <li>Attempt to disrupt, reverse-engineer, or gain unauthorized access to the app's systems.</li>
+  <li>Submit spam, duplicate submissions, or content unrelated to AI Skills.</li>
+  <li>Impersonate any person or misrepresent your affiliation with any organization.</li>
+  <li>Scrape or harvest data from the app for redistribution without permission.</li>
+</ul>
+
+<h2>6. Third-Party Content</h2>
+
+<p>Skills displayed in Skiller are owned by their respective authors and licensed under whatever license each repository specifies. Skiller does not own, endorse, or assume responsibility for the functionality, safety, or quality of third-party Skills. <strong>Always review the source code of a Skill before installing it</strong> in your AI agent.</p>
+
+<p>Install commands shown in the app are convenience snippets — running them executes code controlled by the third-party Skill author. You install Skills entirely at your own risk.</p>
+
+<h2>7. Reporting Content</h2>
+
+<p>If you believe a Skill in our directory infringes your rights, contains malicious content, or otherwise violates these Terms, you can report it directly from the Skill's detail page (tap the menu icon in the top-right) or by emailing us at <a href="mailto:handwanly@gmail.com">handwanly@gmail.com</a>. We aim to review reports promptly.</p>
+
+<h2>8. Advertising</h2>
+
+<p>Skiller is supported by banner advertising provided by Google AdMob in non-personalized mode. By using the app, you acknowledge and consent to ads being displayed.</p>
+
+<h2>9. Disclaimer of Warranties</h2>
+
+<p>Skiller is provided "as is" and "as available", without warranties of any kind, whether express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. We do not guarantee that the app will be error-free, uninterrupted, or that any defects will be corrected.</p>
+
+<h2>10. Limitation of Liability</h2>
+
+<p>To the maximum extent permitted by law, Skiller and its developers shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the app, including but not limited to damages caused by installing third-party Skills.</p>
+
+<h2>11. Termination</h2>
+
+<p>We may suspend or terminate your access to Skiller at any time, with or without notice, for conduct that we believe violates these Terms or is harmful to other users, third parties, or our services. You may stop using Skiller and delete your account at any time via the in-app account deletion flow.</p>
+
+<h2>12. Changes to These Terms</h2>
+
+<p>We may update these Terms from time to time. The "Last updated" date at the top reflects the most recent revision. Continued use of the app after changes are posted means you accept the updated Terms.</p>
+
+<h2>13. Contact</h2>
+
+<p>Questions about these Terms? Email us at <a href="mailto:handwanly@gmail.com">handwanly@gmail.com</a>.</p>
+
 </body>
 </html>
