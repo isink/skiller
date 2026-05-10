@@ -2,7 +2,7 @@ import Foundation
 import Supabase
 
 private let LIST_COLUMNS = """
-id, slug, name, description, description_zh, category, tags, use_cases, \
+id, slug, name, description, description_zh, category, tags, use_cases, use_cases_en, \
 author, github_url, github_stars, rank, score, featured, created_at, published_at
 """
 
