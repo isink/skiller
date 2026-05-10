@@ -96,7 +96,7 @@ struct NewSkillsView: View {
         } else if visibleSkills.isEmpty {
             EmptyState(icon: "tray", title: "Nothing in this batch")
         } else {
-            VStack(spacing: 12) {
+            LazyVStack(spacing: 12) {
                 ForEach(visibleSkills) { SkillCard(skill: $0) }
             }
         }

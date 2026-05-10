@@ -18,7 +18,8 @@ struct SkillCard: View {
     private var isFavorited: Bool { !favorites.isEmpty }
 
     private var chips: [String] {
-        if let useCases = skill.useCases, !useCases.isEmpty {
+        let useCases = skill.localizedUseCases
+        if !useCases.isEmpty {
             return Array(useCases.prefix(3))
         }
         return skill.tags

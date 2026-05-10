@@ -9,6 +9,7 @@ struct Skill: Codable, Identifiable, Hashable {
     let category: String
     let tags: [String]
     let useCases: [String]?
+    let useCasesEn: [String]?
     let author: String
     let githubUrl: String
     let githubStars: Int?
@@ -24,6 +25,7 @@ struct Skill: Codable, Identifiable, Hashable {
         case id, slug, name, description, category, tags, author, rank, score, featured
         case descriptionZh    = "description_zh"
         case useCases         = "use_cases"
+        case useCasesEn       = "use_cases_en"
         case githubUrl        = "github_url"
         case githubStars      = "github_stars"
         case createdAt        = "created_at"
@@ -73,5 +75,16 @@ extension Skill {
             return description
         }
         return descriptionZh ?? ""
+    }
+
+    /// Locale-appropriate use-case chips: English for non-zh systems, Chinese
+    /// otherwise. Falls back to the other language if the preferred one hasn't
+    /// been generated yet (older rows in the DB).
+    var localizedUseCases: [String] {
+        let prefersChinese = Locale.current.language.languageCode?.identifier == "zh"
+        let preferred = prefersChinese ? useCases : useCasesEn
+        if let p = preferred, !p.isEmpty { return p }
+        let fallback = prefersChinese ? useCasesEn : useCases
+        return fallback ?? []
     }
 }

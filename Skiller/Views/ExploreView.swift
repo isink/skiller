@@ -10,6 +10,9 @@ struct ExploreView: View {
     @State private var skills: [Skill] = []
     @State private var repos: [RepoGroupSummary] = []
     @State private var loading = true
+    @State private var skillsPage = 0
+
+    private static let pageSize = 50
 
     enum Mode: String, CaseIterable, Hashable {
         case repos, skills
@@ -25,29 +28,51 @@ struct ExploreView: View {
     private struct LoadKey: Equatable {
         let category: String?
         let mode: Mode
+        let page: Int
+    }
+
+    /// Total pages for the currently selected category in skills mode.
+    private var skillsTotalPages: Int {
+        let total = category.map { counts[$0] ?? 0 } ?? counts.values.reduce(0, +)
+        return max(1, (total + Self.pageSize - 1) / Self.pageSize)
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                header
-                    .padding(.top, 8)
-                categoryRow
-                modePicker
-                contentList
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Color.clear.frame(height: 0).id("__top")
+                    header
+                        .padding(.top, 8)
+                    categoryRow
+                    modePicker
+                    contentList
+                    if mode == .skills && !loading && !skills.isEmpty && skillsTotalPages > 1 {
+                        Pagination(
+                            currentPage: $skillsPage,
+                            totalPages: skillsTotalPages
+                        ) {
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                proxy.scrollTo("__top", anchor: .top)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 32)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 32)
+            .scrollIndicators(.hidden)
         }
-        .scrollIndicators(.hidden)
         .background(Color.bg.ignoresSafeArea())
         .navigationBarHidden(true)
         .task {
             await loadCategories()
         }
-        .task(id: LoadKey(category: category, mode: mode)) {
+        .task(id: LoadKey(category: category, mode: mode, page: skillsPage)) {
             await loadCurrent()
         }
+        .onChange(of: category) { _, _ in skillsPage = 0 }
+        .onChange(of: mode) { _, _ in skillsPage = 0 }
         .onChange(of: initialCategory) { _, new in
             guard let new else { return }
             category = new
@@ -128,7 +153,7 @@ struct ExploreView: View {
             if skills.isEmpty {
                 EmptyState(icon: "tray", title: "No skills yet")
             } else {
-                VStack(spacing: 12) {
+                LazyVStack(spacing: 12) {
                     ForEach(skills) { SkillCard(skill: $0) }
                 }
             }
@@ -136,7 +161,7 @@ struct ExploreView: View {
             if repos.isEmpty {
                 EmptyState(icon: "tray", title: "No repos yet")
             } else {
-                VStack(spacing: 12) {
+                LazyVStack(spacing: 12) {
                     ForEach(repos) { RepoGroupCard(group: $0) }
                 }
             }
@@ -167,11 +192,12 @@ struct ExploreView: View {
     @MainActor
     private func loadSkills() async {
         let cache = SkillsCache.shared
+        let offset = skillsPage * Self.pageSize
         let pair: (stale: [Skill]?, fresh: Task<[Skill]?, Never>)
         if let cat = category {
-            pair = await cache.skillsByCategory(cat, limit: 50)
+            pair = await cache.skillsByCategory(cat, offset: offset, limit: Self.pageSize)
         } else {
-            pair = await cache.allSkills(limit: 50)
+            pair = await cache.allSkills(offset: offset, limit: Self.pageSize)
         }
         if let v = pair.stale {
             skills = v
@@ -187,7 +213,7 @@ struct ExploreView: View {
     @MainActor
     private func loadRepos() async {
         let cache = SkillsCache.shared
-        let (stale, freshTask) = await cache.repoGroups(limit: 30)
+        let (stale, freshTask) = await cache.repoGroups(limit: 1000)
         if let v = stale {
             repos = v
             loading = false

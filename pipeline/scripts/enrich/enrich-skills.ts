@@ -38,6 +38,7 @@ type SkillRow = {
 type Enrichment = {
   description_zh: string;
   use_cases: string[];
+  use_cases_en: string[];
   skill_md_summary_zh: string;
 };
 
@@ -47,7 +48,7 @@ async function enrichOne(skill: SkillRow): Promise<Enrichment> {
     : "";
   const context = mdBody.slice(0, 800);
 
-  const prompt = `你是一个技术文案专家，帮助中文用户了解 Claude AI 的技能插件。
+  const prompt = `你是一个技术文案专家，帮助用户了解 Claude AI 的技能插件，输出双语内容。
 
 技能名称：${skill.name}
 英文描述：${skill.description}
@@ -55,11 +56,12 @@ ${context ? `\n技能内容（节选）：\n${context}` : ""}
 
 请用 JSON 格式输出以下内容：
 1. description_zh：50-80 字的中文描述，准确传达该技能的核心功能，语言简洁自然
-2. use_cases：3-5 个使用场景短标签（每个 4-8 个字），描述用户会在什么情况下用到这个技能
-3. skill_md_summary_zh：150-250 字的中文摘要，面向中文用户介绍这个技能的完整功能、使用方式和适用场景，语言流畅易懂
+2. use_cases：3-5 个中文使用场景短标签（每个 4-8 个字），描述用户会在什么情况下用到这个技能
+3. use_cases_en：use_cases 的英文版，3-5 个 Title Case 短标签（每个 1-3 个英文单词），与中文版语义对应
+4. skill_md_summary_zh：150-250 字的中文摘要，面向中文用户介绍这个技能的完整功能、使用方式和适用场景，语言流畅易懂
 
 只输出 JSON，格式如下：
-{"description_zh":"...","use_cases":["...","...","..."],"skill_md_summary_zh":"..."}`;
+{"description_zh":"...","use_cases":["...","...","..."],"use_cases_en":["...","...","..."],"skill_md_summary_zh":"..."}`;
 
   const res = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
@@ -81,7 +83,12 @@ ${context ? `\n技能内容（节选）：\n${context}` : ""}
   if (!jsonMatch) throw new Error(`No JSON in response: ${text}`);
   const parsed = JSON.parse(jsonMatch[0]) as Enrichment;
 
-  if (!parsed.description_zh || !Array.isArray(parsed.use_cases) || !parsed.skill_md_summary_zh) {
+  if (
+    !parsed.description_zh ||
+    !Array.isArray(parsed.use_cases) ||
+    !Array.isArray(parsed.use_cases_en) ||
+    !parsed.skill_md_summary_zh
+  ) {
     throw new Error(`Unexpected shape: ${text}`);
   }
   return parsed;
@@ -91,8 +98,8 @@ async function fetchPendingSkills(): Promise<SkillRow[]> {
   let query = db
     .from("skills")
     .select("id, name, description, skill_md_content")
-    .or("description_zh.is.null,use_cases.eq.{},skill_md_summary_zh.is.null")
-    .order("rank", { ascending: false });
+    .or("description_zh.is.null,use_cases.eq.{},use_cases_en.eq.{},skill_md_summary_zh.is.null")
+    .order("github_stars", { ascending: false, nullsFirst: false });
 
   if (LIMIT) query = query.limit(LIMIT);
 
@@ -107,6 +114,7 @@ async function updateSkill(id: string, enrichment: Enrichment): Promise<void> {
     .update({
       description_zh: enrichment.description_zh,
       use_cases: enrichment.use_cases,
+      use_cases_en: enrichment.use_cases_en,
       skill_md_summary_zh: enrichment.skill_md_summary_zh,
     })
     .eq("id", id);

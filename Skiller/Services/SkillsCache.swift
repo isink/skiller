@@ -89,15 +89,15 @@ extension SkillsCache {
         }
     }
 
-    func allSkills(limit: Int = 50, force: Bool = false) -> (stale: [Skill]?, fresh: Task<[Skill]?, Never>) {
-        swr(key: "all:\(limit)", ttl: 60, force: force) {
-            try await SkillsAPI.fetchAllSkills(limit: limit)
+    func allSkills(offset: Int = 0, limit: Int = 50, force: Bool = false) -> (stale: [Skill]?, fresh: Task<[Skill]?, Never>) {
+        swr(key: "all:\(offset):\(limit)", ttl: 60, force: force) {
+            try await SkillsAPI.fetchAllSkills(offset: offset, limit: limit)
         }
     }
 
-    func skillsByCategory(_ cat: String, limit: Int = 50, force: Bool = false) -> (stale: [Skill]?, fresh: Task<[Skill]?, Never>) {
-        swr(key: "cat:\(cat):\(limit)", ttl: 60, force: force) {
-            try await SkillsAPI.fetchSkillsByCategory(cat, limit: limit)
+    func skillsByCategory(_ cat: String, offset: Int = 0, limit: Int = 50, force: Bool = false) -> (stale: [Skill]?, fresh: Task<[Skill]?, Never>) {
+        swr(key: "cat:\(cat):\(offset):\(limit)", ttl: 60, force: force) {
+            try await SkillsAPI.fetchSkillsByCategory(cat, offset: offset, limit: limit)
         }
     }
 
