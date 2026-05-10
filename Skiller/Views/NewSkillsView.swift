@@ -37,7 +37,7 @@ struct NewSkillsView: View {
         }
         .scrollIndicators(.hidden)
         .background(Color.bg.ignoresSafeArea())
-        .navigationTitle("最新收录")
+        .navigationTitle("Latest")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.bg, for: .navigationBar)
         .task { await loadCategories() }
@@ -49,7 +49,7 @@ struct NewSkillsView: View {
         let when = batch.first.flatMap { Format.parseISO($0.createdAt) }
         return HStack(spacing: 6) {
             if count > 0 {
-                Text("本次收录 \(count) 个 · 按 ★ 排序")
+                Text("\(count) in this batch · sorted by ★")
                     .font(.system(size: 12))
                     .foregroundStyle(Color.textSubtle)
                 if let when {
@@ -69,7 +69,7 @@ struct NewSkillsView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 CategoryChip(
-                    label: "全部",
+                    label: String(localized: "All"),
                     count: batch.count,
                     active: category == nil
                 ) { category = nil }
@@ -94,7 +94,7 @@ struct NewSkillsView: View {
                 ForEach(0..<6, id: \.self) { _ in SkillCardSkeleton() }
             }
         } else if visibleSkills.isEmpty {
-            EmptyState(icon: "tray", title: "本次没有收录")
+            EmptyState(icon: "tray", title: "Nothing in this batch")
         } else {
             VStack(spacing: 12) {
                 ForEach(visibleSkills) { SkillCard(skill: $0) }

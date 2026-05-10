@@ -51,7 +51,7 @@ struct HotSkillCard: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.bottom, 6)
 
-                Text(skill.descriptionZh ?? skill.description)
+                Text(skill.localizedDescription)
                     .font(.system(size: 12))
                     .foregroundStyle(Color.white.opacity(0.55))
                     .lineLimit(2)

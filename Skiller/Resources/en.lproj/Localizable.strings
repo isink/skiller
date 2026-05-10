@@ -1,0 +1,141 @@
+// Tab bar
+"Home" = "Home";
+"Explore" = "Explore";
+"Favorites" = "Favorites";
+"Profile" = "Profile";
+
+// Common
+"More" = "More";
+"Submit" = "Submit";
+"Cancel" = "Cancel";
+"Close" = "Close";
+"Retry" = "Retry";
+"Delete" = "Delete";
+"Sign Out" = "Sign Out";
+"Submitted" = "Submitted";
+
+// Time — Format.timeAgo / timeAgoShort
+"Today" = "Today";
+"Yesterday" = "Yesterday";
+"%lld days ago" = "%lld days ago";
+"1 week ago" = "1 week ago";
+"%lld weeks ago" = "%lld weeks ago";
+"1 month ago" = "1 month ago";
+"%lld months ago" = "%lld months ago";
+"%lld minutes ago" = "%lld minutes ago";
+"%lld hours ago" = "%lld hours ago";
+
+// Categories — CategoryMeta.displayName
+"Official" = "Official";
+"Coding" = "Coding";
+"Data" = "Data";
+"DevOps" = "DevOps";
+"Security" = "Security";
+"Design" = "Design";
+"Docs" = "Docs";
+"Office" = "Office";
+"Research" = "Research";
+"Other" = "Other";
+
+// Author — Format.author
+"Community" = "Community";
+
+// HomeView
+"Discover quality Claude skills" = "Discover quality Claude skills";
+"Updated %@" = "Updated %@";
+"Total skills" = "Total skills";
+"New today" = "New today";
+"Search skills, tags, authors" = "Search skills, tags, authors";
+"Latest" = "Latest";
+"Loading failed, check your network" = "Loading failed, check your network";
+"Community contributions" = "Community contributions";
+"Be the first contributor" = "Be the first contributor";
+"Submit your GitHub skill repo, it'll show here after review" = "Submit your GitHub skill repo, it'll show here after review";
+"Found %lld results for \"%@\"" = "Found %lld results for \"%@\"";
+"No matching results" = "No matching results";
+"Try other keywords" = "Try other keywords";
+
+// ProfileView
+"Discover and install Claude AI skills" = "Discover and install Claude AI skills";
+"Sign in to recommend GitHub repos" = "Sign in to recommend GitHub repos";
+"Signing in…" = "Signing in…";
+"Sign in with GitHub" = "Sign in with GitHub";
+"Sign-in failed, try again later" = "Sign-in failed, try again later";
+"Apple sign-in failed, try again later" = "Apple sign-in failed, try again later";
+"Deleting…" = "Deleting…";
+"Delete account" = "Delete account";
+"Delete account?" = "Delete account?";
+"Will permanently delete your Skiller account info. Local favorites are kept; approved submissions remain but are detached from your account. This cannot be undone." = "Will permanently delete your Skiller account info. Local favorites are kept; approved submissions remain but are detached from your account. This cannot be undone.";
+"Delete failed, try again later or contact handwanly@gmail.com" = "Delete failed, try again later or contact handwanly@gmail.com";
+"My footprint" = "My footprint";
+"Favorited" = "Favorited";
+"Browsed" = "Browsed";
+"Most viewed" = "Most viewed";
+"Contribute" = "Contribute";
+"Resources" = "Resources";
+"Anthropic Official Skills" = "Anthropic Official Skills";
+"Claude Skills Documentation" = "Claude Skills Documentation";
+"Submit Skill" = "Submit Skill";
+"Recommend a GitHub repo for inclusion" = "Recommend a GitHub repo for inclusion";
+"Privacy Policy" = "Privacy Policy";
+"Terms of Use" = "Terms of Use";
+"Feedback" = "Feedback";
+"Apple User" = "Apple User";
+
+// SubmitSkillView
+"Submit this repo?" = "Submit this repo?";
+"%@\nWill appear in Skiller after review" = "%@\nWill appear in Skiller after review";
+"Recommend Your Skill" = "Recommend Your Skill";
+"Pick one of your GitHub repos, we'll review and include it" = "Pick one of your GitHub repos, we'll review and include it";
+"GitHub account required" = "GitHub account required";
+"Please sign out and sign in with GitHub to submit a repo" = "Please sign out and sign in with GitHub to submit a repo";
+"Sign out current account" = "Sign out current account";
+"Sign in first" = "Sign in first";
+"Sign in to pick a Skill from your GitHub repos" = "Sign in to pick a Skill from your GitHub repos";
+"No public repos found" = "No public repos found";
+"Your GitHub account has no public repos yet" = "Your GitHub account has no public repos yet";
+"Submission Guidelines" = "Submission Guidelines";
+"Repo is publicly accessible, README explains its purpose" = "Repo is publicly accessible, README explains its purpose";
+"Follows Claude Skill spec, contains at least one SKILL.md" = "Follows Claude Skill spec, contains at least one SKILL.md";
+"No malicious code, copyright violation, or inappropriate content" = "No malicious code, copyright violation, or inappropriate content";
+"GitHub auth token missing, please sign in again" = "GitHub auth token missing, please sign in again";
+"Failed to fetch repos, check your network and try again" = "Failed to fetch repos, check your network and try again";
+"Submission failed, please try again later" = "Submission failed, please try again later";
+
+// ReportSkillSheet
+"Report" = "Report";
+"Inappropriate content (sexual / violence / discrimination)" = "Inappropriate content (sexual / violence / discrimination)";
+"Copyright infringement" = "Copyright infringement";
+"Malicious code" = "Malicious code";
+"Spam or low-quality content" = "Spam or low-quality content";
+"We'll manually review reports and remove content when needed." = "We'll manually review reports and remove content when needed.";
+"Report Reason" = "Report Reason";
+"Additional Notes (Optional)" = "Additional Notes (Optional)";
+"Thanks for the feedback. We'll review it as soon as possible." = "Thanks for the feedback. We'll review it as soon as possible.";
+
+// SkillDetailView
+"Skill not found" = "Skill not found";
+"Report this skill" = "Report this skill";
+"Install Command" = "Install Command";
+"View on GitHub" = "View on GitHub";
+
+// ExploreView
+"All" = "All";
+"Repos" = "Repos";
+"Skills" = "Skills";
+"No skills yet" = "No skills yet";
+"No repos yet" = "No repos yet";
+
+// Favorites
+"No favorites yet" = "No favorites yet";
+"Tap the heart icon on a skill page to favorite it" = "Tap the heart icon on a skill page to favorite it";
+
+// NewSkillsView
+"%lld in this batch · sorted by ★" = "%lld in this batch · sorted by ★";
+"Nothing in this batch" = "Nothing in this batch";
+
+// SearchBar
+"Search skills" = "Search skills";
+
+// RepoGroupCard
+"%@ · %lld skills" = "%@ · %lld skills";

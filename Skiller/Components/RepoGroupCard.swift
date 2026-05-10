@@ -34,7 +34,7 @@ struct RepoGroupCard: View {
                                     .font(.system(size: 12))
                                     .foregroundStyle(Color.textSubtle)
                             }
-                            Text("\(Format.author(group.author)) · \(group.skillCount) 个 skill")
+                            Text("\(Format.author(group.author)) · \(group.skillCount) skills")
                                 .font(.system(size: 12))
                                 .foregroundStyle(Color.textSubtle)
                         }

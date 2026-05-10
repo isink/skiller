@@ -9,19 +9,19 @@ struct RootTabView: View {
     var body: some View {
         TabView(selection: $selection) {
             NavigationRouter { HomeView() }
-                .tabItem { Label("首页", systemImage: "house.fill") }
+                .tabItem { Label("Home", systemImage: "house.fill") }
                 .tag(Tab.home)
 
             NavigationRouter { ExploreView(initialCategory: $exploreCategory) }
-                .tabItem { Label("探索", systemImage: "square.grid.2x2.fill") }
+                .tabItem { Label("Explore", systemImage: "square.grid.2x2.fill") }
                 .tag(Tab.explore)
 
             NavigationRouter { FavoritesView() }
-                .tabItem { Label("收藏", systemImage: "heart.fill") }
+                .tabItem { Label("Favorites", systemImage: "heart.fill") }
                 .tag(Tab.favorites)
 
             NavigationRouter { ProfileView() }
-                .tabItem { Label("我的", systemImage: "person.fill") }
+                .tabItem { Label("Profile", systemImage: "person.fill") }
                 .tag(Tab.profile)
         }
         .tint(Color.brand)

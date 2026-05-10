@@ -12,8 +12,14 @@ struct ExploreView: View {
     @State private var loading = true
 
     enum Mode: String, CaseIterable, Hashable {
-        case repos = "仓库"
-        case skills = "技能"
+        case repos, skills
+
+        var label: String {
+            switch self {
+            case .repos:  return String(localized: "Repos")
+            case .skills: return String(localized: "Skills")
+            }
+        }
     }
 
     private struct LoadKey: Equatable {
@@ -59,7 +65,7 @@ struct ExploreView: View {
 
     private var header: some View {
         HStack {
-            Text("探索")
+            Text("Explore")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(Color.textPrimary)
             Spacer()
@@ -70,7 +76,7 @@ struct ExploreView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 CategoryChip(
-                    label: "全部",
+                    label: String(localized: "All"),
                     count: counts.values.reduce(0, +),
                     active: category == nil
                 ) { category = nil }
@@ -92,7 +98,7 @@ struct ExploreView: View {
         HStack(spacing: 8) {
             ForEach(Mode.allCases, id: \.self) { m in
                 Button { mode = m } label: {
-                    Text(m.rawValue)
+                    Text(m.label)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(mode == m ? Color.textPrimary : Color.textSubtle)
                         .padding(.horizontal, 14)
@@ -120,7 +126,7 @@ struct ExploreView: View {
             }
         } else if mode == .skills {
             if skills.isEmpty {
-                EmptyState(icon: "tray", title: "还没有技能")
+                EmptyState(icon: "tray", title: "No skills yet")
             } else {
                 VStack(spacing: 12) {
                     ForEach(skills) { SkillCard(skill: $0) }
@@ -128,7 +134,7 @@ struct ExploreView: View {
             }
         } else {
             if repos.isEmpty {
-                EmptyState(icon: "tray", title: "还没有仓库")
+                EmptyState(icon: "tray", title: "No repos yet")
             } else {
                 VStack(spacing: 12) {
                     ForEach(repos) { RepoGroupCard(group: $0) }

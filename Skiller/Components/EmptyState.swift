@@ -2,8 +2,8 @@ import SwiftUI
 
 struct EmptyState: View {
     var icon: String = "sparkles"
-    let title: String
-    var subtitle: String? = nil
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey? = nil
 
     var body: some View {
         VStack(spacing: 12) {

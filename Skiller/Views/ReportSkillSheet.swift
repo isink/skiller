@@ -8,13 +8,25 @@ struct ReportSkillSheet: View {
     enum Reason: String, CaseIterable, Hashable {
         case abuse, copyright, malicious, spam, other
 
-        var label: String {
+        var label: LocalizedStringKey {
             switch self {
-            case .abuse:     return "违规内容（色情 / 暴力 / 歧视）"
-            case .copyright: return "版权侵犯"
-            case .malicious: return "恶意代码"
-            case .spam:      return "垃圾或低质量内容"
-            case .other:     return "其他"
+            case .abuse:     return "Inappropriate content (sexual / violence / discrimination)"
+            case .copyright: return "Copyright infringement"
+            case .malicious: return "Malicious code"
+            case .spam:      return "Spam or low-quality content"
+            case .other:     return "Other"
+            }
+        }
+
+        /// Stable English label sent to the backend (so reports remain searchable
+        /// regardless of the reporter's UI language).
+        var apiLabel: String {
+            switch self {
+            case .abuse:     return "Inappropriate content (sexual / violence / discrimination)"
+            case .copyright: return "Copyright infringement"
+            case .malicious: return "Malicious code"
+            case .spam:      return "Spam or low-quality content"
+            case .other:     return "Other"
             }
         }
     }
@@ -46,12 +58,12 @@ struct ReportSkillSheet: View {
             }
             .scrollIndicators(.hidden)
             .background(Color.bg.ignoresSafeArea())
-            .navigationTitle("举报")
+            .navigationTitle("Report")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.bg, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button("Close") { dismiss() }
                         .tint(Color.textSubtle)
                 }
                 if !submitted {
@@ -62,7 +74,7 @@ struct ReportSkillSheet: View {
                             if submitting {
                                 ProgressView().tint(Color.brand)
                             } else {
-                                Text("提交").fontWeight(.semibold)
+                                Text("Submit").fontWeight(.semibold)
                             }
                         }
                         .tint(Color.brand)
@@ -80,7 +92,7 @@ struct ReportSkillSheet: View {
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(Color.textPrimary)
                 .lineLimit(1)
-            Text("收到举报后我们会人工复核，必要时下架内容。")
+            Text("We'll manually review reports and remove content when needed.")
                 .font(.system(size: 12))
                 .foregroundStyle(Color.textSubtle)
         }
@@ -93,7 +105,7 @@ struct ReportSkillSheet: View {
 
     private var reasonList: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("举报原因")
+            Text("Report Reason")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color.textSubtle)
                 .tracking(1.2)
@@ -130,7 +142,7 @@ struct ReportSkillSheet: View {
 
     private var noteField: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("补充说明（可选）")
+            Text("Additional Notes (Optional)")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color.textSubtle)
                 .tracking(1.2)
@@ -152,14 +164,14 @@ struct ReportSkillSheet: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 32))
                 .foregroundStyle(Color.accentGreen)
-            Text("已提交")
+            Text("Submitted")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Color.textPrimary)
-            Text("感谢反馈，我们会尽快人工复核。")
+            Text("Thanks for the feedback. We'll review it as soon as possible.")
                 .font(.system(size: 12))
                 .foregroundStyle(Color.textSubtle)
                 .multilineTextAlignment(.center)
-            Button("关闭") { dismiss() }
+            Button("Close") { dismiss() }
                 .tint(Color.brand)
                 .padding(.top, 4)
         }
@@ -185,14 +197,14 @@ struct ReportSkillSheet: View {
                 skillId: skill.id,
                 skillSlug: skill.slug,
                 skillName: skill.name,
-                reason: reason.label,
+                reason: reason.apiLabel,
                 note: trimmed.isEmpty ? nil : trimmed,
                 userId: userId
             )
             submitted = true
         } catch {
             print("Report failed: \(error)")
-            self.error = "提交失败，请稍后重试"
+            self.error = String(localized: "Submission failed, please try again later")
         }
         submitting = false
     }

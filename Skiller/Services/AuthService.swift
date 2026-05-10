@@ -146,7 +146,7 @@ final class AuthService: ObservableObject {
         let emailLogin = user.email?.split(separator: "@").first.map(String.init)
         let login = emailLogin ?? "apple_user"
         let metaName = meta["full_name"]?.stringValue ?? meta["name"]?.stringValue
-        let displayName = metaName ?? "Apple 用户"
+        let displayName = metaName ?? String(localized: "Apple User")
         return UserIdentity(
             userId: user.id,
             provider: .apple,

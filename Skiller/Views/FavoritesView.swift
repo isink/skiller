@@ -9,7 +9,7 @@ struct FavoritesView: View {
     var body: some View {
         Group {
             if favorites.isEmpty {
-                EmptyState(icon: "heart", title: "还没有收藏", subtitle: "在技能详情页右上角点心收藏")
+                EmptyState(icon: "heart", title: "No favorites yet", subtitle: "Tap the heart icon on a skill page to favorite it")
             } else if loading {
                 LazyVStack(spacing: 12) {
                     ForEach(0..<3, id: \.self) { _ in SkillCardSkeleton() }
@@ -28,7 +28,7 @@ struct FavoritesView: View {
             }
         }
         .background(Color.bg.ignoresSafeArea())
-        .navigationTitle("收藏")
+        .navigationTitle("Favorites")
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(Color.bg, for: .navigationBar)
         .task(id: favorites.map(\.skillId)) { await loadSkills() }

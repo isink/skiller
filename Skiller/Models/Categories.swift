@@ -8,17 +8,17 @@ enum CategoryMeta {
 
     static func displayName(_ slug: String) -> String {
         switch slug {
-        case "official":  return "官方"
+        case "official":  return String(localized: "Official")
         case "ai":        return "AI"
-        case "code":      return "编码"
-        case "data":      return "数据"
-        case "devops":    return "运维"
-        case "security":  return "安全"
-        case "design":    return "设计"
-        case "docs":      return "文档"
-        case "office":    return "办公"
-        case "research":  return "研究"
-        case "misc":      return "其他"
+        case "code":      return String(localized: "Coding")
+        case "data":      return String(localized: "Data")
+        case "devops":    return String(localized: "DevOps")
+        case "security":  return String(localized: "Security")
+        case "design":    return String(localized: "Design")
+        case "docs":      return String(localized: "Docs")
+        case "office":    return String(localized: "Office")
+        case "research":  return String(localized: "Research")
+        case "misc":      return String(localized: "Other")
         default:          return slug
         }
     }

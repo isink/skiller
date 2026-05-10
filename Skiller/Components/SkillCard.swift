@@ -41,7 +41,7 @@ struct SkillCard: View {
                                 .foregroundStyle(Color.textPrimary)
                                 .lineLimit(1)
                             if skill.featured {
-                                Text("官方")
+                                Text("Official")
                                     .font(.system(size: 10, weight: .semibold))
                                     .foregroundStyle(Color.brand)
                                     .padding(.horizontal, 8)
@@ -81,7 +81,7 @@ struct SkillCard: View {
                 }
 
                 // Description
-                Text(skill.descriptionZh ?? skill.description)
+                Text(skill.localizedDescription)
                     .font(.system(size: 14))
                     .foregroundStyle(Color.textMuted)
                     .lineLimit(2)

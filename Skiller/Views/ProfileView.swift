@@ -25,21 +25,21 @@ struct ProfileView: View {
                 accountCard
                 footprintCard
 
-                section(title: "贡献") {
+                section(title: "Contribute") {
                     submitRow
                 }
 
-                section(title: "社区") {
+                section(title: "Resources") {
                     linkRow(
                         icon: "chevron.left.forwardslash.chevron.right",
-                        title: "Anthropic 官方技能库",
+                        title: "Anthropic Official Skills",
                         subtitle: "github.com/anthropics/skills",
                         url: "https://github.com/anthropics/skills"
                     )
                     divider
                     linkRow(
                         icon: "book.fill",
-                        title: "Claude Skills 文档",
+                        title: "Claude Skills Documentation",
                         url: "https://docs.anthropic.com/en/docs/claude-code/skills-and-packages"
                     )
                 }
@@ -68,7 +68,7 @@ struct ProfileView: View {
             Text("Skiller")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(Color.textPrimary)
-            Text("发现并安装 Claude AI 技能")
+            Text("Discover and install Claude AI skills")
                 .font(.system(size: 12))
                 .foregroundStyle(Color.textSubtle)
         }
@@ -91,7 +91,7 @@ struct ProfileView: View {
 
     private var signedOutCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("登录后可推荐 GitHub 仓库")
+            Text("Sign in to recommend GitHub repos")
                 .font(.system(size: 13))
                 .foregroundStyle(Color.textSubtle)
 
@@ -124,7 +124,7 @@ struct ProfileView: View {
                             .scaledToFit()
                             .frame(width: 16, height: 16)
                     }
-                    Text(signingIn ? "登录中…" : "使用 GitHub 登录")
+                    Text(signingIn ? "Signing in…" : "Sign in with GitHub")
                         .font(.system(size: 14, weight: .semibold))
                 }
                 .frame(maxWidth: .infinity)
@@ -165,7 +165,7 @@ struct ProfileView: View {
                 Button {
                     Task { await auth.signOut() }
                 } label: {
-                    Text("退出")
+                    Text("Sign Out")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(Color.textSubtle)
                         .padding(.horizontal, 12)
@@ -184,7 +184,7 @@ struct ProfileView: View {
                 } label: {
                     HStack(spacing: 4) {
                         if deleting { ProgressView().tint(.red).scaleEffect(0.7) }
-                        Text(deleting ? "删除中…" : "删除账号")
+                        Text(deleting ? "Deleting…" : "Delete account")
                             .font(.system(size: 11))
                             .foregroundStyle(.red)
                             .underline(true, color: .red.opacity(0.5))
@@ -206,13 +206,13 @@ struct ProfileView: View {
         .background(Color.bgCard)
         .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.borderSubtle, lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .alert("删除账号？", isPresented: $showDeleteConfirm) {
-            Button("删除", role: .destructive) {
+        .alert("Delete account?", isPresented: $showDeleteConfirm) {
+            Button("Delete", role: .destructive) {
                 Task { await deleteAccount() }
             }
-            Button("取消", role: .cancel) {}
+            Button("Cancel", role: .cancel) {}
         } message: {
-            Text("将永久删除你的 Skiller 账号信息。本地收藏不会被删除；已通过审核的提交记录会保留但与你的账号解除关联。此操作不可撤销。")
+            Text("Will permanently delete your Skiller account info. Local favorites are kept; approved submissions remain but are detached from your account. This cannot be undone.")
         }
     }
 
@@ -224,7 +224,7 @@ struct ProfileView: View {
             try await auth.deleteAccount()
         } catch {
             print("Delete account failed: \(error)")
-            authError = "删除失败，请稍后重试或联系 handwanly@gmail.com"
+            authError = String(localized: "Delete failed, try again later or contact handwanly@gmail.com")
         }
         deleting = false
     }
@@ -263,7 +263,7 @@ struct ProfileView: View {
         } catch {
             print("GitHub sign-in failed: \(error)")
             if !isUserCancelled(error) {
-                authError = "登录失败，请稍后重试"
+                authError = String(localized: "Sign-in failed, try again later")
             }
         }
         signingIn = false
@@ -279,7 +279,7 @@ struct ProfileView: View {
                 let token = String(data: tokenData, encoding: .utf8),
                 let nonce = appleNonce
             else {
-                authError = "苹果登录失败，请稍后重试"
+                authError = String(localized: "Apple sign-in failed, try again later")
                 return
             }
             do {
@@ -287,12 +287,12 @@ struct ProfileView: View {
                 authError = nil
             } catch {
                 print("Apple sign-in failed: \(error)")
-                authError = "苹果登录失败，请稍后重试"
+                authError = String(localized: "Apple sign-in failed, try again later")
             }
         case .failure(let error):
             print("Apple sign-in failed: \(error)")
             if !isUserCancelled(error) {
-                authError = "苹果登录失败，请稍后重试"
+                authError = String(localized: "Apple sign-in failed, try again later")
             }
         }
         appleNonce = nil
@@ -317,15 +317,15 @@ struct ProfileView: View {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Color.brand)
-                Text("我的足迹")
+                Text("My footprint")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Color.textSubtle)
             }
 
             HStack(spacing: 0) {
-                stat(value: "\(favorites.count)", label: "已收藏")
+                stat(value: "\(favorites.count)", label: String(localized: "Favorited"))
                 statDivider
-                stat(value: "\(recents.count)", label: "浏览过")
+                stat(value: "\(recents.count)", label: String(localized: "Browsed"))
                 statDivider
                 topStat
             }
@@ -369,7 +369,7 @@ struct ProfileView: View {
                     .foregroundStyle(Color.textSubtle)
                     .frame(height: 30)
             }
-            Text("最常看")
+            Text("Most viewed")
                 .font(.system(size: 11))
                 .foregroundStyle(Color.textSubtle)
         }
@@ -384,7 +384,7 @@ struct ProfileView: View {
 
     // MARK: Section
     private func section<Content: View>(
-        title: String,
+        title: LocalizedStringKey,
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -418,10 +418,10 @@ struct ProfileView: View {
                     .foregroundStyle(Color.brand)
                     .frame(width: 22)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("提交 Skill")
+                    Text("Submit Skill")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(Color.textPrimary)
-                    Text("推荐一个 GitHub 仓库给我们收录")
+                    Text("Recommend a GitHub repo for inclusion")
                         .font(.system(size: 11))
                         .foregroundStyle(Color.textSubtle)
                 }
@@ -442,19 +442,19 @@ struct ProfileView: View {
         HStack(spacing: 16) {
             Spacer()
             Link(destination: URL(string: "https://isink.github.io/skiller/privacy.html")!) {
-                Text("隐私政策")
+                Text("Privacy Policy")
                     .font(.system(size: 11))
                     .foregroundStyle(Color.textSubtle)
                     .underline(true, color: Color.textSubtle.opacity(0.5))
             }
             Link(destination: URL(string: "https://isink.github.io/skiller/terms.html")!) {
-                Text("使用条款")
+                Text("Terms of Use")
                     .font(.system(size: 11))
                     .foregroundStyle(Color.textSubtle)
                     .underline(true, color: Color.textSubtle.opacity(0.5))
             }
-            Link(destination: URL(string: "mailto:handwanly@gmail.com?subject=Skiller%20%E5%8F%8D%E9%A6%88")!) {
-                Text("意见反馈")
+            Link(destination: URL(string: "mailto:handwanly@gmail.com?subject=Skiller%20Feedback")!) {
+                Text("Feedback")
                     .font(.system(size: 11))
                     .foregroundStyle(Color.textSubtle)
                     .underline(true, color: Color.textSubtle.opacity(0.5))
@@ -464,7 +464,7 @@ struct ProfileView: View {
         .padding(.top, 16)
     }
 
-    private func linkRow(icon: String, title: String, subtitle: String? = nil, url: String) -> some View {
+    private func linkRow(icon: String, title: LocalizedStringKey, subtitle: String? = nil, url: String) -> some View {
         Link(destination: URL(string: url) ?? URL(string: "https://example.com")!) {
             HStack(spacing: 12) {
                 Image(systemName: icon)

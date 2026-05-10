@@ -60,3 +60,18 @@ struct HomeStats {
     let newToday: Int
     let lastSyncAt: Date?
 }
+
+extension Skill {
+    /// Picks Chinese description for zh users, English for everyone else.
+    /// Falls back to whichever exists when the preferred one is missing/empty.
+    var localizedDescription: String {
+        let prefersChinese = Locale.current.language.languageCode?.identifier == "zh"
+        if prefersChinese, let zh = descriptionZh, !zh.isEmpty {
+            return zh
+        }
+        if !description.isEmpty {
+            return description
+        }
+        return descriptionZh ?? ""
+    }
+}

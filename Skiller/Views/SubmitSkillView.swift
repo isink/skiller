@@ -37,30 +37,30 @@ struct SubmitSkillView: View {
         .task(id: stateKey) { await loadIfNeeded() }
         .refreshable { await loadRepos() }
         .alert(
-            "提交这个仓库？",
+            "Submit this repo?",
             isPresented: Binding(
                 get: { pendingRepo != nil },
                 set: { if !$0 { pendingRepo = nil } }
             ),
             presenting: pendingRepo
         ) { repo in
-            Button("提交") {
+            Button("Submit") {
                 let r = repo
                 Task { await submit(r) }
             }
-            Button("取消", role: .cancel) {}
+            Button("Cancel", role: .cancel) {}
         } message: { repo in
-            Text("\(repo.fullName)\n审核通过后会出现在 Skiller 里")
+            Text("\(repo.fullName)\nWill appear in Skiller after review")
         }
     }
 
     // MARK: - Header
     private var intro: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("推荐你的 Skill")
+            Text("Recommend Your Skill")
                 .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(Color.textPrimary)
-            Text("从你的 GitHub 仓库里挑一个，我们会人工审核后收录")
+            Text("Pick one of your GitHub repos, we'll review and include it")
                 .font(.system(size: 12))
                 .foregroundStyle(Color.textSubtle)
         }
@@ -91,17 +91,17 @@ struct SubmitSkillView: View {
             Image(systemName: "chevron.left.forwardslash.chevron.right")
                 .font(.system(size: 28))
                 .foregroundStyle(Color.brand)
-            Text("提交需要 GitHub 账号")
+            Text("GitHub account required")
                 .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(Color.textPrimary)
-            Text("请退出当前账号后改用 GitHub 登录，再来提交仓库")
+            Text("Please sign out and sign in with GitHub to submit a repo")
                 .font(.system(size: 12))
                 .foregroundStyle(Color.textSubtle)
                 .multilineTextAlignment(.center)
             Button {
                 Task { await auth.signOut() }
             } label: {
-                Text("退出当前账号")
+                Text("Sign out current account")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 18)
@@ -126,10 +126,10 @@ struct SubmitSkillView: View {
             Image(systemName: "lock.fill")
                 .font(.system(size: 28))
                 .foregroundStyle(Color.brand)
-            Text("请先登录")
+            Text("Sign in first")
                 .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(Color.textPrimary)
-            Text("登录后才能从你的 GitHub 仓库里挑选要推荐的 Skill")
+            Text("Sign in to pick a Skill from your GitHub repos")
                 .font(.system(size: 12))
                 .foregroundStyle(Color.textSubtle)
                 .multilineTextAlignment(.center)
@@ -146,7 +146,7 @@ struct SubmitSkillView: View {
                             .scaledToFit()
                             .frame(width: 16, height: 16)
                     }
-                    Text(signingIn ? "登录中…" : "使用 GitHub 登录")
+                    Text(signingIn ? "Signing in…" : "Sign in with GitHub")
                         .font(.system(size: 14, weight: .semibold))
                 }
                 .padding(.horizontal, 20)
@@ -258,7 +258,7 @@ struct SubmitSkillView: View {
             HStack(spacing: 4) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 14))
-                Text("已提交")
+                Text("Submitted")
                     .font(.system(size: 11, weight: .medium))
             }
             .foregroundStyle(Color.accentGreen)
@@ -282,10 +282,10 @@ struct SubmitSkillView: View {
             Image(systemName: "tray")
                 .font(.system(size: 24))
                 .foregroundStyle(Color.textSubtle)
-            Text("没有找到公开仓库")
+            Text("No public repos found")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(Color.textPrimary)
-            Text("你的 GitHub 账号下还没有公开仓库")
+            Text("Your GitHub account has no public repos yet")
                 .font(.system(size: 12))
                 .foregroundStyle(Color.textSubtle)
                 .multilineTextAlignment(.center)
@@ -310,7 +310,7 @@ struct SubmitSkillView: View {
             Button {
                 Task { await loadRepos() }
             } label: {
-                Text("重试")
+                Text("Retry")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 18)
@@ -331,19 +331,19 @@ struct SubmitSkillView: View {
     // MARK: - Guidelines
     private var guidelines: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("收录条件")
+            Text("Submission Guidelines")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color.textSubtle)
                 .tracking(1.4)
                 .textCase(.uppercase)
-            bullet("仓库公开可访问,README 写明用途")
-            bullet("符合 Claude Skill 规范,至少含一个 SKILL.md")
-            bullet("不含恶意代码、版权侵犯或不当内容")
+            bullet("Repo is publicly accessible, README explains its purpose")
+            bullet("Follows Claude Skill spec, contains at least one SKILL.md")
+            bullet("No malicious code, copyright violation, or inappropriate content")
         }
         .padding(.top, 8)
     }
 
-    private func bullet(_ s: String) -> some View {
+    private func bullet(_ s: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 6) {
             Text("·").foregroundStyle(Color.textMuted)
             Text(s)
@@ -363,7 +363,7 @@ struct SubmitSkillView: View {
     private func loadRepos() async {
         guard case .signedIn(let identity) = auth.state else { return }
         guard let token = identity.providerToken else {
-            loadError = "未拿到 GitHub 授权 Token,请重新登录后再试"
+            loadError = String(localized: "GitHub auth token missing, please sign in again")
             return
         }
         loading = true
@@ -373,7 +373,7 @@ struct SubmitSkillView: View {
             repos = list.filter { !$0.fork && !$0.isPrivate }
         } catch {
             print("Load repos failed: \(error)")
-            loadError = "拉取仓库失败,请检查网络后重试"
+            loadError = String(localized: "Failed to fetch repos, check your network and try again")
         }
         loading = false
     }
@@ -392,7 +392,7 @@ struct SubmitSkillView: View {
             submittedRepoIds.insert(repo.id)
         } catch {
             print("Submit failed: \(error)")
-            loadError = "提交失败,请稍后重试"
+            loadError = String(localized: "Submission failed, please try again later")
         }
         submittingRepoId = nil
     }

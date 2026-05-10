@@ -62,11 +62,11 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 banner
-                Text("找到 \(results.count) 个关于 “\(query)” 的结果")
+                Text("Found \(results.count) results for \"\(query)\"")
                     .font(.system(size: 14))
                     .foregroundStyle(Color.textMuted)
                 if results.isEmpty {
-                    EmptyState(icon: "magnifyingglass", title: "没有匹配结果", subtitle: "试试其他关键词")
+                    EmptyState(icon: "magnifyingglass", title: "No matching results", subtitle: "Try other keywords")
                 } else {
                     LazyVStack(spacing: 12) {
                         ForEach(results) { SkillCard(skill: $0) }
@@ -88,7 +88,7 @@ struct HomeView: View {
                     Text("Skiller")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundStyle(Color.textPrimary)
-                    Text("发现优质 Claude 技能")
+                    Text("Discover quality Claude skills")
                         .font(.system(size: 12))
                         .foregroundStyle(Color.textSubtle)
                 }
@@ -96,7 +96,7 @@ struct HomeView: View {
                 if let last = stats?.lastSyncAt {
                     HStack(spacing: 4) {
                         Circle().fill(Color.accentGreen).frame(width: 6, height: 6)
-                        Text("\(Format.timeAgoShort(last))更新")
+                        Text("Updated \(Format.timeAgoShort(last))")
                             .font(.system(size: 11))
                             .foregroundStyle(Color.textSubtle)
                     }
@@ -107,15 +107,15 @@ struct HomeView: View {
                 StatCard(
                     icon: "square.grid.2x2",
                     value: stats.map { "\($0.total)" } ?? "—",
-                    label: "技能总数",
+                    label: "Total skills",
                     fullWidth: !(stats.map { $0.newToday > 0 } ?? false)
                 )
                 if let s = stats, s.newToday > 0 {
-                    StatCard(icon: "bolt.fill", value: "+\(s.newToday)", label: "今日新增", accent: true)
+                    StatCard(icon: "bolt.fill", value: "+\(s.newToday)", label: "New today", accent: true)
                 }
             }
 
-            SearchBar(text: $query, placeholder: "搜索技能、标签、作者")
+            SearchBar(text: $query, placeholder: "Search skills, tags, authors")
         }
     }
 
@@ -126,14 +126,14 @@ struct HomeView: View {
                 Image(systemName: "sparkles")
                     .font(.system(size: 14))
                     .foregroundStyle(Color.brand)
-                Text("最新收录")
+                Text("Latest")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(Color.textPrimary)
             }
             Spacer()
             NavigationLink(value: SkillRoute.allNew) {
                 HStack(spacing: 2) {
-                    Text("更多").font(.system(size: 12)).foregroundStyle(Color.textSubtle)
+                    Text("More").font(.system(size: 12)).foregroundStyle(Color.textSubtle)
                     Image(systemName: "chevron.right").font(.system(size: 11)).foregroundStyle(Color.textSubtle)
                 }
             }.buttonStyle(.plain)
@@ -162,7 +162,7 @@ struct HomeView: View {
                 Image(systemName: "wifi.slash")
                     .font(.system(size: 28))
                     .foregroundStyle(Color.textMuted)
-                Text("加载失败，请检查网络")
+                Text("Loading failed, check your network")
                     .font(.system(size: 14))
                     .foregroundStyle(Color.textMuted)
                 Button {
@@ -170,7 +170,7 @@ struct HomeView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.clockwise").font(.system(size: 12))
-                        Text("重试").font(.system(size: 12, weight: .semibold))
+                        Text("Retry").font(.system(size: 12, weight: .semibold))
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16)
@@ -211,14 +211,14 @@ struct HomeView: View {
                 Image(systemName: "person.2.fill")
                     .font(.system(size: 13))
                     .foregroundStyle(Color.brand)
-                Text("社区贡献")
+                Text("Community contributions")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(Color.textPrimary)
             }
             Spacer()
             NavigationLink(value: SkillRoute.submit) {
                 HStack(spacing: 2) {
-                    Text("提交").font(.system(size: 12)).foregroundStyle(Color.textSubtle)
+                    Text("Submit").font(.system(size: 12)).foregroundStyle(Color.textSubtle)
                     Image(systemName: "chevron.right").font(.system(size: 11)).foregroundStyle(Color.textSubtle)
                 }
             }.buttonStyle(.plain)
@@ -252,10 +252,10 @@ struct HomeView: View {
                     .font(.system(size: 22))
                     .foregroundStyle(Color.brand)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("成为第一个贡献者")
+                    Text("Be the first contributor")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color.textPrimary)
-                    Text("提交你的 GitHub skill 仓库，审核通过后展示在这里")
+                    Text("Submit your GitHub skill repo, it'll show here after review")
                         .font(.system(size: 12))
                         .foregroundStyle(Color.textSubtle)
                         .lineLimit(2)
@@ -308,7 +308,7 @@ struct HomeView: View {
 private struct StatCard: View {
     let icon: String
     let value: String
-    let label: String
+    let label: LocalizedStringKey
     var accent: Bool = false
     var fullWidth: Bool = false
 

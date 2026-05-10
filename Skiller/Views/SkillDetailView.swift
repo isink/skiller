@@ -49,7 +49,7 @@ struct SkillDetailView: View {
             } else if loading {
                 ProgressView().tint(Color.brand).frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                EmptyState(icon: "exclamationmark.triangle", title: "找不到该技能")
+                EmptyState(icon: "exclamationmark.triangle", title: "Skill not found")
             }
         }
         .background(Color.bg.ignoresSafeArea())
@@ -74,7 +74,7 @@ struct SkillDetailView: View {
                         Button {
                             showReportSheet = true
                         } label: {
-                            Label("举报此技能", systemImage: "flag")
+                            Label("Report this skill", systemImage: "flag")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -117,7 +117,7 @@ struct SkillDetailView: View {
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(Color.textPrimary)
                 if skill.featured {
-                    Text("官方")
+                    Text("Official")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(Color.brand)
                         .padding(.horizontal, 8).padding(.vertical, 2)
@@ -137,7 +137,7 @@ struct SkillDetailView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(Color.textSubtle)
             }
-            Text(skill.descriptionZh ?? skill.description)
+            Text(skill.localizedDescription)
                 .font(.system(size: 15))
                 .foregroundStyle(Color.textMuted)
                 .lineSpacing(3)
@@ -151,7 +151,7 @@ struct SkillDetailView: View {
         let active = agents.contains(selectedAgent) ? selectedAgent : agents[0]
         let command = active.command(skill.slug)
         return VStack(alignment: .leading, spacing: 12) {
-            Text("安装命令")
+            Text("Install Command")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Color.textSubtle)
 
@@ -233,14 +233,14 @@ struct SkillDetailView: View {
 
     private func metaBlock(_ skill: Skill) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("更多")
+            Text("More")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Color.textSubtle)
             Link(destination: URL(string: skill.githubUrl) ?? URL(string: "https://github.com")!) {
                 HStack {
                     Image(systemName: "arrow.up.right.square")
                         .foregroundStyle(Color.brand)
-                    Text("在 GitHub 上查看")
+                    Text("View on GitHub")
                         .font(.system(size: 14))
                         .foregroundStyle(Color.textPrimary)
                     Spacer()
