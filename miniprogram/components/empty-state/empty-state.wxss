@@ -1,0 +1,7 @@
+.empty {
+  padding: 128rpx 64rpx;
+  text-align: center;
+}
+.icon { font-size: 84rpx; line-height: 1; color: #3A3A48; }
+.title { margin-top: 24rpx; font-size: 32rpx; font-weight: 600; color: var(--text-muted); }
+.subtitle { margin-top: 16rpx; font-size: 28rpx; line-height: 1.5; color: var(--text-subtle); }

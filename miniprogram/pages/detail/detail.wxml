@@ -1,0 +1,68 @@
+<view wx:if="{{status === 'ready'}}" class="container">
+  <view class="header">
+    <view class="title-row">
+      <view class="title-main">
+        <text class="name" user-select>{{vm.name}}</text>
+        <text wx:if="{{vm.featured}}" class="badge">{{t.official}}</text>
+      </view>
+      <view class="heart {{favorited ? 'heart--on' : ''}}" bindtap="onToggleFavorite">{{favorited ? '♥' : '♡'}}</view>
+    </view>
+    <view class="meta">
+      <block wx:if="{{vm.stars}}">
+        <text class="star">★</text>
+        <text>{{vm.stars}} · </text>
+      </block>
+      <text>{{vm.authorName}} · {{vm.timeAgo}}</text>
+    </view>
+    <text class="desc" user-select>{{vm.description}}</text>
+
+    <view class="facts">
+      <view class="fact">
+        <text class="fact-label">{{t.category}}</text>
+        <text class="fact-chip fact-chip--category">{{categoryName}}</text>
+      </view>
+      <view wx:if="{{tags.length}}" class="fact">
+        <text class="fact-label">{{t.tags}}</text>
+        <view class="fact-chips">
+          <text wx:for="{{tags}}" wx:key="*this" class="fact-chip">{{item}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="source card">
+    <view class="block-title">{{t.sourceRepo}}</view>
+    <view class="hint">{{t.sourceHint}}</view>
+    <block wx:if="{{sourceURL}}">
+      <view class="source-box">
+        <text class="url" user-select>{{sourceURL}}</text>
+        <view class="copy {{copiedSource ? 'copy--done' : ''}}" bindtap="onCopySource">
+          {{copiedSource ? '✓ ' + t.copied : t.copyLink}}
+        </view>
+      </view>
+      <view class="hint hint--small">{{t.copyLinkHint}}</view>
+    </block>
+    <view wx:else class="hint">{{t.sourceUnavailable}}</view>
+  </view>
+
+  <view wx:if="{{hasMarkdown}}" class="markdown">
+    <view class="md-header">
+      <text class="block-title">SKILL.md</text>
+      <view class="copy {{copiedRaw ? 'copy--done' : ''}}" bindtap="onCopyMarkdown">
+        {{copiedRaw ? '✓ ' + t.copied : t.copyMarkdown}}
+      </view>
+    </view>
+    <rich-text nodes="{{nodes}}" user-select></rich-text>
+  </view>
+  <view wx:elif="{{markdownPending}}" class="md-loading">…</view>
+</view>
+
+<view wx:elif="{{status === 'loading'}}" class="spinner-wrap">
+  <view class="spinner"></view>
+</view>
+
+<empty-state wx:elif="{{status === 'error'}}" icon="⚠︎" title="{{t.skillLoadFailed}}" subtitle="{{t.loadFailed}}">
+  <view class="retry" bindtap="onRetry">↻ {{t.retry}}</view>
+</empty-state>
+
+<empty-state wx:else icon="⚠︎" title="{{t.skillNotFound}}" />

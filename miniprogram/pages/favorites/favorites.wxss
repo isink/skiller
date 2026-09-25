@@ -1,0 +1,14 @@
+.offline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+  padding: 20rpx 28rpx;
+  font-size: 24rpx;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 24rpx;
+}
+.offline-retry { flex-shrink: 0; margin-left: 24rpx; font-weight: 600; color: var(--brand); }
+.note { margin-top: 40rpx; text-align: center; font-size: 22rpx; color: var(--text-subtle); }

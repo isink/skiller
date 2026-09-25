@@ -1,0 +1,101 @@
+<view class="container">
+  <view class="banner">
+    <view class="brand-row">
+      <view>
+        <view class="brand">Skiller</view>
+        <view class="tagline">{{t.tagline}}</view>
+      </view>
+      <view wx:if="{{updatedText}}" class="updated">
+        <view class="dot"></view>
+        <text>{{updatedText}}</text>
+      </view>
+    </view>
+
+    <view class="stats">
+      <view class="stat card">
+        <view class="stat-label"><text class="stat-icon">▦</text>{{t.totalSkills}}</view>
+        <view class="stat-value">{{totalText}}</view>
+      </view>
+      <view wx:if="{{stats && stats.newToday > 0}}" class="stat card">
+        <view class="stat-label stat-label--green"><text class="stat-icon">⚡</text>{{t.newToday}}</view>
+        <view class="stat-value">+{{stats.newToday}}</view>
+      </view>
+    </view>
+
+    <view class="search">
+      <text class="search-icon">⌕</text>
+      <input
+        class="search-input"
+        value="{{query}}"
+        placeholder="{{t.searchPlaceholder}}"
+        placeholder-class="search-placeholder"
+        confirm-type="search"
+        bindinput="onInput"
+      />
+      <text wx:if="{{query}}" class="search-clear" bindtap="onClear">✕</text>
+    </view>
+  </view>
+
+  <!-- 搜索 -->
+  <block wx:if="{{searching}}">
+    <block wx:if="{{searchStatus === 'loading'}}">
+      <view wx:for="{{[0, 1, 2]}}" wx:key="*this" class="list-item"><skill-skeleton /></view>
+    </block>
+    <empty-state wx:elif="{{searchStatus === 'error'}}" icon="⚠︎" title="{{t.searchFailed}}">
+      <view class="retry" bindtap="onRetrySearch">↻ {{t.retry}}</view>
+    </empty-state>
+    <block wx:elif="{{searchStatus === 'done'}}">
+      <view class="results-label">{{resultsLabel}}</view>
+      <empty-state wx:if="{{!results.length}}" icon="⌕" title="{{t.noResults}}" subtitle="{{t.tryOtherKeywords}}" />
+      <view wx:for="{{results}}" wx:key="id" class="list-item">
+        <skill-card skill="{{item}}" />
+      </view>
+      <view wx:if="{{results.length}}" class="list-footer">
+        <text wx:if="{{loadingMore}}">{{t.loading}}</text>
+        <text wx:elif="{{moreError}}" class="link" bindtap="loadMoreResults">{{t.networkError}}</text>
+        <text wx:elif="{{hasMore}}" class="link" bindtap="loadMoreResults">{{t.loadMore}}</text>
+        <text wx:else>{{t.noMore}}</text>
+      </view>
+    </block>
+  </block>
+
+  <!-- 首页内容 -->
+  <block wx:else>
+    <view wx:if="{{offlineText}}" class="offline">{{offlineText}}</view>
+
+    <view wx:if="{{loadError}}" class="error card">
+      <view class="error-icon">⚠︎</view>
+      <view class="error-text">{{t.loadFailed}}</view>
+      <view class="retry" bindtap="onRetry">↻ {{t.retry}}</view>
+    </view>
+
+    <block wx:else>
+      <view class="section-header">
+        <view class="section-title"><text class="sparkle">✦</text>{{t.latest}}</view>
+        <view class="more" bindtap="onMore">{{t.more}} ›</view>
+      </view>
+      <scroll-view scroll-x class="hot-row" enhanced show-scrollbar="{{false}}">
+        <block wx:if="{{loading}}">
+          <view wx:for="{{[0, 1, 2, 3]}}" wx:key="*this" class="hot-item">
+            <view class="hot-placeholder"></view>
+          </view>
+        </block>
+        <view wx:for="{{fresh}}" wx:key="id" class="hot-item">
+          <hot-skill-card skill="{{item}}" />
+        </view>
+      </scroll-view>
+
+      <view class="section-header section-header--gap">
+        <view class="section-title"><text class="sparkle">★</text>{{t.popular}}</view>
+      </view>
+      <block wx:if="{{loading}}">
+        <view wx:for="{{[0, 1, 2]}}" wx:key="*this" class="list-item"><skill-skeleton /></view>
+      </block>
+      <view wx:for="{{popular}}" wx:key="id" class="list-item">
+        <skill-card skill="{{item}}" />
+      </view>
+    </block>
+
+    <view class="about-link" bindtap="onAbout">{{t.about}} ›</view>
+  </block>
+</view>

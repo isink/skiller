@@ -1,0 +1,64 @@
+/* 与 iOS 端 Theme/Colors.swift 一致的深色主题 */
+page {
+  --bg: #0B0B0F;
+  --bg-elevated: #14141B;
+  --bg-card: #1A1A24;
+  --brand: #D97757;
+  --brand-light: #E8A084;
+  --border-default: #2A2A36;
+  --border-subtle: #1F1F29;
+  --text-primary: #F5F5F7;
+  --text-muted: #9A9AA8;
+  --text-subtle: #6B6B78;
+  --accent-green: #8AE6A6;
+  --star: #F5B400;
+
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 28rpx;
+}
+
+.container {
+  padding: 32rpx 32rpx 64rpx;
+  box-sizing: border-box;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 32rpx;
+}
+
+.list-item { margin-bottom: 24rpx; }
+.list-item:last-child { margin-bottom: 0; }
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.muted { color: var(--text-muted); }
+.subtle { color: var(--text-subtle); }
+
+.chip-row {
+  white-space: nowrap;
+  width: 100%;
+}
+.chip-wrap {
+  display: inline-block;
+  margin-right: 16rpx;
+  vertical-align: top;
+}
+
+.btn-reset {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  line-height: normal;
+  border-radius: 0;
+  font-size: inherit;
+  color: inherit;
+}
+.btn-reset::after { border: none; }

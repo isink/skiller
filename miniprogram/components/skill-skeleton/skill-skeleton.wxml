@@ -1,0 +1,16 @@
+<view class="skeleton">
+  <view class="row">
+    <view class="col">
+      <view class="bone" style="height: 28rpx;"></view>
+      <view class="bone" style="width: 160rpx; height: 20rpx; margin-top: 16rpx;"></view>
+    </view>
+    <view class="dot"></view>
+  </view>
+  <view class="bone" style="height: 20rpx; margin-top: 24rpx;"></view>
+  <view class="bone" style="width: 440rpx; height: 20rpx; margin-top: 12rpx;"></view>
+  <view class="pills">
+    <view class="pill" style="width: 96rpx;"></view>
+    <view class="pill" style="width: 72rpx;"></view>
+    <view class="pill" style="width: 88rpx;"></view>
+  </view>
+</view>

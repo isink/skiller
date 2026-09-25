@@ -1,0 +1,17 @@
+.skeleton {
+  padding: 32rpx;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 32rpx;
+  animation: pulse 0.9s ease-in-out infinite alternate;
+}
+@keyframes pulse {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+.row { display: flex; align-items: flex-start; }
+.col { flex: 1; margin-right: 32rpx; }
+.bone { background: var(--bg-elevated); border-radius: 8rpx; }
+.dot { width: 48rpx; height: 48rpx; border-radius: 50%; background: var(--bg-elevated); }
+.pills { display: flex; margin-top: 24rpx; }
+.pill { height: 36rpx; margin-right: 12rpx; border-radius: 999rpx; background: var(--bg-elevated); }

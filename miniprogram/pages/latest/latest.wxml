@@ -1,0 +1,29 @@
+<view class="container">
+  <view wx:if="{{summary}}" class="summary">{{summary}}</view>
+
+  <scroll-view wx:if="{{total}}" scroll-x class="chip-row" enhanced show-scrollbar="{{false}}">
+    <view class="chip-wrap">
+      <category-chip label="{{t.all}}" count="{{total}}" active="{{!category}}" value="" bind:select="onSelectCategory" />
+    </view>
+    <view wx:for="{{chips}}" wx:key="slug" class="chip-wrap">
+      <category-chip
+        label="{{item.label}}"
+        count="{{item.count}}"
+        active="{{category === item.slug}}"
+        value="{{item.slug}}"
+        bind:select="onSelectCategory"
+      />
+    </view>
+  </scroll-view>
+
+  <block wx:if="{{loading && !visible.length}}">
+    <view wx:for="{{[0, 1, 2, 3, 4, 5]}}" wx:key="*this" class="list-item"><skill-skeleton /></view>
+  </block>
+  <empty-state wx:elif="{{loadError}}" icon="⚠︎" title="{{t.loadFailed}}">
+    <view class="retry" bindtap="onRetry">↻ {{t.retry}}</view>
+  </empty-state>
+  <empty-state wx:elif="{{!visible.length}}" icon="☐" title="{{t.nothingInBatch}}" />
+  <view wx:for="{{visible}}" wx:key="id" class="list-item">
+    <skill-card skill="{{item}}" />
+  </view>
+</view>

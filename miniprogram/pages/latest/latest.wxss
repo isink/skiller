@@ -1,0 +1,13 @@
+.summary { margin-bottom: 32rpx; font-size: 24rpx; color: var(--text-subtle); }
+.chip-row { margin-bottom: 32rpx; }
+
+.retry {
+  display: inline-block;
+  margin-top: 24rpx;
+  padding: 16rpx 32rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+  background: var(--brand);
+  border-radius: 999rpx;
+}

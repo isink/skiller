@@ -1,0 +1,15 @@
+{
+  "name": "skiller-miniprogram",
+  "private": true,
+  "description": "Skiller 微信小程序。依赖仅用于类型检查、单元测试和生成图标，不打进小程序包。",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build:test": "rm -rf .test-build && tsc -p tsconfig.test.json",
+    "test": "npm run typecheck && npm run build:test && node --test tests/*.test.js",
+    "icons": "node scripts/gen-tabbar-icons.js"
+  },
+  "devDependencies": {
+    "miniprogram-api-typings": "^5.2.3",
+    "typescript": "~5.9.3"
+  }
+}

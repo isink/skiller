@@ -1,0 +1,16 @@
+<view wx:if="{{vm}}" class="hot" style="background: {{bg}};" hover-class="hot--hover" bindtap="onTap">
+  <view class="accent-bar" style="background: {{accent}};"></view>
+  <view class="kicker-row">
+    <text class="kicker" style="color: {{accent}};">{{kicker}}</text>
+    <view wx:if="{{vm.stars}}" class="stars">
+      <text class="star">★</text>
+      <text>{{vm.stars}}</text>
+    </view>
+  </view>
+  <view class="name">{{vm.name}}</view>
+  <view class="desc">{{vm.description}}</view>
+  <view class="spacer"></view>
+  <view>
+    <text class="cat" style="color: {{accent}}; background: {{accentSoft}};">{{vm.categoryName}}</text>
+  </view>
+</view>

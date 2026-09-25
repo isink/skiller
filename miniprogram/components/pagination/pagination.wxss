@@ -1,0 +1,28 @@
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 0;
+}
+.label {
+  min-width: 200rpx;
+  margin: 0 32rpx;
+  text-align: center;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.nav {
+  width: 72rpx;
+  height: 72rpx;
+  line-height: 66rpx;
+  text-align: center;
+  font-size: 44rpx;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.nav--disabled { opacity: 0.4; }

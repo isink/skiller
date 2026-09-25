@@ -1,0 +1,24 @@
+<view class="container">
+  <block wx:if="{{loading}}">
+    <view wx:for="{{[0, 1, 2]}}" wx:key="*this" class="list-item"><skill-skeleton /></view>
+  </block>
+
+  <empty-state
+    wx:elif="{{empty}}"
+    icon="♡"
+    title="{{t.noFavorites}}"
+    subtitle="{{t.noFavoritesHint}}"
+  />
+
+  <block wx:else>
+    <view wx:if="{{offline}}" class="offline" bindtap="onRetry">
+      <text>{{t.favoritesOffline}}</text>
+      <text class="offline-retry">{{t.retry}}</text>
+    </view>
+    <empty-state wx:if="{{!skills.length && offline}}" icon="⚠︎" title="{{t.loadFailed}}" />
+    <view wx:for="{{skills}}" wx:key="id" class="list-item">
+      <skill-card skill="{{item}}" />
+    </view>
+    <view class="note">{{t.favoritesLocalNote}}</view>
+  </block>
+</view>
