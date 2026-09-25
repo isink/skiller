@@ -1,0 +1,57 @@
+<view class="container">
+  <view class="brand-header">
+    <view class="logo">✦</view>
+    <view class="brand">Skiller</view>
+    <view class="subtitle">{{t.appSubtitle}}</view>
+  </view>
+
+  <view class="footprint card">
+    <view class="fp-title"><text class="fp-icon">↗</text>{{t.myFootprint}}</view>
+    <view class="fp-stats">
+      <view class="fp-stat">
+        <view class="fp-value">{{favoriteCount}}</view>
+        <view class="fp-label">{{t.favorited}}</view>
+      </view>
+      <view class="fp-divider"></view>
+      <view class="fp-stat">
+        <view class="fp-value">{{browsedCount}}</view>
+        <view class="fp-label">{{t.browsed}}</view>
+      </view>
+      <view class="fp-divider"></view>
+      <view class="fp-stat">
+        <view class="fp-value {{topCategory ? 'fp-value--text' : 'fp-value--empty'}}">{{topCategory || '—'}}</view>
+        <view class="fp-label">{{t.mostViewed}}</view>
+      </view>
+    </view>
+    <view wx:if="{{browsedCount}}" class="fp-clear" bindtap="onClearHistory">{{t.clearHistory}}</view>
+  </view>
+
+  <view class="section-label">{{t.resources}}</view>
+  <view class="card links">
+    <view class="link-row" hover-class="link-row--hover" data-key="officialSkills" bindtap="onOpenLink">
+      <text class="link-icon">{{codeIcon}}</text>
+      <view class="link-main">
+        <view class="link-title">{{t.officialSkills}}</view>
+        <view class="link-sub">github.com/anthropics/skills</view>
+      </view>
+      <text class="chevron">›</text>
+    </view>
+    <view class="link-divider"></view>
+    <view class="link-row" hover-class="link-row--hover" data-key="skillsDocs" bindtap="onOpenLink">
+      <text class="link-icon">▤</text>
+      <view class="link-main">
+        <view class="link-title">{{t.skillsDocs}}</view>
+      </view>
+      <text class="chevron">›</text>
+    </view>
+  </view>
+
+  <view class="footnote">
+    <view class="foot-links">
+      <text class="foot-link" data-key="privacy" bindtap="onOpenLink">{{t.privacyPolicy}}</text>
+      <text class="foot-link" data-key="terms" bindtap="onOpenLink">{{t.termsOfUse}}</text>
+      <text class="foot-link" bindtap="onFeedback">{{t.feedback}}</text>
+    </view>
+    <view wx:if="{{icpFilingNumber}}" class="icp">{{icpFilingNumber}}</view>
+  </view>
+</view>

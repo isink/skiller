@@ -1,6 +1,6 @@
 # Skiller
 
-浏览、搜索和收藏 Claude Skills 的原生 iOS 应用。
+浏览、搜索和收藏 Claude Skills 的原生 iOS 应用，另有功能精简的微信小程序版本（见 [`miniprogram/`](miniprogram)）。
 
 Skiller 汇集 Anthropic 官方与社区的上千个 Claude Skills，提供分类浏览、中英文搜索、GitHub 热度排序和 SKILL.md 原文阅读。登录后，收藏可在多台设备间同步。界面支持简体中文与 English。
 
@@ -53,6 +53,7 @@ App 只读取 Supabase，skill 数据由独立的 Node.js 管线维护，位于 
 ```
 Skiller/        iOS 应用源码（App、Models、Services、Views、Components、Theme、Resources）
 SkillerTests/   单元测试：收藏同步、登录范围、隐私同意、举报参数等
+miniprogram/    微信小程序版本（本机收藏，无登录）
 pipeline/       数据导入、富化、数据库 schema 与迁移
 docs/           隐私政策、使用条款与官网页面
 project.yml     XcodeGen 工程定义

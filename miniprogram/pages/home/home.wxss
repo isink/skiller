@@ -1,0 +1,56 @@
+.banner { margin-bottom: 40rpx; }
+
+.brand-row { display: flex; justify-content: space-between; align-items: flex-start; }
+.brand { font-size: 48rpx; font-weight: 700; color: var(--text-primary); }
+.tagline { margin-top: 4rpx; font-size: 24rpx; color: var(--text-subtle); }
+.updated { display: flex; align-items: center; font-size: 22rpx; color: var(--text-subtle); }
+.dot { width: 12rpx; height: 12rpx; margin-right: 8rpx; border-radius: 50%; background: var(--accent-green); }
+
+.stats { display: flex; margin-top: 32rpx; }
+.stat { flex: 1; padding: 24rpx 32rpx; }
+.stat + .stat { margin-left: 24rpx; }
+.stat-label { font-size: 22rpx; font-weight: 500; color: var(--text-subtle); }
+.stat-label--green { color: var(--accent-green); }
+.stat-icon { margin-right: 12rpx; color: var(--brand); }
+.stat-label--green .stat-icon { color: var(--accent-green); }
+.stat-value { margin-top: 4rpx; font-size: 40rpx; font-weight: 700; color: var(--text-primary); }
+
+.search {
+  display: flex;
+  align-items: center;
+  height: 88rpx;
+  margin-top: 32rpx;
+  padding: 0 28rpx;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 24rpx;
+}
+.search-icon { font-size: 36rpx; color: var(--text-subtle); margin-right: 16rpx; }
+.search-input { flex: 1; font-size: 30rpx; color: var(--text-primary); }
+.search-placeholder { color: var(--text-subtle); }
+.search-clear { padding: 16rpx; margin-right: -16rpx; font-size: 26rpx; color: var(--text-subtle); }
+
+.results-label { margin-bottom: 24rpx; font-size: 28rpx; color: var(--text-muted); }
+
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24rpx; }
+.sparkle { margin-right: 12rpx; font-size: 28rpx; color: var(--brand); }
+.more { font-size: 24rpx; color: var(--text-subtle); padding: 8rpx 0 8rpx 16rpx; }
+
+.hot-row { white-space: nowrap; width: 100%; }
+.hot-item { display: inline-block; margin-right: 20rpx; vertical-align: top; }
+.hot-item:last-child { margin-right: 0; }
+.hot-placeholder { width: 336rpx; height: 392rpx; border-radius: 32rpx; background: var(--bg-elevated); }
+
+.error { padding: 48rpx 0; text-align: center; }
+.error-icon { font-size: 56rpx; color: var(--text-muted); }
+.error-text { margin-top: 24rpx; font-size: 28rpx; color: var(--text-muted); }
+.retry {
+  display: inline-block;
+  margin-top: 24rpx;
+  padding: 16rpx 32rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+  background: var(--brand);
+  border-radius: 999rpx;
+}

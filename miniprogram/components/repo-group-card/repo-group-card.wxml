@@ -1,0 +1,25 @@
+<view wx:if="{{group}}">
+  <view class="head" hover-class="head--hover" bindtap="onToggle">
+    <view class="head-main">
+      <view class="repo-row">
+        <text class="code-icon">{{codeIcon}}</text>
+        <text class="repo">{{group.repo}}</text>
+      </view>
+      <view class="meta">
+        <block wx:if="{{stars}}">
+          <text class="star">★</text>
+          <text>{{stars}} · </text>
+        </block>
+        <text>{{meta}}</text>
+      </view>
+    </view>
+    <text class="chevron {{expanded ? 'chevron--up' : ''}}">⌄</text>
+  </view>
+
+  <view wx:if="{{expanded}}" class="children">
+    <view wx:if="{{loading}}" class="loading">…</view>
+    <view wx:for="{{skills}}" wx:key="id" class="child">
+      <skill-card skill="{{item}}" />
+    </view>
+  </view>
+</view>

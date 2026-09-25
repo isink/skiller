@@ -1,0 +1,2 @@
+.summary { margin-bottom: 32rpx; font-size: 24rpx; color: var(--text-subtle); }
+.chip-row { margin-bottom: 32rpx; }

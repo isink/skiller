@@ -1,0 +1,24 @@
+<view wx:if="{{vm}}" class="skill-card" hover-class="skill-card--hover" bindtap="onTap">
+  <view class="top">
+    <view class="top-main">
+      <view class="title-row">
+        <text class="name">{{vm.name}}</text>
+        <text wx:if="{{vm.featured}}" class="badge">{{t.official}}</text>
+      </view>
+      <view class="meta">
+        <block wx:if="{{vm.stars}}">
+          <text class="star">★</text>
+          <text>{{vm.stars}} · </text>
+        </block>
+        <text>{{vm.authorName}} · {{vm.timeAgo}}</text>
+      </view>
+    </view>
+    <view class="heart {{favorited ? 'heart--on' : ''}}" catchtap="onToggleFavorite">
+      {{favorited ? '♥' : '♡'}}
+    </view>
+  </view>
+  <view class="desc">{{vm.description}}</view>
+  <view wx:if="{{vm.chips.length}}" class="chips">
+    <text wx:for="{{vm.chips}}" wx:key="*this" class="chip">{{item}}</text>
+  </view>
+</view>

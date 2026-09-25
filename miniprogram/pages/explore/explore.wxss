@@ -1,0 +1,17 @@
+.chip-row { margin-bottom: 32rpx; }
+
+.modes { display: flex; margin-bottom: 32rpx; }
+.mode {
+  margin-right: 16rpx;
+  padding: 12rpx 28rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text-subtle);
+  border: 1px solid transparent;
+  border-radius: 999rpx;
+}
+.mode--active {
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border-color: var(--border-default);
+}

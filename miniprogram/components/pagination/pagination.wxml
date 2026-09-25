@@ -1,0 +1,5 @@
+<view class="pager">
+  <view class="nav {{page <= 0 ? 'nav--disabled' : ''}}" bindtap="onPrev">‹</view>
+  <text class="label">{{label}}</text>
+  <view class="nav {{page >= total - 1 ? 'nav--disabled' : ''}}" bindtap="onNext">›</view>
+</view>

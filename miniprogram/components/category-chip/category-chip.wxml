@@ -1,0 +1,4 @@
+<view class="chip {{active ? 'chip--active' : ''}}" bindtap="onTap">
+  <text class="label">{{label}}</text>
+  <text wx:if="{{countText}}" class="count">{{countText}}</text>
+</view>

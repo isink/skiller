@@ -1,0 +1,53 @@
+.brand-header { padding: 32rpx 0; text-align: center; }
+.logo {
+  width: 128rpx;
+  height: 128rpx;
+  margin: 0 auto;
+  line-height: 128rpx;
+  font-size: 56rpx;
+  color: var(--brand);
+  background: rgba(217, 119, 87, 0.18);
+  border-radius: 36rpx;
+}
+.brand { margin-top: 24rpx; font-size: 44rpx; font-weight: 700; color: var(--text-primary); }
+.subtitle { margin-top: 8rpx; font-size: 24rpx; color: var(--text-subtle); }
+
+.footprint { margin-top: 8rpx; padding: 32rpx; }
+.fp-title { font-size: 24rpx; font-weight: 600; color: var(--text-subtle); }
+.fp-icon { margin-right: 12rpx; color: var(--brand); }
+.fp-stats { display: flex; align-items: center; margin-top: 24rpx; }
+.fp-stat { flex: 1; text-align: center; }
+.fp-value { height: 60rpx; line-height: 60rpx; font-size: 44rpx; font-weight: 700; color: var(--text-primary); }
+.fp-value--text { font-size: 32rpx; }
+.fp-value--empty { color: var(--text-subtle); }
+.fp-label { margin-top: 8rpx; font-size: 22rpx; color: var(--text-subtle); }
+.fp-divider { width: 1px; height: 72rpx; background: var(--border-subtle); }
+.fp-clear { margin-top: 24rpx; text-align: right; font-size: 22rpx; color: var(--text-subtle); }
+
+.section-label {
+  margin: 40rpx 0 16rpx 8rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  letter-spacing: 3rpx;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+.links { overflow: hidden; }
+.link-row { display: flex; align-items: center; padding: 28rpx 32rpx; }
+.link-row--hover { background: var(--bg-elevated); }
+.link-icon { width: 44rpx; margin-right: 24rpx; font-size: 26rpx; color: var(--brand); text-align: center; }
+.link-main { flex: 1; min-width: 0; }
+.link-title { font-size: 28rpx; font-weight: 500; color: var(--text-primary); }
+.link-sub { margin-top: 4rpx; font-size: 22rpx; color: var(--text-subtle); }
+.chevron { font-size: 36rpx; color: var(--text-subtle); }
+.link-divider { height: 1px; margin-left: 100rpx; background: var(--border-subtle); }
+
+.footnote { margin-top: 64rpx; text-align: center; }
+.foot-links { display: flex; justify-content: center; }
+.foot-link {
+  margin: 0 16rpx;
+  font-size: 22rpx;
+  color: var(--text-subtle);
+  text-decoration: underline;
+}
+.icp { margin-top: 16rpx; font-size: 20rpx; color: var(--text-subtle); opacity: 0.7; }

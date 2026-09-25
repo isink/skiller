@@ -1,0 +1,63 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/explore/explore",
+    "pages/favorites/favorites",
+    "pages/profile/profile",
+    "pages/detail/detail",
+    "pages/latest/latest"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#0B0B0F",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "Skiller",
+    "backgroundColor": "#0B0B0F",
+    "backgroundColorTop": "#0B0B0F",
+    "backgroundColorBottom": "#0B0B0F",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#6B6B78",
+    "selectedColor": "#D97757",
+    "backgroundColor": "#0B0B0F",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "images/tabbar/home.png",
+        "selectedIconPath": "images/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/explore/explore",
+        "text": "探索",
+        "iconPath": "images/tabbar/explore.png",
+        "selectedIconPath": "images/tabbar/explore-active.png"
+      },
+      {
+        "pagePath": "pages/favorites/favorites",
+        "text": "收藏",
+        "iconPath": "images/tabbar/favorites.png",
+        "selectedIconPath": "images/tabbar/favorites-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/tabbar/profile.png",
+        "selectedIconPath": "images/tabbar/profile-active.png"
+      }
+    ]
+  },
+  "usingComponents": {
+    "skill-card": "/components/skill-card/skill-card",
+    "hot-skill-card": "/components/hot-skill-card/hot-skill-card",
+    "repo-group-card": "/components/repo-group-card/repo-group-card",
+    "category-chip": "/components/category-chip/category-chip",
+    "pagination": "/components/pagination/pagination",
+    "empty-state": "/components/empty-state/empty-state",
+    "skill-skeleton": "/components/skill-skeleton/skill-skeleton"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

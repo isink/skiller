@@ -1,0 +1,78 @@
+<view class="container">
+  <view class="banner">
+    <view class="brand-row">
+      <view>
+        <view class="brand">Skiller</view>
+        <view class="tagline">{{t.tagline}}</view>
+      </view>
+      <view wx:if="{{updatedText}}" class="updated">
+        <view class="dot"></view>
+        <text>{{updatedText}}</text>
+      </view>
+    </view>
+
+    <view class="stats">
+      <view class="stat card">
+        <view class="stat-label"><text class="stat-icon">▦</text>{{t.totalSkills}}</view>
+        <view class="stat-value">{{totalText}}</view>
+      </view>
+      <view wx:if="{{stats && stats.newToday > 0}}" class="stat card">
+        <view class="stat-label stat-label--green"><text class="stat-icon">⚡</text>{{t.newToday}}</view>
+        <view class="stat-value">+{{stats.newToday}}</view>
+      </view>
+    </view>
+
+    <view class="search">
+      <text class="search-icon">⌕</text>
+      <input
+        class="search-input"
+        value="{{query}}"
+        placeholder="{{t.searchPlaceholder}}"
+        placeholder-class="search-placeholder"
+        confirm-type="search"
+        bindinput="onInput"
+      />
+      <text wx:if="{{query}}" class="search-clear" bindtap="onClear">✕</text>
+    </view>
+  </view>
+
+  <!-- 搜索结果 -->
+  <block wx:if="{{searching}}">
+    <view wx:if="{{resultsLabel}}" class="results-label">{{resultsLabel}}</view>
+    <empty-state
+      wx:if="{{resultsLabel && !results.length}}"
+      icon="⌕"
+      title="{{t.noResults}}"
+      subtitle="{{t.tryOtherKeywords}}"
+    />
+    <view wx:for="{{results}}" wx:key="id" class="list-item">
+      <skill-card skill="{{item}}" />
+    </view>
+  </block>
+
+  <!-- 最新收录 -->
+  <block wx:else>
+    <view class="section-header">
+      <view class="section-title"><text class="sparkle">✦</text>{{t.latest}}</view>
+      <view class="more" bindtap="onMore">{{t.more}} ›</view>
+    </view>
+
+    <scroll-view wx:if="{{loading}}" scroll-x class="hot-row" enhanced show-scrollbar="{{false}}">
+      <view wx:for="{{[0, 1, 2, 3]}}" wx:key="*this" class="hot-item">
+        <view class="hot-placeholder"></view>
+      </view>
+    </scroll-view>
+
+    <view wx:elif="{{loadError}}" class="error card">
+      <view class="error-icon">⚠︎</view>
+      <view class="error-text">{{t.loadFailed}}</view>
+      <view class="retry" bindtap="onRetry">↻ {{t.retry}}</view>
+    </view>
+
+    <scroll-view wx:elif="{{fresh.length}}" scroll-x class="hot-row" enhanced show-scrollbar="{{false}}">
+      <view wx:for="{{fresh}}" wx:key="id" class="hot-item">
+        <hot-skill-card skill="{{item}}" />
+      </view>
+    </scroll-view>
+  </block>
+</view>

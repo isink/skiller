@@ -1,0 +1,29 @@
+{
+  "description": "Skiller 微信小程序",
+  "appid": "touristappid",
+  "projectname": "skiller",
+  "compileType": "miniprogram",
+  "libVersion": "3.4.0",
+  "packOptions": {
+    "ignore": [
+      { "type": "folder", "value": "tests" },
+      { "type": "folder", "value": "scripts" },
+      { "type": "file", "value": "package.json" },
+      { "type": "file", "value": "README.md" }
+    ],
+    "include": []
+  },
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": true,
+    "ignoreUploadUnusedFiles": true
+  },
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
+}
