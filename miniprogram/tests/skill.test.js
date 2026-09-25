@@ -1,10 +1,10 @@
 const h = require('./helpers')
 const test = require('node:test')
 const assert = require('node:assert')
-const skill = require('../utils/skill')
-const favorites = require('../utils/favorites')
-const recents = require('../utils/recents')
-const cache = require('../utils/cache')
+const skill = require('../.test-build/utils/skill')
+const favorites = require('../.test-build/utils/favorites')
+const recents = require('../.test-build/utils/recents')
+const cache = require('../.test-build/utils/cache')
 
 test('githubRepositoryURL only accepts https github.com owner/repo links', () => {
   assert.strictEqual(skill.githubRepositoryURL('https://github.com/a/b/tree/main/x'), 'https://github.com/a/b/tree/main/x')
@@ -57,20 +57,55 @@ test('recents dedupe and report the most viewed category', () => {
   assert.strictEqual(recents.topCategory(), null)
 })
 
+test('favorites keep a list-field snapshot for offline display', () => {
+  h.reset()
+  const full = { id: 'x', slug: 's', name: 'n', skill_md_content: '# big', tags: [] }
+  favorites.toggle('x', full)
+  const [entry] = favorites.all()
+  assert.strictEqual(entry.skill.name, 'n')
+  assert.ok(!('skill_md_content' in entry.skill))
+
+  favorites.refreshSnapshots([{ id: 'x', slug: 's', name: 'renamed', tags: [] }, { id: 'other', slug: 'o', name: 'o' }])
+  assert.strictEqual(favorites.all()[0].skill.name, 'renamed')
+  assert.deepStrictEqual(favorites.ids(), ['x'])
+})
+
 test('cache serves stale values and seeds the skill index', async () => {
   cache.clear()
   let calls = 0
   const fetcher = () => { calls++; return Promise.resolve([{ id: 'x', slug: 's', name: 'n' }]) }
   const first = cache.swr('k', 60, fetcher)
   assert.strictEqual(first.stale, null)
-  await first.fresh
+  assert.deepStrictEqual((await first.fresh).error, false)
   const second = cache.swr('k', 60, fetcher)
   assert.strictEqual(second.stale.length, 1)
-  assert.strictEqual((await second.fresh).length, 1)
+  assert.strictEqual((await second.fresh).value.length, 1)
   assert.strictEqual(calls, 1)
-  await cache.swr('k', 60, fetcher, true).fresh
+  await cache.swr('k', 60, fetcher, { force: true }).fresh
   assert.strictEqual(calls, 2)
   assert.strictEqual(cache.peekSkill('x').name, 'n')
-  const failed = cache.swr('bad', 60, () => Promise.reject(new Error('x')))
-  assert.strictEqual(await failed.fresh, null)
+  assert.deepStrictEqual(await cache.swr('bad', 60, () => Promise.reject(new Error('x'))).fresh, { value: null, error: true })
+})
+
+test('persisted cache entries survive a restart and act as offline data', async () => {
+  h.reset()
+  cache.clear()
+  await cache.swr('home', 60, () => Promise.resolve({ total: 3 }), { persist: true }).fresh
+  assert.ok(h.storage[cache.PERSIST_PREFIX + 'home'])
+
+  cache.clear() // 模拟冷启动：内存清空，本地存储还在
+  const offline = cache.swr('home', 60, () => Promise.reject(new Error('offline')), { persist: true, force: true })
+  assert.deepStrictEqual(offline.stale, { total: 3 })
+  assert.ok(offline.staleAt > 0)
+  assert.deepStrictEqual(await offline.fresh, { value: null, error: true })
+})
+
+test('skillById distinguishes not found from network errors', async () => {
+  cache.clear()
+  const id = '123e4567-e89b-12d3-a456-426614174000'
+  h.reset()
+  h.respond(() => ({ statusCode: 200, data: [], header: {} }))
+  assert.deepStrictEqual(await cache.skillById(id).fresh, { value: null, error: false })
+  h.respond(() => ({ fail: true, errMsg: 'request:fail' }))
+  assert.deepStrictEqual(await cache.skillById(id).fresh, { value: null, error: true })
 })

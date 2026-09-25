@@ -19,6 +19,9 @@
   <block wx:if="{{loading && !visible.length}}">
     <view wx:for="{{[0, 1, 2, 3, 4, 5]}}" wx:key="*this" class="list-item"><skill-skeleton /></view>
   </block>
+  <empty-state wx:elif="{{loadError}}" icon="⚠︎" title="{{t.loadFailed}}">
+    <view class="retry" bindtap="onRetry">↻ {{t.retry}}</view>
+  </empty-state>
   <empty-state wx:elif="{{!visible.length}}" icon="☐" title="{{t.nothingInBatch}}" />
   <view wx:for="{{visible}}" wx:key="id" class="list-item">
     <skill-card skill="{{item}}" />

@@ -1,7 +1,7 @@
 require('./helpers')
 const test = require('node:test')
 const assert = require('node:assert')
-const format = require('../utils/format')
+const format = require('../.test-build/utils/format')
 
 test('parseISO handles Postgres microsecond timestamps with offsets', () => {
   assert.strictEqual(format.parseISO('2025-06-01T12:00:00.123456+00:00'), Date.UTC(2025, 5, 1, 12, 0, 0, 123))

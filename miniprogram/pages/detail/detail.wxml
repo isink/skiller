@@ -1,4 +1,4 @@
-<view wx:if="{{vm}}" class="container">
+<view wx:if="{{status === 'ready'}}" class="container">
   <view class="header">
     <view class="title-row">
       <view class="title-main">
@@ -15,6 +15,19 @@
       <text>{{vm.authorName}} · {{vm.timeAgo}}</text>
     </view>
     <text class="desc" user-select>{{vm.description}}</text>
+
+    <view class="facts">
+      <view class="fact">
+        <text class="fact-label">{{t.category}}</text>
+        <text class="fact-chip fact-chip--category">{{categoryName}}</text>
+      </view>
+      <view wx:if="{{tags.length}}" class="fact">
+        <text class="fact-label">{{t.tags}}</text>
+        <view class="fact-chips">
+          <text wx:for="{{tags}}" wx:key="*this" class="fact-chip">{{item}}</text>
+        </view>
+      </view>
+    </view>
   </view>
 
   <view class="source card">
@@ -39,13 +52,17 @@
         {{copiedRaw ? '✓ ' + t.copied : t.copyMarkdown}}
       </view>
     </view>
-    <rich-text wx:if="{{html}}" nodes="{{html}}" user-select></rich-text>
-    <view wx:else class="md-loading">…</view>
+    <rich-text nodes="{{nodes}}" user-select></rich-text>
   </view>
+  <view wx:elif="{{markdownPending}}" class="md-loading">…</view>
 </view>
 
-<view wx:elif="{{loading}}" class="spinner-wrap">
+<view wx:elif="{{status === 'loading'}}" class="spinner-wrap">
   <view class="spinner"></view>
 </view>
+
+<empty-state wx:elif="{{status === 'error'}}" icon="⚠︎" title="{{t.skillLoadFailed}}" subtitle="{{t.loadFailed}}">
+  <view class="retry" bindtap="onRetry">↻ {{t.retry}}</view>
+</empty-state>
 
 <empty-state wx:else icon="⚠︎" title="{{t.skillNotFound}}" />

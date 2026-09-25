@@ -1,8 +1,8 @@
 const h = require('./helpers')
 const test = require('node:test')
 const assert = require('node:assert')
-const api = require('../utils/api')
-const db = require('../utils/supabase')
+const api = require('../.test-build/utils/api')
+const db = require('../.test-build/utils/supabase')
 
 function lastQuery() {
   const url = h.requests[h.requests.length - 1].url
@@ -27,9 +27,32 @@ test('searchSkills builds an or/ilike filter over the same columns as iOS', asyn
   const { path, params } = lastQuery()
   assert.ok(path.endsWith('/rest/v1/skills'))
   assert.strictEqual(params.or, '(name.ilike.*pdf tool*,description.ilike.*pdf tool*,description_zh.ilike.*pdf tool*,author.ilike.*pdf tool*)')
-  assert.strictEqual(params.order, 'rank.desc')
-  assert.strictEqual(params.limit, '50')
+  assert.strictEqual(params.order, 'rank.desc,id.asc')
+  assert.strictEqual(params.offset, '0')
+  assert.strictEqual(params.limit, String(api.SEARCH_PAGE_SIZE))
   assert.strictEqual(params.select, api.LIST_COLUMNS)
+
+  await api.searchSkills('pdf', 40)
+  assert.strictEqual(lastQuery().params.offset, '40')
+})
+
+test('network failures reject so pages can tell errors from empty results', async () => {
+  h.reset()
+  h.respond(() => ({ fail: true, errMsg: 'request:fail timeout' }))
+  await assert.rejects(api.searchSkills('pdf'), (err) => err.statusCode === 0 && /timeout/.test(err.message))
+})
+
+test('fetchPopularSkills orders by stars and dedupes', async () => {
+  h.reset()
+  const rows = [
+    { id: '1', author: 'a', name: 'x' }, { id: '2', author: 'A', name: 'X' }, { id: '3', author: 'b', name: 'y' },
+  ]
+  h.respond(() => ({ statusCode: 200, data: rows, header: {} }))
+  const out = await api.fetchPopularSkills(2)
+  assert.deepStrictEqual(out.map((r) => r.id), ['1', '3'])
+  const { params } = lastQuery()
+  assert.strictEqual(params.order, 'github_stars.desc.nullslast')
+  assert.strictEqual(params.limit, '6')
 })
 
 test('searchSkills skips the request for blank queries', async () => {
@@ -141,4 +164,32 @@ test('trimToLatestBatch cuts at the first gap longer than an hour', () => {
 test('sortCategories follows the fixed category order', () => {
   const rows = [{ slug: 'misc' }, { slug: 'zzz' }, { slug: 'code' }, { slug: 'official' }]
   assert.deepStrictEqual(api.sortCategories(rows).map((r) => r.slug), ['official', 'code', 'misc', 'zzz'])
+})
+
+test('every data call is read-only and uses only the anon key', async () => {
+  const config = require('../.test-build/utils/config')
+  const jwt = JSON.parse(Buffer.from(config.supabaseAnonKey.split('.')[1], 'base64').toString())
+  assert.strictEqual(jwt.role, 'anon')
+
+  h.reset()
+  h.respond((opts) => ({ statusCode: 200, data: opts.method === 'POST' ? [] : [], header: { 'content-range': '*/0' } }))
+  const id = '123e4567-e89b-12d3-a456-426614174000'
+  await Promise.all([
+    api.fetchAllSkills(), api.fetchSkillsByCategory('code'), api.fetchPopularSkills(), api.fetchNewSkills(),
+    api.fetchLatestBatch(), api.searchSkills('x'), api.fetchSkillById(id), api.fetchSkillsByIds([id]),
+    api.fetchSkillsInRepo('a/b'), api.fetchCategories(), api.fetchCategoryCounts(), api.fetchRepoGroups(),
+    api.fetchHomeStats(),
+  ])
+  assert.ok(h.requests.length >= 15)
+  for (const req of h.requests) {
+    const path = req.url.replace(config.supabaseUrl, '').split('?')[0]
+    assert.strictEqual(req.header.apikey, config.supabaseAnonKey)
+    assert.strictEqual(req.header.Authorization, 'Bearer ' + config.supabaseAnonKey)
+    if (req.method === 'POST') {
+      assert.ok(['/rest/v1/rpc/get_category_counts', '/rest/v1/rpc/get_repo_groups'].includes(path), 'unexpected POST ' + path)
+    } else {
+      assert.strictEqual(req.method, 'GET')
+      assert.ok(['/rest/v1/skills', '/rest/v1/categories'].includes(path), 'unexpected table ' + path)
+    }
+  }
 })

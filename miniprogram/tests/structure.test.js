@@ -15,7 +15,7 @@ const units = app.pages.concat(componentPaths)
 
 test('every page and component has js/json/wxml/wxss', () => {
   for (const unit of units) {
-    for (const ext of ['js', 'json', 'wxml', 'wxss']) {
+    for (const ext of ['ts', 'json', 'wxml', 'wxss']) {
       assert.ok(exists(`${unit}.${ext}`), `missing ${unit}.${ext}`)
     }
   }
@@ -33,7 +33,7 @@ test('component references resolve', () => {
   for (const unit of units) {
     const json = JSON.parse(read(`${unit}.json`))
     for (const p of Object.values(json.usingComponents || {})) {
-      assert.ok(exists(p.replace(/^\//, '') + '.js'), `${unit} -> ${p}`)
+      assert.ok(exists(p.replace(/^\//, '') + '.ts'), `${unit} -> ${p}`)
     }
   }
 })
@@ -41,7 +41,7 @@ test('component references resolve', () => {
 test('WXML event handlers are defined', () => {
   for (const unit of units) {
     const wxml = read(`${unit}.wxml`)
-    const js = read(`${unit}.js`)
+    const js = read(`${unit}.ts`)
     const handlers = [...wxml.matchAll(/\b(?:bind|catch)(?::)?\w+="(\w+)"/g)].map((m) => m[1])
     for (const h of handlers) {
       assert.match(js, new RegExp(`\\b${h}\\s*\\(`), `${unit}: handler ${h} not defined`)
@@ -63,16 +63,31 @@ test('WXML tags are balanced', () => {
   }
 })
 
-test('no regex lookbehind in shipped JS', () => {
+test('shipped code has no regex lookbehind and no plain JS left over', () => {
   const files = []
   const walk = (dir) => {
     for (const name of fs.readdirSync(path.join(root, dir))) {
       const rel = path.join(dir, name)
-      if (['tests', 'scripts', 'node_modules'].includes(name)) continue
+      if (['tests', 'scripts', 'node_modules', '.test-build'].includes(name)) continue
       if (fs.statSync(path.join(root, rel)).isDirectory()) walk(rel)
-      else if (rel.endsWith('.js')) files.push(rel)
+      else if (rel.endsWith('.ts') || rel.endsWith('.js')) files.push(rel)
     }
   }
   walk('.')
-  for (const f of files) assert.ok(!/\(\?<[=!]/.test(read(f)), `${f} uses lookbehind`)
+  for (const f of files) {
+    assert.ok(f.endsWith('.ts'), `${f}: 源码统一使用 TypeScript`)
+    assert.ok(!/\(\?<[=!]/.test(read(f)), `${f} uses lookbehind`)
+    assert.ok(!/service_role/.test(read(f)), `${f} mentions service_role`)
+  }
+})
+
+test('every i18n key referenced in WXML exists', () => {
+  require('./helpers')
+  const { STRINGS } = require('../.test-build/utils/i18n')
+  for (const unit of units) {
+    const wxml = read(`${unit}.wxml`)
+    for (const m of wxml.matchAll(/\bt\.(\w+)/g)) {
+      assert.ok(STRINGS[m[1]], `${unit}: missing i18n key ${m[1]}`)
+    }
+  }
 })

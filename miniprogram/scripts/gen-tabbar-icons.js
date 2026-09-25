@@ -26,7 +26,7 @@ const shapes = {
     const door = roundedRect(x, y, 0, 0.52, 0.16, 0.32, 0.05)
     return (roof || body) && !door
   },
-  explore(x, y) {
+  category(x, y) {
     const r = 0.36
     return [[-0.42, -0.42], [0.42, -0.42], [-0.42, 0.42], [0.42, 0.42]]
       .some(([cx, cy]) => roundedRect(x, y, cx, cy, r, r, 0.1))
@@ -37,13 +37,6 @@ const shapes = {
     const Y = -(y * 1.25) + 0.15
     const a = X * X + Y * Y - 1
     return a * a * a - X * X * Y * Y * Y <= 0
-  },
-  profile(x, y) {
-    const head = x * x + (y + 0.38) * (y + 0.38) <= 0.36 * 0.36
-    const bx = x / 0.78
-    const by = (y - 0.88) / 0.62
-    const body = y <= 0.86 && bx * bx + by * by <= 1
-    return head || body
   },
 }
 

@@ -41,6 +41,23 @@
 .hot-item:last-child { margin-right: 0; }
 .hot-placeholder { width: 336rpx; height: 392rpx; border-radius: 32rpx; background: var(--bg-elevated); }
 
+.section-header--gap { margin-top: 48rpx; }
+
+.offline {
+  margin-bottom: 32rpx;
+  padding: 20rpx 28rpx;
+  font-size: 24rpx;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 24rpx;
+}
+
+.list-footer { padding: 32rpx 0 8rpx; text-align: center; font-size: 24rpx; color: var(--text-subtle); }
+.link { color: var(--brand); }
+
+.about-link { margin-top: 64rpx; text-align: center; font-size: 24rpx; color: var(--text-subtle); }
+
 .error { padding: 48rpx 0; text-align: center; }
 .error-icon { font-size: 56rpx; color: var(--text-muted); }
 .error-text { margin-top: 24rpx; font-size: 28rpx; color: var(--text-muted); }

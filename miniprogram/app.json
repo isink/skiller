@@ -1,11 +1,11 @@
 {
   "pages": [
     "pages/home/home",
-    "pages/explore/explore",
+    "pages/category/category",
     "pages/favorites/favorites",
-    "pages/profile/profile",
     "pages/detail/detail",
-    "pages/latest/latest"
+    "pages/latest/latest",
+    "pages/about/about"
   ],
   "window": {
     "navigationBarBackgroundColor": "#0B0B0F",
@@ -29,22 +29,16 @@
         "selectedIconPath": "images/tabbar/home-active.png"
       },
       {
-        "pagePath": "pages/explore/explore",
-        "text": "探索",
-        "iconPath": "images/tabbar/explore.png",
-        "selectedIconPath": "images/tabbar/explore-active.png"
+        "pagePath": "pages/category/category",
+        "text": "分类",
+        "iconPath": "images/tabbar/category.png",
+        "selectedIconPath": "images/tabbar/category-active.png"
       },
       {
         "pagePath": "pages/favorites/favorites",
         "text": "收藏",
         "iconPath": "images/tabbar/favorites.png",
         "selectedIconPath": "images/tabbar/favorites-active.png"
-      },
-      {
-        "pagePath": "pages/profile/profile",
-        "text": "我的",
-        "iconPath": "images/tabbar/profile.png",
-        "selectedIconPath": "images/tabbar/profile-active.png"
       }
     ]
   },

@@ -48,3 +48,9 @@
   color: var(--brand);
   font-size: 40rpx;
 }
+.retry {
+  padding: 32rpx 0;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-muted);
+}

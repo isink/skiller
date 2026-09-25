@@ -6,10 +6,42 @@
   "libVersion": "3.4.0",
   "packOptions": {
     "ignore": [
-      { "type": "folder", "value": "tests" },
-      { "type": "folder", "value": "scripts" },
-      { "type": "file", "value": "package.json" },
-      { "type": "file", "value": "README.md" }
+      {
+        "type": "folder",
+        "value": "tests"
+      },
+      {
+        "type": "folder",
+        "value": "scripts"
+      },
+      {
+        "type": "folder",
+        "value": "node_modules"
+      },
+      {
+        "type": "folder",
+        "value": ".test-build"
+      },
+      {
+        "type": "file",
+        "value": "package.json"
+      },
+      {
+        "type": "file",
+        "value": "package-lock.json"
+      },
+      {
+        "type": "file",
+        "value": "tsconfig.json"
+      },
+      {
+        "type": "file",
+        "value": "tsconfig.test.json"
+      },
+      {
+        "type": "file",
+        "value": "README.md"
+      }
     ],
     "include": []
   },
@@ -19,7 +51,10 @@
     "postcss": true,
     "minified": true,
     "urlCheck": true,
-    "ignoreUploadUnusedFiles": true
+    "ignoreUploadUnusedFiles": true,
+    "useCompilerPlugins": [
+      "typescript"
+    ]
   },
   "condition": {},
   "editorSetting": {

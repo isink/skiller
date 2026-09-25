@@ -18,6 +18,7 @@
 
   <view wx:if="{{expanded}}" class="children">
     <view wx:if="{{loading}}" class="loading">…</view>
+    <view wx:elif="{{loadError}}" class="retry" bindtap="load">{{retryText}}</view>
     <view wx:for="{{skills}}" wx:key="id" class="child">
       <skill-card skill="{{item}}" />
     </view>

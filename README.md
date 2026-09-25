@@ -53,7 +53,7 @@ App 只读取 Supabase，skill 数据由独立的 Node.js 管线维护，位于 
 ```
 Skiller/        iOS 应用源码（App、Models、Services、Views、Components、Theme、Resources）
 SkillerTests/   单元测试：收藏同步、登录范围、隐私同意、举报参数等
-miniprogram/    微信小程序版本（本机收藏，无登录）
+miniprogram/    微信小程序版本（TypeScript，本机收藏，无登录）
 pipeline/       数据导入、富化、数据库 schema 与迁移
 docs/           隐私政策、使用条款与官网页面
 project.yml     XcodeGen 工程定义

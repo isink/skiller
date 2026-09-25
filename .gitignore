@@ -41,3 +41,6 @@ __pycache__/
 ## Secrets & logs
 .env
 *.log
+
+## WeChat Mini Program
+miniprogram/.test-build/

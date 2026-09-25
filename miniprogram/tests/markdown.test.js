@@ -1,75 +1,112 @@
 require('./helpers')
 const test = require('node:test')
 const assert = require('node:assert')
-const { toHTML } = require('../utils/markdown')
-const { stripFrontmatter } = require('../utils/skill')
+const fs = require('fs')
+const path = require('path')
+const { toNodes, parseInline } = require('../.test-build/utils/markdown')
+const { stripFrontmatter } = require('../.test-build/utils/skill')
 
-const text = (html) => html.replace(/<[^>]+>/g, '')
+// rich-text 会解码文本节点里的实体，这里模拟它的显示结果
+const decode = (s) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+const plain = (nodes) => nodes.map((n) => (n.type === 'text' ? decode(n.text) : plain(n.children || []))).join('')
+const find = (nodes, name, out = []) => {
+  nodes.forEach((n) => {
+    if (n.name === name) out.push(n)
+    if (n.children) find(n.children, name, out)
+  })
+  return out
+}
+const allNames = (nodes, out = new Set()) => {
+  nodes.forEach((n) => { if (n.name) out.add(n.name); if (n.children) allNames(n.children, out) })
+  return out
+}
 
-test('headings, paragraphs and soft line breaks', () => {
-  const html = toHTML('# Title\n\nline one\nline two\n\n## Sub')
-  assert.match(html, /font-size:24px[^>]*>Title</)
-  assert.match(html, />line one line two</)
-  assert.match(html, /font-size:20px[^>]*>Sub</)
+const fixture = stripFrontmatter(fs.readFileSync(path.join(__dirname, 'fixtures/sample-skill.md'), 'utf8'))
+const nodes = toNodes(fixture)
+const shown = plain(nodes)
+
+test('fixture: only whitelisted element names are produced', () => {
+  const allowed = new Set(['div', 'span', 'strong', 'em', 'del', 'code', 'br', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'])
+  for (const name of allNames(nodes)) assert.ok(allowed.has(name), 'unexpected element ' + name)
+  // 除 style 外不输出任何属性（没有 src、onerror、href）
+  const walk = (ns) => ns.forEach((n) => {
+    if (n.attrs) assert.deepStrictEqual(Object.keys(n.attrs), ['style'])
+    if (n.children) walk(n.children)
+  })
+  walk(nodes)
 })
 
-test('raw HTML in markdown is escaped, not rendered', () => {
-  const html = toHTML('<script>alert(1)</script> & <img src=x onerror=y>')
-  assert.ok(!/<script|<img/.test(html))
-  assert.match(html, /&lt;script&gt;/)
-  assert.match(html, /&amp;/)
+test('fixture: raw HTML is shown as text, comments are dropped', () => {
+  assert.ok(shown.includes('<script>alert("xss")</script>'))
+  assert.ok(shown.includes('<img src="https://example.com/x.png" onerror="alert(1)">'))
+  assert.ok(shown.includes('<details><summary>Click</summary>hidden?</details>'))
+  assert.ok(!shown.includes('an HTML comment'))
 })
 
-test('fenced code keeps indentation and is not parsed as markdown', () => {
-  const html = toHTML('```js\nif (a) {\n  **b** <c>\n}\n```\nafter')
-  assert.match(html, /if&nbsp;\(a\)&nbsp;\{<br\/>&nbsp;&nbsp;\*\*b\*\*&nbsp;&lt;c&gt;<br\/>\}/)
-  assert.ok(!html.includes('<strong>'))
-  assert.match(html, />after</)
+test('fixture: special characters survive entity decoding', () => {
+  assert.ok(shown.includes(`5 < 6 > 4, "quotes", 'single', &amp; literal, 100% done, a\\b.`))
+  assert.ok(shown.includes('& friends'))
+})
+
+test('fixture: frontmatter is stripped and headings rendered', () => {
+  assert.ok(!shown.includes('sample-skill.md'))
+  assert.ok(!shown.includes('description: Fixture'))
+  assert.match(nodes[0].attrs.style, /font-size:24px/)
+  assert.strictEqual(plain([nodes[0]]), 'Sample Skill')
+})
+
+test('fixture: code block keeps indentation and content verbatim', () => {
+  const pre = nodes.find((n) => n.attrs && /Menlo/.test(n.attrs.style) && n.name === 'div')
+  const code = pre.children.filter((n) => n.type === 'text').map((n) => decode(n.text).replace(/ /g, ' '))
+  assert.deepStrictEqual(code, ['pip install pdfplumber', 'python -c "print(\'<ok>\')"', '    indented_with_tab()'])
+  assert.strictEqual(find([pre], 'br').length, 2)
+})
+
+test('fixture: lists, tasks, quote, table, rule and inline marks', () => {
+  assert.ok(shown.includes('1.Install the package'))
+  assert.ok(shown.includes('•Supports inline <code> spans'))
+  assert.ok(shown.includes('•child item with a link'))
+  assert.ok(shown.includes('☑ finished task'))
+  assert.ok(shown.includes('☐ open task'))
+  assert.ok(shown.includes('Note: keep originals. Second line.'))
+  assert.deepStrictEqual(find(nodes, 'th').map((n) => plain([n])), ['Tool', 'Purpose'])
+  assert.deepStrictEqual(find(nodes, 'td').map((n) => plain([n])), ['pdfplumber', 'text | tables', 'pypdf', 'merge'])
+  assert.strictEqual(find(nodes, 'hr').length, 1)
+  assert.deepStrictEqual(find(nodes, 'del').map((n) => plain([n])), ['deprecated'])
+  assert.ok(find(nodes, 'strong').map((n) => plain([n])).includes('strong'))
+  assert.ok(find(nodes, 'em').map((n) => plain([n])).includes('em'))
+  assert.ok(shown.includes('[diagram]'))
+  assert.ok(shown.includes('https://example.com/auto?a=1&b=2'))
+  assert.ok(shown.includes('snake_case_word'))
+  // 链接地址不输出，只保留文字
+  assert.ok(!shown.includes('github.com/anthropics/skills'))
+})
+
+test('inline code is not parsed further', () => {
+  const out = parseInline('a `**b** <c>` d')
+  assert.strictEqual(out[1].name, 'code')
+  assert.strictEqual(plain(out[1].children), '**b** <c>')
+  assert.strictEqual(find(out, 'strong').length, 0)
+})
+
+test('nested emphasis inside links and bold', () => {
+  const out = parseInline('**bold _and em_** [x *y*](u)')
+  const strong = find(out, 'strong')[0]
+  assert.strictEqual(find([strong], 'em').length, 1)
+  assert.strictEqual(plain(out), 'bold and em x y')
+})
+
+test('soft line breaks join paragraph lines with spaces', () => {
+  assert.strictEqual(plain(toNodes('line one\nline two')), 'line one line two')
 })
 
 test('unterminated fence swallows the rest as code', () => {
-  const html = toHTML('```\ncode')
-  assert.match(html, />code</)
+  assert.strictEqual(plain(toNodes('```\ncode')), 'code')
 })
 
-test('inline code, emphasis, links and images', () => {
-  const html = toHTML('Use `a*b*c` and **bold**, *em*, _em2_, ~~del~~, [link](https://x.y) ![pic](p.png) snake_case_name')
-  assert.match(html, /<code[^>]*>a\*b\*c<\/code>/)
-  assert.match(html, /<strong>bold<\/strong>/)
-  assert.match(html, /<em>em<\/em>/)
-  assert.match(html, /<em>em2<\/em>/)
-  assert.match(html, /<del>del<\/del>/)
-  assert.match(html, /<span style="color:#D97757;">link<\/span>/)
-  assert.match(html, /\[pic\]/)
-  assert.match(html, /snake_case_name/)
-  assert.ok(!html.includes('https://x.y'))
-})
-
-test('lists: bullets, ordered, nesting, tasks and continuation lines', () => {
-  const html = toHTML('- one\n  continued\n- two\n  - nested\n\n1. first\n2) second\n- [x] done\n- [ ] todo')
-  const t = text(html)
-  assert.match(t, /•one continued/)
-  assert.match(t, /•two/)
-  assert.match(html, /padding-left:38px[^>]*>.*nested/)
-  assert.match(t, /1\.first/)
-  assert.match(t, /2\.second/)
-  assert.match(t, /☑ done/)
-  assert.match(t, /☐ todo/)
-})
-
-test('tables render header and body cells, including escaped pipes', () => {
-  const html = toHTML('| a | b |\n|---|:-:|\n| 1 | x \\| y |\n| 2 |\n\nafter')
-  assert.match(html, /<th[^>]*>a<\/th><th[^>]*>b<\/th>/)
-  assert.match(html, /<td[^>]*>1<\/td><td[^>]*>x \| y<\/td>/)
-  assert.match(html, /<td[^>]*>2<\/td><td[^>]*><\/td>/)
-  assert.match(html, />after</)
-})
-
-test('blockquotes, rules and HTML comments', () => {
-  const html = toHTML('> quoted\n> more\n\n---\n<!-- hidden -->\ntext')
-  assert.match(html, /border-left:3px[^>]*><div[^>]*>quoted more</)
-  assert.match(html, /<hr /)
-  assert.ok(!html.includes('hidden'))
+test('nested list indentation', () => {
+  const out = toNodes('- a\n  - b\n    - c')
+  assert.deepStrictEqual(out.map((n) => /padding-left:(\d+)px/.exec(n.attrs.style)[1]), ['20', '38', '56'])
 })
 
 test('stripFrontmatter removes the YAML header only', () => {
@@ -80,6 +117,6 @@ test('stripFrontmatter removes the YAML header only', () => {
 })
 
 test('empty input renders nothing', () => {
-  assert.strictEqual(toHTML(''), '')
-  assert.strictEqual(toHTML(null), '')
+  assert.deepStrictEqual(toNodes(''), [])
+  assert.deepStrictEqual(toNodes(null), [])
 })
