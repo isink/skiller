@@ -32,6 +32,15 @@ export function resolveSkillSource(url: string, defaultBranch: string): SkillSou
   }
 }
 
+/** Repair the malformed blob/undefined links created by older code-search imports. */
+export function canonicalSkillSourceURL(originalUrl: string, source: SkillSource): string {
+  const url = new URL(originalUrl);
+  if (url.pathname.split("/").filter(Boolean)[3] !== "undefined") return originalUrl;
+  const ref = source.ref.split("/").map(encodeURIComponent).join("/");
+  const path = source.path.split("/").map(encodeURIComponent).join("/");
+  return `https://github.com/${encodeURIComponent(source.owner)}/${encodeURIComponent(source.repo)}/blob/${ref}/${path}`;
+}
+
 export function latestCommitDate(payload: unknown): string | null {
   if (!Array.isArray(payload) || !payload.length) return null;
   const first = payload[0] as { commit?: { committer?: { date?: unknown }; author?: { date?: unknown } } };

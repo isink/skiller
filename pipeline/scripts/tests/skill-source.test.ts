@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { fetchSkillFileDate, latestCommitDate, needsSourceCheck, resolveSkillSource } from "../lib/skill-source";
+import { canonicalSkillSourceURL, fetchSkillFileDate, latestCommitDate, needsSourceCheck, resolveSkillSource } from "../lib/skill-source";
 
 test("tree links resolve to their own SKILL.md, including nested branches", () => {
   assert.deepEqual(
@@ -21,6 +21,13 @@ test("blob links keep the exact file path and unknown refs remain unknown", () =
   assert.deepEqual(
     resolveSkillSource("https://github.com/acme/skills/blob/undefined/.agent/skills/pdf/SKILL.md", "master"),
     { owner: "acme", repo: "skills", ref: "master", path: ".agent/skills/pdf/SKILL.md" },
+  );
+  assert.equal(
+    canonicalSkillSourceURL(
+      "https://github.com/acme/skills/blob/undefined/.agent/skills/pdf/SKILL.md",
+      { owner: "acme", repo: "skills", ref: "master", path: ".agent/skills/pdf/SKILL.md" },
+    ),
+    "https://github.com/acme/skills/blob/master/.agent/skills/pdf/SKILL.md",
   );
   assert.deepEqual(
     resolveSkillSource("https://github.com/acme/skills/tree/main/tools/pdf", "master"),

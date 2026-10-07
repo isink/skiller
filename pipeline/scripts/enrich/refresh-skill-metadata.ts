@@ -2,7 +2,7 @@
 import "dotenv/config";
 import { db } from "../import/lib/supabase";
 import { parseGitHubRepositoryURL } from "../lib/github-url";
-import { fetchSkillFileDate, needsSourceCheck, resolveSkillSource } from "../lib/skill-source";
+import { canonicalSkillSourceURL, fetchSkillFileDate, needsSourceCheck, resolveSkillSource } from "../lib/skill-source";
 
 const token = process.env.GITHUB_TOKEN;
 if (!token) throw new Error("GITHUB_TOKEN is required for daily metadata refresh");
@@ -169,12 +169,15 @@ async function main(): Promise<void> {
       if (!source) { unresolved++; continue; }
       const { updatedAt, missing } = await fetchSkillFileDate(source, github);
       if (missing) missingFiles++;
-      const { error } = await db.from("skills").update({
+      const canonicalUrl = canonicalSkillSourceURL(skill.github_url, source);
+      const patch: Record<string, unknown> = {
         source_updated_at: updatedAt,
         source_checked_at: new Date().toISOString(),
         source_repo_pushed_at: state.pushed_at,
-        source_url_checked: skill.github_url,
-      }).eq("id", skill.id);
+        source_url_checked: canonicalUrl,
+      };
+      if (canonicalUrl !== skill.github_url) patch.github_url = canonicalUrl;
+      const { error } = await db.from("skills").update(patch).eq("id", skill.id);
       if (error) throw error;
       checkedFiles++;
       if (checkedFiles % 100 === 0) console.log(`SKILL.md dates: ${checkedFiles}; GitHub requests: ${requests}/${maxRequests}`);
