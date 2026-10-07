@@ -29,6 +29,11 @@ create table if not exists public.skills (
   skill_md_content text,
   skill_md_summary_zh text,
   github_stars integer,
+  github_stars_checked_at timestamptz,
+  source_updated_at timestamptz,
+  source_checked_at timestamptz,
+  source_repo_pushed_at timestamptz,
+  source_url_checked text,
   install_count integer not null default 0
     constraint skills_install_count_nonnegative check (install_count >= 0),
   rank integer not null default 0,
@@ -38,6 +43,20 @@ create table if not exists public.skills (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create table if not exists public.github_repo_refresh_state (
+  repo_key text primary key,
+  default_branch text not null,
+  stars integer,
+  pushed_at timestamptz,
+  checked_at timestamptz not null
+);
+
+alter table public.github_repo_refresh_state enable row level security;
+revoke all on table public.github_repo_refresh_state
+  from public, anon, authenticated, service_role;
+grant select, insert, update, delete on table public.github_repo_refresh_state
+  to service_role;
 
 create index if not exists skills_category_idx on public.skills (category);
 create index if not exists skills_rank_idx on public.skills (rank desc);

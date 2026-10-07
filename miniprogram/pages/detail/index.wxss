@@ -1,0 +1,23 @@
+.detail-page { padding-left: 24rpx; padding-right: 24rpx; }
+.detail-header { margin: 8rpx 0 24rpx; padding: 28rpx; border: 1rpx solid #292932; border-radius: 24rpx; background: #15151b; }
+.detail-title { flex: 1; font-size: 40rpx; font-weight: 750; line-height: 1.25; }
+.favorite-button { width: 68rpx; margin-left: 16rpx; color: #9a9aa5; font-size: 46rpx; text-align: center; }
+.favorite-on { color: #e27a69; }
+.detail-description { display: block; margin-top: 18rpx; color: #c0c0c9; font-size: 27rpx; line-height: 1.55; }
+.detail-tags { margin-top: 20rpx; }
+.tag { margin: 0 10rpx 10rpx 0; padding: 8rpx 14rpx; border-radius: 999rpx; background: #25252e; color: #bebec7; font-size: 21rpx; }
+.detail-meta { margin-top: 8rpx; color: #888894; font-size: 22rpx; }
+.detail-source-meta { display: flex; flex-direction: column; gap: 6rpx; margin-top: 10rpx; color: #a0a0aa; font-size: 22rpx; line-height: 1.5; }
+.reading-note { margin-top: 24rpx; padding: 18rpx 20rpx; border: 1rpx solid #393943; border-radius: 16rpx; background: #202027; }
+.reading-note-title { display: block; color: #f0a184; font-size: 23rpx; font-weight: 700; }
+.reading-note-text { display: block; margin-top: 6rpx; color: #a8a8b3; font-size: 22rpx; line-height: 1.5; }
+.markdown-card { padding: 28rpx; border: 1rpx solid #292932; border-radius: 24rpx; background: #121217; }
+.markdown-title { display: block; margin-bottom: 24rpx; color: #e28a6a; font-size: 23rpx; font-weight: 700; letter-spacing: 1rpx; }
+.md-heading { margin: 30rpx 0 14rpx; color: #f3f3f5; font-weight: 700; }
+.md-h1 { font-size: 36rpx; }.md-h2 { font-size: 33rpx; }.md-h3 { font-size: 30rpx; }.md-h4,.md-h5,.md-h6 { font-size: 28rpx; }
+.md-paragraph,.md-list,.md-quote { display: block; margin: 12rpx 0; color: #c8c8d0; font-size: 25rpx; line-height: 1.7; white-space: pre-wrap; }
+.md-quote { padding: 10rpx 18rpx; border-left: 4rpx solid #d97757; color: #a8a8b3; }
+.md-code { margin: 16rpx 0; padding: 20rpx; border: 1rpx solid #30303a; border-radius: 14rpx; background: #09090c; color: #d1d1d8; font-family: Menlo, monospace; font-size: 22rpx; line-height: 1.6; white-space: pre; }
+.md-rule { height: 1rpx; margin: 28rpx 0; background: #30303a; }
+rich-text code { padding: 2rpx 6rpx; border-radius: 5rpx; background: #24242c; color: #efaa8d; font-family: Menlo, monospace; }
+rich-text strong { color: #f4f4f6; font-weight: 700; }

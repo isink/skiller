@@ -4,6 +4,8 @@
 
 Skiller 汇集 Anthropic 官方与社区的上千个 Claude Skills，提供分类浏览、中英文搜索、GitHub 热度排序和 SKILL.md 原文阅读。登录后，收藏可在多台设备间同步。界面支持简体中文与 English。
 
+原生微信小程序版本位于 [`miniprogram/`](miniprogram/)，使用微信原生 TypeScript / WXML / WXSS；当前直接以公开 anon key 只读访问与 iOS App 相同的 Supabase 目录。微信正式版仍需配置请求合法域名并完成真机验证。
+
 ## 功能
 
 - **发现**：首页展示热门与新收录的 skill，可按分类浏览，支持中英文搜索。
@@ -54,6 +56,7 @@ App 只读取 Supabase，skill 数据由独立的 Node.js 管线维护，位于 
 Skiller/        iOS 应用源码（App、Models、Services、Views、Components、Theme、Resources）
 SkillerTests/   单元测试：收藏同步、登录范围、隐私同意、举报参数等
 pipeline/       数据导入、富化、数据库 schema 与迁移
+miniprogram/    微信小程序（发现、搜索、分类、详情、本地收藏）
 docs/           隐私政策、使用条款与官网页面
 project.yml     XcodeGen 工程定义
 ```

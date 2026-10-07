@@ -113,7 +113,7 @@ async function main() {
 
     const { error: updErr } = await db
       .from("skills")
-      .update({ github_stars: stars })
+      .update({ github_stars: stars, github_stars_checked_at: new Date().toISOString() })
       .in("id", ids);
     if (updErr) {
       console.error(`\n  ✖ update ${key}: ${updErr.message}`);

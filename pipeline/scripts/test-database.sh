@@ -83,7 +83,8 @@ apply_hardening_migrations() {
   for migration in \
     "$pipeline_dir/supabase/migrations/014_favorites_sync.sql" \
     "$pipeline_dir/supabase/migrations/015_skills_contract.sql" \
-    "$pipeline_dir/supabase/migrations/016_lock_down_public_writes.sql"; do
+    "$pipeline_dir/supabase/migrations/016_lock_down_public_writes.sql" \
+    "$pipeline_dir/supabase/migrations/017_skill_source_freshness.sql"; do
     run_sql "$migration"
   done
 }
@@ -94,19 +95,19 @@ run_sql "$pipeline_dir/supabase/schema.sql"
 run_sql "$pipeline_dir/supabase/tests/security.sql"
 cleanup_active_instance
 
-printf '%s\n' 'Testing the representative 013 -> 014 -> 015 -> 016 upgrade path...'
+printf '%s\n' 'Testing the representative 013 -> 017 upgrade path...'
 start_instance upgrade
 run_sql "$pipeline_dir/supabase/tests/pre-014-schema.sql"
 apply_hardening_migrations
 run_sql "$pipeline_dir/supabase/tests/post-016-upgrade.sql"
 run_sql "$pipeline_dir/supabase/tests/security.sql"
 
-printf '%s\n' 'Testing 014-016 idempotency on upgraded historical data...'
+printf '%s\n' 'Testing 014-017 idempotency on upgraded historical data...'
 upgrade_state_before="$(capture_upgrade_state)"
 apply_hardening_migrations
 upgrade_state_after="$(capture_upgrade_state)"
 if [[ "$upgrade_state_before" != "$upgrade_state_after" ]]; then
-  printf '%s\n' '014-016 changed data or function definitions on the second run' >&2
+  printf '%s\n' '014-017 changed data or function definitions on the second run' >&2
   exit 1
 fi
 run_sql "$pipeline_dir/supabase/tests/post-016-upgrade.sql"

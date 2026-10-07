@@ -1,0 +1,4 @@
+.intro { display: block; margin: 8rpx 0 24rpx; color: #a3a3ae; font-size: 25rpx; }
+.filter-scroll { width: calc(100vw - 32rpx); margin: 0 -16rpx 24rpx; }
+.filters { display: flex; padding: 0 16rpx; white-space: nowrap; }
+.skill-card { display: block; }

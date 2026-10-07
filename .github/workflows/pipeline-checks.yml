@@ -4,13 +4,17 @@ on:
   pull_request:
     paths:
       - "pipeline/**"
+      - "miniprogram/**"
       - ".github/workflows/pipeline-checks.yml"
+      - ".github/workflows/refresh-skill-metadata.yml"
   push:
     branches:
       - master
     paths:
       - "pipeline/**"
+      - "miniprogram/**"
       - ".github/workflows/pipeline-checks.yml"
+      - ".github/workflows/refresh-skill-metadata.yml"
 
 permissions:
   contents: read
@@ -33,4 +37,5 @@ jobs:
         with:
           version: 2.75.0
       - run: npm ci
+      - run: npx tsc -p ../miniprogram/tsconfig.json --noEmit
       - run: npm run check:full

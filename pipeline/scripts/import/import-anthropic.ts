@@ -157,6 +157,7 @@ const KNOWN_CATEGORIES: Record<string, string> = {
 async function main() {
   console.log(`→ Fetching GitHub stars for ${OWNER}/${REPO}`);
   const repoStars = await fetchRepoStars(OWNER, REPO);
+  const starsCheckedAt = repoStars === undefined ? undefined : new Date().toISOString();
   console.log(`✓ Stars: ${repoStars ?? "n/a"}`);
 
   console.log(`→ Listing ${OWNER}/${REPO} skill directories`);
@@ -211,6 +212,7 @@ async function main() {
       github_url: `https://github.com/${OWNER}/${REPO}/tree/${BRANCH}/${dir}`,
       skill_md_content: md,
       ...repoStarsPatch(repoStars),
+      ...(starsCheckedAt ? { github_stars_checked_at: starsCheckedAt } : {}),
       rank: 80, // baseline for official skills; sources.json can override
       score: 95,
       featured: true,

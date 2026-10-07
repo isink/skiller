@@ -259,6 +259,7 @@ async function main() {
       github_url: `${repo.html_url}/blob/${repo.default_branch}/${path}`,
       skill_md_content: md,
       github_stars: repo.stargazers_count,
+      github_stars_checked_at: new Date().toISOString(),
       rank: 0,
       score: 0,
       featured: false,

@@ -12,6 +12,7 @@
     "apply:overrides": "tsx scripts/import/apply-overrides.ts",
     "enrich:skills": "tsx scripts/enrich/enrich-skills.ts",
     "backfill:stars": "tsx scripts/enrich/backfill-github-stars.ts",
+    "refresh:metadata": "tsx scripts/enrich/refresh-skill-metadata.ts",
     "backfill:stars:local": "NODE_USE_ENV_PROXY=1 https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 npm run backfill:stars",
     "reclassify": "tsx scripts/import/reclassify-misc.ts",
     "review:pending": "tsx scripts/review/review-pending.ts",
@@ -22,9 +23,11 @@
     "check": "npm run typecheck && npm test",
     "check:full": "npm run check && npm run test:db",
     "sync": "npm run import:all && npm run apply:overrides && npm run reclassify && npm run enrich:skills",
+    "migrate:cloudbase": "tsx scripts/migrate-cloudbase.ts",
     "sync:local": "NODE_USE_ENV_PROXY=1 https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 npm run sync"
   },
   "dependencies": {
+    "@cloudbase/js-sdk": "^3.10.1",
     "@supabase/supabase-js": "^2.47.10",
     "dotenv": "^16.4.7"
   },
