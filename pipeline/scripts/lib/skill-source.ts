@@ -15,10 +15,14 @@ export function resolveSkillSource(url: string, defaultBranch: string): SkillSou
     const rest = parts.slice(3);
     const branchParts = defaultBranch.split("/");
     const onDefault = branchParts.every((part, index) => rest[index] === part);
-    // Imported links use the repository default branch (or HEAD). Do not guess
-    // where a non-default ref with slashes ends and its file path begins.
-    const ref = rest[0] === "HEAD" ? defaultBranch : onDefault ? defaultBranch : "";
-    const pathParts = rest.slice(rest[0] === "HEAD" ? 1 : branchParts.length);
+    // Older imported blob URLs contain the literal string "undefined" where
+    // the branch should be. The file path is still intact, so use the
+    // repository's current default branch for those records.
+    // Do not guess where a non-default ref with slashes ends and its path begins.
+    const placeholderRef = rest[0] === "HEAD" || rest[0] === "undefined";
+    const explicitMainRef = rest[0] === "main" || rest[0] === "master";
+    const ref = placeholderRef || onDefault ? defaultBranch : explicitMainRef ? rest[0] : "";
+    const pathParts = rest.slice(placeholderRef || (explicitMainRef && !onDefault) ? 1 : branchParts.length);
     if (!ref || !pathParts.length || pathParts.some((part) => part === "." || part === "..")) return null;
     const path = kind === "tree" ? `${pathParts.join("/")}/SKILL.md` : pathParts.join("/");
     if (path.split("/").at(-1)?.toLowerCase() !== "skill.md") return null;

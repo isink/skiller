@@ -18,6 +18,14 @@ test("blob links keep the exact file path and unknown refs remain unknown", () =
     resolveSkillSource("https://github.com/acme/skills/blob/main/tools/SKILL.md", "main"),
     { owner: "acme", repo: "skills", ref: "main", path: "tools/SKILL.md" },
   );
+  assert.deepEqual(
+    resolveSkillSource("https://github.com/acme/skills/blob/undefined/.agent/skills/pdf/SKILL.md", "master"),
+    { owner: "acme", repo: "skills", ref: "master", path: ".agent/skills/pdf/SKILL.md" },
+  );
+  assert.deepEqual(
+    resolveSkillSource("https://github.com/acme/skills/tree/main/tools/pdf", "master"),
+    { owner: "acme", repo: "skills", ref: "main", path: "tools/pdf/SKILL.md" },
+  );
   assert.equal(resolveSkillSource("https://github.com/acme/skills/tree/topic/feature/tools", "main"), null);
   assert.equal(resolveSkillSource("https://example.com/acme/skills/tree/main/tools", "main"), null);
 });
