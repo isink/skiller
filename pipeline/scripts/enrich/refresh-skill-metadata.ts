@@ -98,13 +98,23 @@ async function main(): Promise<void> {
   const metadata = new Map<string, RepoState>();
   let checkedRepos = 0;
   let missingRepos = 0;
-  // Refresh all repository stars first, including rows that already have a count.
-  for (const [key, group] of groups) {
+  let pendingRepos = 0;
+  // Leave part of each run's request budget for SKILL.md checks. Should the
+  // catalog grow beyond one day's budget, oldest repo checks run first.
+  const repoBudget = Math.max(1, Math.floor(maxRequests * 0.75));
+  const orderedGroups = [...groups].sort(([left], [right]) => {
+    const leftChecked = stateByRepo.get(left)?.checked_at ?? "";
+    const rightChecked = stateByRepo.get(right)?.checked_at ?? "";
+    return leftChecked.localeCompare(rightChecked) || left.localeCompare(right);
+  });
+  // Refresh repository stars first, including rows that already have a count.
+  for (const [key, group] of orderedGroups) {
     const previous = stateByRepo.get(key);
     if (previous?.checked_at.slice(0, 10) === today) {
       metadata.set(key, previous);
       continue;
     }
+    if (requests >= repoBudget) { pendingRepos++; continue; }
     const endpoint = `https://api.github.com/repos/${encodeURIComponent(group.owner)}/${encodeURIComponent(group.repo)}`;
     const result = await github(endpoint);
     const now = new Date().toISOString();
@@ -171,7 +181,7 @@ async function main(): Promise<void> {
     }
   }
   console.log(JSON.stringify({
-    totalSkills: skills.length, repositories: groups.size, checkedRepos, missingRepos,
+    totalSkills: skills.length, repositories: groups.size, checkedRepos, missingRepos, pendingRepos,
     checkedFiles, missingFiles, unresolved, pendingFiles, invalidUrls, githubRequests: requests,
   }));
 }
