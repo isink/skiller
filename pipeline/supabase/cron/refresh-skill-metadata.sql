@@ -17,7 +17,8 @@ select cron.schedule(
         where name = 'skiller_refresh_service_role_key'
       )
     ),
-    body := '{}'::jsonb
+    body := '{}'::jsonb,
+    timeout_milliseconds := 120000
   );
   $$
 );

@@ -7,21 +7,16 @@ if (!supabaseUrl || !serviceKey || !githubToken) {
 }
 
 const maxGithubRequests = 60;
-// 36 x 96 invocations leaves room for missed runs while covering ~2,850 repos/day.
+// 36 repositories per invocation leaves room for file checks and missed runs.
 const maxRepos = 36;
 const stopAtMs = 105_000;
+class BatchPause extends Error {}
 const githubHeaders = {
   Accept: "application/vnd.github+json",
   "X-GitHub-Api-Version": "2022-11-28",
   "User-Agent": "skiller-metadata-refresh",
   Authorization: `Bearer ${githubToken}`,
 };
-const dbHeaders = {
-  apikey: serviceKey,
-  Authorization: `Bearer ${serviceKey}`,
-  "Content-Type": "application/json",
-};
-
 type RepoDue = { repo_key: string; github_url: string };
 type FileDue = {
   id: string;
@@ -32,10 +27,16 @@ type FileDue = {
 type Source = { owner: string; repo: string; ref: string; path: string };
 type GithubResult = { status: number; body: unknown };
 
-async function database(path: string, method: string, body: unknown): Promise<unknown> {
+async function database(
+  path: string, method: string, body: unknown, token: string = serviceKey,
+): Promise<unknown> {
   const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
     method,
-    headers: dbHeaders,
+    headers: {
+      apikey: token,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(15_000),
   });
@@ -44,8 +45,8 @@ async function database(path: string, method: string, body: unknown): Promise<un
   return raw ? JSON.parse(raw) : null;
 }
 
-function rpc(name: string, args: Record<string, unknown>): Promise<unknown> {
-  return database(`rpc/${name}`, "POST", args);
+function rpc(name: string, args: Record<string, unknown>, token: string = serviceKey): Promise<unknown> {
+  return database(`rpc/${name}`, "POST", args, token);
 }
 
 function repository(url: string): { owner: string; repo: string } {
@@ -93,9 +94,11 @@ function commitDate(payload: unknown): string | null {
   return typeof value === "string" && Number.isFinite(Date.parse(value)) ? value : null;
 }
 
-async function run(): Promise<Record<string, number | boolean>> {
+async function run(callerToken: string): Promise<Record<string, number | boolean>> {
   const holder = crypto.randomUUID();
-  const claimed = await rpc("claim_skill_metadata_refresh", { p_holder: holder });
+  // The RPC is granted only to service_role. PostgREST verifies the caller's
+  // token before any privileged work, even if the runtime uses a different key.
+  const claimed = await rpc("claim_skill_metadata_refresh", { p_holder: holder }, callerToken);
   if (claimed !== true) return { skipped: true, githubRequests: 0 };
 
   const started = Date.now();
@@ -103,94 +106,117 @@ async function run(): Promise<Record<string, number | boolean>> {
   let lastGithubRequest = 0;
   let checkedRepos = 0;
   let missingRepos = 0;
+  let failedRepos = 0;
   let checkedFiles = 0;
   let missingFiles = 0;
+  let failedFiles = 0;
   let unresolvedFiles = 0;
 
   async function github(url: string): Promise<GithubResult> {
-    if (githubRequests >= maxGithubRequests || Date.now() - started >= stopAtMs) {
-      throw new Error("Batch request or time budget exhausted");
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (githubRequests >= maxGithubRequests || Date.now() - started >= stopAtMs) {
+        throw new BatchPause("Batch request or time budget exhausted");
+      }
+      const delay = Math.max(0, 1000 - (Date.now() - lastGithubRequest));
+      if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+      lastGithubRequest = Date.now();
+      githubRequests++;
+      let response: Response;
+      try {
+        response = await fetch(url, { headers: githubHeaders, signal: AbortSignal.timeout(20_000) });
+      } catch (error) {
+        if (attempt === 0) continue;
+        throw error;
+      }
+      if (response.status === 404) return { status: 404, body: null };
+      if (response.status === 403 || response.status === 429) {
+        throw new BatchPause(`GitHub rate limited (${response.status}); batch will resume on the next invocation`);
+      }
+      if (!response.ok) throw new Error(`GitHub ${response.status} for public API request`);
+      return { status: response.status, body: await response.json() };
     }
-    const delay = Math.max(0, 1000 - (Date.now() - lastGithubRequest));
-    if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
-    lastGithubRequest = Date.now();
-    const response = await fetch(url, { headers: githubHeaders, signal: AbortSignal.timeout(20_000) });
-    githubRequests++;
-    if (response.status === 404) return { status: 404, body: null };
-    if (response.status === 403 || response.status === 429) {
-      throw new Error(`GitHub rate limited (${response.status}); batch will resume on the next invocation`);
-    }
-    if (!response.ok) throw new Error(`GitHub ${response.status} for public API request`);
-    return { status: response.status, body: await response.json() };
+    throw new Error("GitHub request failed");
   }
 
   try {
     const repos = await rpc("skill_metadata_repos_due", { p_limit: maxRepos }) as RepoDue[];
     for (const row of repos) {
       if (Date.now() - started >= stopAtMs) break;
-      const { owner, repo } = repository(row.github_url);
-      const result = await github(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`);
-      if (result.status === 404) {
+      try {
+        const { owner, repo } = repository(row.github_url);
+        const result = await github(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`);
+        if (result.status === 404) {
+          await rpc("apply_skill_repo_metadata", {
+            p_repo_key: row.repo_key, p_found: false, p_stars: null,
+            p_default_branch: "", p_pushed_at: null,
+          });
+          missingRepos++;
+          continue;
+        }
+        const body = result.body as { default_branch?: unknown; stargazers_count?: unknown; pushed_at?: unknown };
+        if (typeof body?.default_branch !== "string" || !body.default_branch
+          || !Number.isInteger(body.stargazers_count) || (body.stargazers_count as number) < 0
+          || (body.pushed_at !== null && (typeof body.pushed_at !== "string"
+            || !Number.isFinite(Date.parse(body.pushed_at))))) {
+          throw new Error(`Invalid GitHub repository metadata for ${row.repo_key}`);
+        }
         await rpc("apply_skill_repo_metadata", {
-          p_repo_key: row.repo_key, p_found: false, p_stars: null,
-          p_default_branch: "", p_pushed_at: null,
+          p_repo_key: row.repo_key, p_found: true, p_stars: body.stargazers_count,
+          p_default_branch: body.default_branch, p_pushed_at: body.pushed_at,
         });
-        missingRepos++;
-        continue;
+        checkedRepos++;
+      } catch (error) {
+        if (error instanceof BatchPause) break;
+        failedRepos++;
+        console.warn(`Repository refresh failed for ${row.repo_key}: ${error}`);
       }
-      const body = result.body as { default_branch?: unknown; stargazers_count?: unknown; pushed_at?: unknown };
-      if (typeof body?.default_branch !== "string" || !body.default_branch
-        || !Number.isInteger(body.stargazers_count) || (body.stargazers_count as number) < 0
-        || (body.pushed_at !== null && (typeof body.pushed_at !== "string"
-          || !Number.isFinite(Date.parse(body.pushed_at))))) {
-        throw new Error(`Invalid GitHub repository metadata for ${row.repo_key}`);
-      }
-      await rpc("apply_skill_repo_metadata", {
-        p_repo_key: row.repo_key, p_found: true, p_stars: body.stargazers_count,
-        p_default_branch: body.default_branch, p_pushed_at: body.pushed_at,
-      });
-      checkedRepos++;
     }
 
     const fileLimit = Math.floor((maxGithubRequests - githubRequests) / 2);
     const files = await rpc("skill_metadata_files_due", { p_limit: fileLimit }) as FileDue[];
     for (const row of files) {
       if (Date.now() - started >= stopAtMs || githubRequests + 2 > maxGithubRequests) break;
-      const source = sourceFrom(row.github_url, row.default_branch);
-      let updatedAt: string | null = null;
-      let missing = false;
-      if (source) {
-        const base = `https://api.github.com/repos/${encodeURIComponent(source.owner)}/${encodeURIComponent(source.repo)}`;
-        const filePath = source.path.split("/").map(encodeURIComponent).join("/");
-        const file = await github(`${base}/contents/${filePath}?ref=${encodeURIComponent(source.ref)}`);
-        if (file.status === 404) {
-          missing = true;
-        } else {
-          const info = file.body as { type?: unknown; name?: unknown };
-          if (info?.type !== "file" || typeof info.name !== "string" || info.name.toLowerCase() !== "skill.md") {
+      try {
+        const source = sourceFrom(row.github_url, row.default_branch);
+        let updatedAt: string | null = null;
+        let missing = false;
+        if (source) {
+          const base = `https://api.github.com/repos/${encodeURIComponent(source.owner)}/${encodeURIComponent(source.repo)}`;
+          const filePath = source.path.split("/").map(encodeURIComponent).join("/");
+          const file = await github(`${base}/contents/${filePath}?ref=${encodeURIComponent(source.ref)}`);
+          if (file.status === 404) {
             missing = true;
           } else {
-            const query = new URLSearchParams({ path: source.path, sha: source.ref, per_page: "1" });
-            const commits = await github(`${base}/commits?${query}`);
-            updatedAt = commits.status === 404 ? null : commitDate(commits.body);
+            const info = file.body as { type?: unknown; name?: unknown };
+            if (info?.type !== "file" || typeof info.name !== "string" || info.name.toLowerCase() !== "skill.md") {
+              missing = true;
+            } else {
+              const query = new URLSearchParams({ path: source.path, sha: source.ref, per_page: "1" });
+              const commits = await github(`${base}/commits?${query}`);
+              updatedAt = commits.status === 404 ? null : commitDate(commits.body);
+            }
           }
+        } else {
+          unresolvedFiles++;
         }
-      } else {
-        unresolvedFiles++;
+        const checkedUrl = source ? canonicalUrl(row.github_url, source) : row.github_url;
+        await database(`skills?id=eq.${encodeURIComponent(row.id)}`, "PATCH", {
+          github_url: checkedUrl,
+          source_updated_at: updatedAt,
+          source_checked_at: new Date().toISOString(),
+          source_repo_pushed_at: row.pushed_at,
+          source_url_checked: checkedUrl,
+        });
+        checkedFiles++;
+        if (missing) missingFiles++;
+      } catch (error) {
+        if (error instanceof BatchPause) break;
+        failedFiles++;
+        console.warn(`Skill file refresh failed for ${row.id}: ${error}`);
       }
-      const checkedUrl = source ? canonicalUrl(row.github_url, source) : row.github_url;
-      await database(`skills?id=eq.${encodeURIComponent(row.id)}`, "PATCH", {
-        github_url: checkedUrl,
-        source_updated_at: updatedAt,
-        source_checked_at: new Date().toISOString(),
-        source_repo_pushed_at: row.pushed_at,
-        source_url_checked: checkedUrl,
-      });
-      checkedFiles++;
-      if (missing) missingFiles++;
     }
-    return { skipped: false, checkedRepos, missingRepos, checkedFiles,
-      missingFiles, unresolvedFiles, githubRequests };
+    return { skipped: false, checkedRepos, missingRepos, failedRepos, checkedFiles,
+      missingFiles, failedFiles, unresolvedFiles, githubRequests };
   } finally {
     await rpc("release_skill_metadata_refresh", { p_holder: holder });
   }
@@ -198,13 +224,14 @@ async function run(): Promise<Record<string, number | boolean>> {
 
 Deno.serve(async (request) => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
-  // JWT verification stays enabled at the Supabase gateway. Recheck the
-  // service role here so an ordinary signed-in user cannot invoke the job.
-  if (request.headers.get("authorization") !== `Bearer ${serviceKey}`) {
+  // JWT verification stays enabled at the gateway; the first RPC also checks
+  // service_role against database permissions before starting the refresh.
+  const callerToken = /^Bearer\s+(\S+)$/i.exec(request.headers.get("authorization") ?? "")?.[1];
+  if (!callerToken) {
     return new Response("Unauthorized", { status: 401 });
   }
   try {
-    const result = await run();
+    const result = await run(callerToken);
     console.log(JSON.stringify(result));
     return Response.json(result);
   } catch (error) {
