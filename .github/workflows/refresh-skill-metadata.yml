@@ -1,8 +1,7 @@
 name: Refresh skill metadata
 
 on:
-  schedule:
-    - cron: "17 3 * * *"
+  # Supabase Cron owns the daily schedule. Keep this as an operator fallback.
   workflow_dispatch:
 
 permissions:
