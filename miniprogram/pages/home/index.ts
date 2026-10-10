@@ -108,6 +108,9 @@ Page({
     if (searchTimer !== undefined) clearTimeout(searchTimer);
     this.setData({ query: "", results: [], searching: false, error: "" });
   },
+  navigateToFavorites() {
+    wx.navigateTo({ url: "/pages/favorites/index" });
+  },
   openSkill(event: { currentTarget: { dataset: { id: string } } }) {
     wx.navigateTo({ url: `/pages/detail/index?id=${encodeURIComponent(event.currentTarget.dataset.id)}` });
   },

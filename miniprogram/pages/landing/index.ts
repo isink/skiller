@@ -1,9 +1,9 @@
 Page({
   navigateToSkills() {
-    wx.switchTab({ url: "/pages/home/index" });
+    wx.navigateTo({ url: "/pages/home/index" });
   },
 
   navigateToRadar() {
-    wx.switchTab({ url: "/pages/radar/index" });
+    wx.navigateTo({ url: "/pages/radar/index" });
   },
 });

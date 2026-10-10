@@ -13,7 +13,7 @@ function present(skill: Skill): FavoriteSkill {
 Page({
   data: { skills: [] as FavoriteSkill[], loading: false, error: "" },
 
-  onShow() { this.loadFavorites(); },
+  onLoad() { this.loadFavorites(); },
 
   async loadFavorites() {
     const ids = getFavoriteIds();

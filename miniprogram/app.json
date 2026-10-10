@@ -14,18 +14,6 @@
     "backgroundColor": "#0B0B0F",
     "backgroundTextStyle": "light"
   },
-  "tabBar": {
-    "color": "#898995",
-    "selectedColor": "#D97757",
-    "backgroundColor": "#15151B",
-    "borderStyle": "black",
-    "list": [
-      { "pagePath": "pages/landing/index", "text": "首页" },
-      { "pagePath": "pages/home/index", "text": "技能库" },
-      { "pagePath": "pages/radar/index", "text": "雷达" },
-      { "pagePath": "pages/favorites/index", "text": "收藏" }
-    ]
-  },
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"
