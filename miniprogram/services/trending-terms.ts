@@ -37,10 +37,9 @@ function request<T>(path: string, query: Query = {}): Promise<T> {
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "未知";
-  const date = new Date(dateStr);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  return `${month}月${day}日`;
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr);
+  if (!match) return "未知";
+  return `${Number(match[1])}年${Number(match[2])}月${Number(match[3])}日`;
 }
 
 function formatScore(score: number | null): string {
@@ -82,6 +81,8 @@ export async function fetchTrendingTerms(options: { offset?: number; limit?: num
   const limit = Math.min(50, Math.max(1, options.limit ?? TRENDING_PAGE_SIZE));
   
   const rows = await request<TrendingTerm[]>("/rest/v1/trending_terms_public", {
+    select: "term,summary_zh,score,heat,status,discovered_at",
+    order: "discovered_at.desc.nullslast,score.desc.nullslast,term.asc",
     offset,
     limit,
   });
