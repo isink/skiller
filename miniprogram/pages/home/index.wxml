@@ -1,16 +1,8 @@
-<view class="page">
+<view class="page page-with-tabbar">
   <view class="hero">
-    <view class="hero-header">
-      <view class="hero-text">
-        <text class="eyebrow">AISkill技能库</text>
-        <text class="hero-title">发现值得用的 Skills</text>
-        <text class="hero-subtitle">浏览、搜索和收藏优质技能</text>
-      </view>
-      <view class="favorites-entry" bindtap="navigateToFavorites">
-        <text class="favorites-icon">⭐</text>
-        <text class="favorites-label">收藏</text>
-      </view>
-    </view>
+    <text class="eyebrow">AISkill技能库</text>
+    <text class="hero-title">发现值得用的 Skills</text>
+    <text class="hero-subtitle">浏览、搜索和收藏优质技能</text>
   </view>
 
   <view class="search-wrap">
@@ -65,4 +57,6 @@
       <view class="source-meta"><text>{{item.displayStars}}</text><text>{{item.displayUpdated}}</text></view>
     </view>
   </block>
+
+  <skill-tabbar active="home"></skill-tabbar>
 </view>
