@@ -1,0 +1,57 @@
+<view class="page">
+  <view class="hero">
+    <text class="hero-title">新词雷达</text>
+    <text class="hero-subtitle">追踪AI领域热门新词与趋势</text>
+  </view>
+
+  <view wx:if="{{error}}" class="notice">{{error}}</view>
+
+  <view wx:if="{{loading && terms.length === 0}}" class="notice">正在加载…</view>
+
+  <view wx:for="{{terms}}" wx:key="term" class="card term-card" data-index="{{index}}" bindtap="showTermDetail">
+    <view class="term-header">
+      <text class="term-name">{{item.term}}</text>
+      <view class="status-badge" style="background: {{item.statusColor}};">
+        <text class="status-text">{{item.displayStatus}}</text>
+      </view>
+    </view>
+    <text class="term-summary">{{item.displaySummary}}</text>
+    <view class="term-meta">
+      <text class="meta-item">评分 {{item.displayScore}}</text>
+      <text class="meta-item">热度 {{item.displayHeat}}</text>
+      <text class="meta-item">{{item.displayDate}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{terms.length === 0 && !loading}}" class="empty">暂无新词数据</view>
+
+  <view wx:if="{{loading && terms.length > 0}}" class="loading-more">加载中…</view>
+  <view wx:if="{{!hasMore && terms.length > 0}}" class="no-more">没有更多了</view>
+</view>
+
+<view wx:if="{{showDetail && selectedTerm}}" class="modal-overlay" bindtap="hideDetail">
+  <view class="modal-content" catchtap="">
+    <view class="modal-header">
+      <text class="modal-title">{{selectedTerm.term}}</text>
+      <view class="status-badge" style="background: {{selectedTerm.statusColor}};">
+        <text class="status-text">{{selectedTerm.displayStatus}}</text>
+      </view>
+    </view>
+    <text class="modal-summary">{{selectedTerm.displaySummary}}</text>
+    <view class="modal-meta-grid">
+      <view class="meta-grid-item">
+        <text class="meta-label">评分</text>
+        <text class="meta-value">{{selectedTerm.displayScore}}</text>
+      </view>
+      <view class="meta-grid-item">
+        <text class="meta-label">热度</text>
+        <text class="meta-value">{{selectedTerm.displayHeat}}</text>
+      </view>
+      <view class="meta-grid-item">
+        <text class="meta-label">发现时间</text>
+        <text class="meta-value">{{selectedTerm.displayDate}}</text>
+      </view>
+    </view>
+    <view class="modal-close" bindtap="hideDetail">关闭</view>
+  </view>
+</view>
