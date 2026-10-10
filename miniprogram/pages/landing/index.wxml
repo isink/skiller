@@ -2,7 +2,7 @@
   <view class="brand-header">
     <image class="brand-mark" src="/assets/icons/brand.png" mode="aspectFit" />
     <view class="brand-text">
-      <text class="brand-name">AISkill</text>
+      <text class="brand-name">头山</text>
       <text class="brand-tagline">AI 工具箱</text>
     </view>
   </view>

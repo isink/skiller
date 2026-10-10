@@ -1,6 +1,6 @@
 <view class="page page-with-tabbar">
   <view class="hero">
-    <text class="eyebrow">AISkill技能库</text>
+    <text class="eyebrow">头山 AI 工具箱</text>
     <text class="hero-title">发现值得用的 Skills</text>
     <text class="hero-subtitle">浏览、搜索和收藏优质技能</text>
   </view>
@@ -38,7 +38,7 @@
         </view>
       </view>
     </scroll-view>
-    <view wx:elif="loading" class="notice">正在读取分类…</view>
+    <view wx:elif="{{loading}}" class="notice">正在读取分类…</view>
 
     <view class="section-title">精选技能</view>
     <view wx:if="{{loading && featured.length === 0}}" class="notice">正在加载…</view>

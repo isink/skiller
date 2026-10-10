@@ -3,8 +3,8 @@
 .brand-header { display: flex; flex-direction: row; align-items: center; }
 .brand-mark { width: 80rpx; height: 80rpx; flex-shrink: 0; border-radius: var(--radius-md); }
 .brand-text { display: flex; flex-direction: column; margin-left: var(--space-2); }
-.brand-name { color: var(--color-text); font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: 1.2; letter-spacing: 1rpx; }
-.brand-tagline { margin-top: 4rpx; color: var(--color-text-3); font-size: var(--text-xs); letter-spacing: 4rpx; }
+.brand-name { color: var(--color-text); font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: 1.15; letter-spacing: 2rpx; }
+.brand-tagline { margin-top: 4rpx; color: var(--color-text-2); font-size: var(--text-sm); letter-spacing: 2rpx; }
 
 .landing-intro { padding: var(--space-5) 0 var(--space-4); }
 .landing-title { display: block; font-size: var(--text-2xl); font-weight: var(--weight-bold); line-height: 1.2; letter-spacing: 1rpx; }

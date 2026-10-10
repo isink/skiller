@@ -8,7 +8,7 @@
     "pages/detail/index"
   ],
   "window": {
-    "navigationBarTitleText": "AISkill技能库",
+    "navigationBarTitleText": "头山 AI 工具箱",
     "navigationBarBackgroundColor": "#0C0E12",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#0C0E12",
