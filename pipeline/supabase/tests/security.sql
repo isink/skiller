@@ -78,6 +78,19 @@ begin
     raise exception 'client skills and categories grants must be read only';
   end if;
 
+  if (
+    select relrowsecurity
+    from pg_class
+    where oid = 'public.github_repo_refresh_state'::regclass
+  ) is distinct from true
+    or has_table_privilege('anon', 'public.github_repo_refresh_state', 'select')
+    or has_table_privilege('authenticated', 'public.github_repo_refresh_state', 'select')
+    or not has_table_privilege('service_role', 'public.github_repo_refresh_state', 'select')
+    or not has_table_privilege('service_role', 'public.github_repo_refresh_state', 'insert')
+    or not has_table_privilege('service_role', 'public.github_repo_refresh_state', 'update') then
+    raise exception 'repository refresh state must be private and service writable';
+  end if;
+
   if has_table_privilege('anon', 'public.submissions', 'select')
     or has_table_privilege('anon', 'public.submissions', 'insert')
     or has_table_privilege('anon', 'public.submissions', 'update')

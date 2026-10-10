@@ -1,0 +1,31 @@
+page {
+  min-height: 100%;
+  background: #0b0b0f;
+  color: #f4f4f6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 28rpx;
+}
+
+view, text, button, input, textarea, scroll-view { box-sizing: border-box; }
+button::after { border: 0; }
+
+.page { min-height: 100vh; padding: 32rpx 32rpx 48rpx; }
+.page-with-tabbar { padding-bottom: calc(100rpx + env(safe-area-inset-bottom) + 48rpx); }
+.muted { color: #9696a2; }
+.subtle { color: #6e6e7a; }
+.brand { color: #e28a6a; }
+.section-title { margin: 36rpx 0 20rpx; font-size: 32rpx; font-weight: 700; }
+.row { display: flex; flex-direction: row; align-items: center; }
+.space-between { justify-content: space-between; }
+.card { margin-bottom: 18rpx; padding: 24rpx; border: 1rpx solid #272730; border-radius: 24rpx; background: #15151b; }
+.skill-name { display: block; color: #f4f4f6; font-size: 30rpx; font-weight: 650; line-height: 1.35; }
+.skill-desc { display: block; margin-top: 10rpx; color: #a8a8b3; font-size: 25rpx; line-height: 1.5; }
+.meta { margin-top: 16rpx; color: #777783; font-size: 22rpx; }
+.source-meta { display: flex; flex-direction: column; gap: 4rpx; margin-top: 8rpx; color: #90909b; font-size: 21rpx; line-height: 1.45; }
+.chip-row { display: flex; flex-direction: row; flex-wrap: wrap; gap: 12rpx; }
+.chip { display: inline-flex; margin: 0 10rpx 10rpx 0; padding: 10rpx 18rpx; border: 1rpx solid #30303a; border-radius: 999rpx; color: #c4c4cc; font-size: 23rpx; }
+.chip-active { border-color: #d97757; background: #3a2420; color: #f0a184; }
+.empty { padding: 96rpx 20rpx; color: #858591; text-align: center; line-height: 1.7; }
+.notice { margin: 20rpx 0; color: #9696a2; font-size: 24rpx; text-align: center; }
+.primary-button { margin-top: 24rpx; border-radius: 999rpx; background: #d97757; color: white; font-size: 26rpx; }
+.search { height: 84rpx; padding: 0 24rpx; border: 1rpx solid #30303a; border-radius: 18rpx; background: #17171e; color: #f4f4f6; }

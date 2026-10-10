@@ -1,0 +1,23 @@
+<view class="page page-with-tabbar">
+  <text class="intro">按主题找到适合你的 Skills</text>
+  <scroll-view scroll-x class="filter-scroll" show-scrollbar="false">
+    <view class="filters">
+      <text class="chip {{activeCategory === '' ? 'chip-active' : ''}}" data-slug="" bindtap="selectCategory">全部</text>
+      <text wx:for="{{categories}}" wx:key="id" class="chip {{activeCategory === item.slug ? 'chip-active' : ''}}" data-slug="{{item.slug}}" bindtap="selectCategory">{{item.name}} · {{counts[item.slug] || 0}}</text>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{error}}" class="notice">{{error}}</view>
+  <view wx:if="{{loading && skills.length === 0}}" class="notice">正在加载技能…</view>
+  <view wx:for="{{skills}}" wx:key="id" class="card skill-card" data-id="{{item.id}}" bindtap="openSkill">
+    <text class="skill-name">{{item.name}}</text>
+    <text class="skill-desc">{{item.displayDescription}}</text>
+    <view class="meta"><text>{{item.displayCategory}} · {{item.author}}</text></view>
+    <view class="source-meta"><text>{{item.displayStars}}</text><text>{{item.displayUpdated}}</text></view>
+  </view>
+  <view wx:if="{{!loading && skills.length === 0 && !error}}" class="empty">这个分类暂时没有技能</view>
+  <view wx:if="{{loadingMore}}" class="notice">正在加载更多…</view>
+  <view wx:if="{{!hasMore && skills.length > 0}}" class="notice">已经到底了</view>
+
+  <skill-tabbar active="explore"></skill-tabbar>
+</view>

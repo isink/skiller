@@ -1,0 +1,86 @@
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.hero {
+  padding: 48rpx 0 64rpx;
+  text-align: center;
+}
+
+.eyebrow {
+  display: block;
+  color: #d97757;
+  font-size: 22rpx;
+  letter-spacing: 4rpx;
+  font-weight: 600;
+}
+
+.hero-title {
+  display: block;
+  margin-top: 20rpx;
+  font-size: 52rpx;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.hero-subtitle {
+  display: block;
+  margin-top: 16rpx;
+  color: #9696a2;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.entry-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.entry-card {
+  position: relative;
+  padding: 48rpx 36rpx;
+  border: 1.5rpx solid #2e2e38;
+  border-radius: 28rpx;
+  background: linear-gradient(135deg, #17171e 0%, #1a1a22 100%);
+  transition: all 0.3s ease;
+}
+
+.entry-card:active {
+  transform: scale(0.98);
+  border-color: #3e3e48;
+  background: linear-gradient(135deg, #1c1c24 0%, #1f1f28 100%);
+}
+
+.entry-icon {
+  font-size: 64rpx;
+  line-height: 1;
+  margin-bottom: 24rpx;
+}
+
+.entry-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #f4f4f6;
+  margin-bottom: 12rpx;
+}
+
+.entry-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #a8a8b3;
+  line-height: 1.6;
+}
+
+.entry-arrow {
+  position: absolute;
+  top: 48rpx;
+  right: 36rpx;
+  font-size: 56rpx;
+  color: #4e4e58;
+  line-height: 1;
+}

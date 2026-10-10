@@ -37,3 +37,6 @@ file_size_limit = "50MiB"
 enabled = true
 site_url = "http://127.0.0.1:3000"
 additional_redirect_urls = []
+
+[functions.refresh-skill-metadata]
+verify_jwt = true

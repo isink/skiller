@@ -36,6 +36,7 @@ type InsertSkill = {
   github_url: string;
   skill_md_content?: string;
   github_stars?: number;
+  github_stars_checked_at?: string;
   rank: number;
   score: number;
   featured: boolean;
@@ -95,6 +96,7 @@ function mapSkill(
   upstream: UpstreamSkill,
   skillMd: string | undefined,
   githubStars: number | undefined,
+  starsCheckedAt: string | undefined,
 ): InsertSkill {
   return {
     slug: upstream.id,
@@ -106,6 +108,7 @@ function mapSkill(
     github_url: REPO_TREE_BASE + upstream.path,
     ...skillContentPatch(skillMd),
     ...repoStarsPatch(githubStars),
+    ...(starsCheckedAt ? { github_stars_checked_at: starsCheckedAt } : {}),
     rank: 0,
     score: 0,
     featured: false,
@@ -155,6 +158,7 @@ async function main() {
 
   console.log("→ Fetching GitHub stars for antigravity repo");
   const repoStars = await fetchRepoStars("sickn33", "antigravity-awesome-skills");
+  const starsCheckedAt = repoStars === undefined ? undefined : new Date().toISOString();
   console.log(`✓ Stars: ${repoStars ?? "n/a"}`);
 
   const upstream = await fetchUpstream();
@@ -164,7 +168,7 @@ async function main() {
     upstream.map((u) => ({ slug: u.id, path: u.path }))
   );
 
-  const rows: InsertSkill[] = upstream.map((u) => mapSkill(u, mdMap.get(u.id), repoStars));
+  const rows: InsertSkill[] = upstream.map((u) => mapSkill(u, mdMap.get(u.id), repoStars, starsCheckedAt));
 
   console.log(`→ Upserting ${rows.length} skills`);
   await upsertBatch(rows);

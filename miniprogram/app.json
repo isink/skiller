@@ -1,0 +1,20 @@
+{
+  "pages": [
+    "pages/landing/index",
+    "pages/home/index",
+    "pages/radar/index",
+    "pages/favorites/index",
+    "pages/explore/index",
+    "pages/detail/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "AISkill技能库",
+    "navigationBarBackgroundColor": "#0B0B0F",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0B0B0F",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

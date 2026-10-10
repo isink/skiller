@@ -43,7 +43,7 @@ type SearchItem = {
     html_url: string;
     description: string | null;
     stargazers_count: number;
-    default_branch: string;
+    default_branch?: string;
   };
   url: string; // contents API URL
 };
@@ -119,6 +119,25 @@ async function fetchSkillMdFromUrl(contentsUrl: string): Promise<string | undefi
   // Node's atob doesn't handle multi-line base64; strip newlines first.
   const decoded = Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
   return decoded.replace(/\u0000/g, "");
+}
+
+const defaultBranches = new Map<string, string>();
+
+/** Code-search repository objects can omit default_branch. Never write blob/undefined links. */
+async function getDefaultBranch(repo: SearchItem["repository"]): Promise<string> {
+  if (typeof repo.default_branch === "string" && repo.default_branch) return repo.default_branch;
+  const cached = defaultBranches.get(repo.full_name);
+  if (cached) return cached;
+  const res = await fetch(`https://api.github.com/repos/${repo.full_name.split("/").map(encodeURIComponent).join("/")}`, {
+    headers: authHeaders(), signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error(`Repository API ${res.status} ${res.statusText}: ${repo.full_name}`);
+  const data = (await res.json()) as { default_branch?: unknown };
+  if (typeof data.default_branch !== "string" || !data.default_branch) {
+    throw new Error(`Repository API returned no default branch: ${repo.full_name}`);
+  }
+  defaultBranches.set(repo.full_name, data.default_branch);
+  return data.default_branch;
 }
 
 /** Minimal YAML frontmatter parser (same approach as import-anthropic.ts) */
@@ -249,6 +268,8 @@ async function main() {
     tags.push("community");
     const uniqueTags = Array.from(new Set(tags)).slice(0, 8);
 
+    const defaultBranch = await getDefaultBranch(repo);
+
     const row = {
       slug,
       name,
@@ -256,9 +277,10 @@ async function main() {
       category,
       tags: uniqueTags,
       author: repo.full_name.split("/")[0],
-      github_url: `${repo.html_url}/blob/${repo.default_branch}/${path}`,
+      github_url: `${repo.html_url}/blob/${defaultBranch}/${path}`,
       skill_md_content: md,
       github_stars: repo.stargazers_count,
+      github_stars_checked_at: new Date().toISOString(),
       rank: 0,
       score: 0,
       featured: false,

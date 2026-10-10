@@ -1,0 +1,17 @@
+<view class="skill-tabbar">
+  <view class="tabbar-items">
+    <view class="tabbar-item {{active === 'home' ? 'active' : ''}}" bindtap="onTapHome">
+      <text class="tabbar-icon">🎯</text>
+      <text class="tabbar-label">发现</text>
+    </view>
+    <view class="tabbar-item {{active === 'explore' ? 'active' : ''}}" bindtap="onTapExplore">
+      <text class="tabbar-icon">📂</text>
+      <text class="tabbar-label">分类</text>
+    </view>
+    <view class="tabbar-item {{active === 'favorites' ? 'active' : ''}}" bindtap="onTapFavorites">
+      <text class="tabbar-icon">⭐</text>
+      <text class="tabbar-label">收藏</text>
+    </view>
+  </view>
+  <view class="tabbar-safe-area"></view>
+</view>
