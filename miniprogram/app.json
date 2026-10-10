@@ -1,8 +1,10 @@
 {
   "pages": [
+    "pages/landing/index",
     "pages/home/index",
-    "pages/explore/index",
+    "pages/radar/index",
     "pages/favorites/index",
+    "pages/explore/index",
     "pages/detail/index"
   ],
   "window": {
@@ -18,8 +20,9 @@
     "backgroundColor": "#15151B",
     "borderStyle": "black",
     "list": [
-      { "pagePath": "pages/home/index", "text": "发现" },
-      { "pagePath": "pages/explore/index", "text": "分类" },
+      { "pagePath": "pages/landing/index", "text": "首页" },
+      { "pagePath": "pages/home/index", "text": "技能库" },
+      { "pagePath": "pages/radar/index", "text": "雷达" },
       { "pagePath": "pages/favorites/index", "text": "收藏" }
     ]
   },

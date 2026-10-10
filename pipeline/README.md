@@ -19,7 +19,53 @@ npm run import:all      # 拉新 skill（要代理）
 npm run apply:overrides # 最终严格校验精选/排序/分类目标
 npm run reclassify      # 重新分类 misc
 npm run enrich:skills   # 中文化（不要代理）
+
+# 导入趋势新词
+npm run upsert:trending -- path/to/terms.json
 ```
+
+## Trending Terms (新词雷达)
+
+导入 AI 新词到小程序"新词雷达"功能:
+
+```bash
+npm run upsert:trending -- data/trending-terms.json
+```
+
+**JSON 格式** (数组,每项为对象):
+
+```json
+[
+  {
+    "term": "RAG",
+    "summary": "检索增强生成,结合外部知识库提升LLM准确性",
+    "score": 0.92,
+    "heat": 8500,
+    "status": "已命中",
+    "discovered_at": "2026-10-01",
+    "recheck_at": "2026-11-01",
+    "trends_heat": 12000,
+    "source": "google-trends",
+    "url": "https://trends.google.com/..."
+  }
+]
+```
+
+**字段说明**:
+- `term` (必填): 新词名称,用作唯一键
+- `summary`: 中文简介(约30字)
+- `score`: 评分 0-1
+- `heat`: 热度值
+- `status`: 状态(`待观察` | `已命中` | `未命中` | `已转选题`)
+- `discovered_at`: 发现日期 (YYYY-MM-DD)
+- `recheck_at`: 复查日期 (YYYY-MM-DD)
+- `trends_heat`: Google Trends 热度
+- `source`: 来源平台(不会显示在小程序)
+- `url`: 来源链接(不会显示在小程序)
+
+除 `term` 外其他字段均可选。脚本通过 `term` 字段执行 upsert。
+
+**数据库迁移**: 先在 Supabase SQL Editor 执行 `pipeline/supabase/migrations/019_trending_terms.sql`。
 
 ## Required env vars (.env)
 

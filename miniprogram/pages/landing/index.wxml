@@ -1,0 +1,23 @@
+<view class="page landing-page">
+  <view class="hero">
+    <text class="eyebrow">AISkill</text>
+    <text class="hero-title">探索 AI 技能与趋势</text>
+    <text class="hero-subtitle">发现优质技能，追踪热门新词</text>
+  </view>
+
+  <view class="entry-cards">
+    <view class="entry-card" bindtap="navigateToSkills">
+      <view class="entry-icon">🎯</view>
+      <text class="entry-title">AI 技能库</text>
+      <text class="entry-desc">浏览、搜索和收藏优质技能</text>
+      <view class="entry-arrow">›</view>
+    </view>
+
+    <view class="entry-card" bindtap="navigateToRadar">
+      <view class="entry-icon">📡</view>
+      <text class="entry-title">新词雷达</text>
+      <text class="entry-desc">追踪AI领域热门新词与趋势</text>
+      <view class="entry-arrow">›</view>
+    </view>
+  </view>
+</view>
