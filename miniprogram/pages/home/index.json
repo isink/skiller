@@ -1,1 +1,1 @@
-{ "navigationBarTitleText": "技能库", "enablePullDownRefresh": true }
+{ "navigationBarTitleText": "技能库", "enablePullDownRefresh": true, "usingComponents": { "skill-tabbar": "/components/skill-tabbar/index" } }

@@ -1,9 +1,4 @@
 .hero { padding: 22rpx 0 28rpx; }
-.hero-header { display: flex; justify-content: space-between; align-items: flex-start; }
-.hero-text { flex: 1; }
-.favorites-entry { display: flex; flex-direction: column; align-items: center; gap: 4rpx; padding: 12rpx 18rpx; border-radius: 16rpx; background: #1a1a22; }
-.favorites-icon { font-size: 32rpx; }
-.favorites-label { color: #d97757; font-size: 20rpx; font-weight: 600; }
 .eyebrow { display: block; color: #d97757; font-size: 19rpx; letter-spacing: 3rpx; }
 .hero-title { display: block; margin-top: 14rpx; font-size: 46rpx; font-weight: 750; }
 .hero-subtitle { display: block; margin-top: 12rpx; color: #9696a2; font-size: 24rpx; }

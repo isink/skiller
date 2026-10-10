@@ -1,1 +1,1 @@
-{ "navigationBarTitleText": "收藏" }
+{ "navigationBarTitleText": "收藏", "usingComponents": { "skill-tabbar": "/components/skill-tabbar/index" } }
