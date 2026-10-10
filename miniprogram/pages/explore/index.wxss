@@ -1,4 +1,4 @@
-.intro { display: block; margin: 8rpx 0 24rpx; color: #a3a3ae; font-size: 25rpx; }
-.filter-scroll { width: calc(100vw - 32rpx); margin: 0 -16rpx 24rpx; }
-.filters { display: flex; padding: 0 16rpx; white-space: nowrap; }
+.intro { display: block; margin: var(--space-half) 0 var(--space-2); color: var(--color-text-2); font-size: var(--text-md); }
+.filter-scroll { margin: 0 calc(-1 * var(--page-gutter)) var(--space-3); white-space: nowrap; }
+.filters { display: flex; flex-direction: row; padding: 0 var(--page-gutter); }
 .skill-card { display: block; }

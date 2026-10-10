@@ -9,6 +9,10 @@
       {
         "value": "node_modules",
         "type": "folder"
+      },
+      {
+        "value": "svg",
+        "type": "suffix"
       }
     ],
     "include": []
