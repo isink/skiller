@@ -24,25 +24,14 @@ Page({
     error: "",
   },
 
-  onLoad() {
-    const selected = wx.getStorageSync("skiller.miniprogram.selectedCategory") || "";
-    wx.removeStorageSync("skiller.miniprogram.selectedCategory");
+  onLoad(options: { category?: string }) {
+    const category = options.category || "";
     const categories = readCache<Category[]>("categories") || [];
     const counts = readCache<Record<string, number>>("category-counts") || {};
-    const cached = readCache<Skill[]>(`explore:${selected || "all"}:0`);
-    this.setData({ categories, counts, activeCategory: selected, skills: (cached || []).map(present), loading: !cached });
+    const cached = readCache<Skill[]>(`explore:${category || "all"}:0`);
+    this.setData({ categories, counts, activeCategory: category, skills: (cached || []).map(present), loading: !cached });
     this.loadCategories();
     this.loadPage(true);
-  },
-
-  onShow() {
-    const selected = wx.getStorageSync("skiller.miniprogram.selectedCategory") || "";
-    if (!selected) return;
-    wx.removeStorageSync("skiller.miniprogram.selectedCategory");
-    if (selected !== this.data.activeCategory) {
-      this.setData({ activeCategory: selected, skills: [], offset: 0, hasMore: true });
-      this.loadPage(true);
-    }
   },
 
   async loadCategories() {

@@ -112,8 +112,7 @@ Page({
     wx.navigateTo({ url: `/pages/detail/index?id=${encodeURIComponent(event.currentTarget.dataset.id)}` });
   },
   openCategory(event: { currentTarget: { dataset: { slug: string } } }) {
-    wx.setStorageSync("skiller.miniprogram.selectedCategory", event.currentTarget.dataset.slug);
-    wx.switchTab({ url: "/pages/explore/index" });
+    wx.navigateTo({ url: `/pages/explore/index?category=${encodeURIComponent(event.currentTarget.dataset.slug)}` });
   },
-  openAllCategories() { wx.switchTab({ url: "/pages/explore/index" }); },
+  openAllCategories() { wx.navigateTo({ url: "/pages/explore/index" }); },
 });
