@@ -25,3 +25,9 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 - 搜索匹配技能名、作者、英文简介和中文简介，最多返回 50 条。
 - 收藏只保存在当前设备，不与 iOS 账号同步。
 - 正式 AppID 在开发者工具中开启域名校验后，Supabase 的技能和分类请求已返回 HTTP 200；真机请求与完整发布流程尚未验收。
+
+## 界面设计
+
+- 设计令牌（颜色、间距、圆角、字号、点击区域）统一定义在 `app.wxss` 的 `page` 选择器下，页面和组件通过 `var(--…)` 引用；全局只有一个强调色，间距按 8pt（16rpx）栅格取值。
+- 图标位于 `assets/icons/`，页面引用 PNG；SVG 源文件仅用于生成，已在 `project.config.json` 中排除出代码包。修改图标或配色后运行 `node scripts/render-miniprogram-icons.mjs`（需要 Node 22+ 和 Chrome）重新生成。
+- 底部技能导航（`components/skill-tabbar`）只用于发现、分类、收藏三个页面，仍然通过 `wx.redirectTo` 切换，不使用原生 tabBar。

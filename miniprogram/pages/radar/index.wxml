@@ -8,16 +8,20 @@
 
   <view wx:if="{{loading && terms.length === 0}}" class="notice">正在加载…</view>
 
-  <view wx:for="{{terms}}" wx:key="term" class="card term-card" data-index="{{index}}" bindtap="showTermDetail">
+  <view wx:for="{{terms}}" wx:key="term" class="card term-card" hover-class="card-hover" hover-stay-time="60" data-index="{{index}}" bindtap="showTermDetail">
     <view class="term-header">
       <text class="term-name">{{item.term}}</text>
-      <view class="status-badge" style="background: {{item.statusColor}};">
+      <view class="status-chip {{item.status === '已命中' ? 'status-hit' : (item.status === '已转选题' ? 'status-topic' : '')}}">
         <text class="status-text">{{item.displayStatus}}</text>
       </view>
     </view>
     <text class="term-summary">{{item.displaySummary}}</text>
+    <view class="score-row">
+      <text class="score-label">评分</text>
+      <view class="score-track"><view class="score-fill" style="width: {{item.score > 0 ? (item.score > 1 ? 100 : item.score * 100) : 0}}%;"></view></view>
+      <text class="score-value">{{item.displayScore}}</text>
+    </view>
     <view class="term-meta">
-      <text class="meta-item">评分 {{item.displayScore}}</text>
       <text class="meta-item">热度 {{item.displayHeat}}</text>
       <text class="meta-item">{{item.displayDate}}</text>
     </view>
@@ -31,18 +35,22 @@
 
 <view wx:if="{{showDetail && selectedTerm}}" class="modal-overlay" bindtap="hideDetail">
   <view class="modal-content" catchtap="">
+    <view class="modal-handle"></view>
     <view class="modal-header">
       <text class="modal-title">{{selectedTerm.term}}</text>
-      <view class="status-badge" style="background: {{selectedTerm.statusColor}};">
+      <view class="status-chip {{selectedTerm.status === '已命中' ? 'status-hit' : (selectedTerm.status === '已转选题' ? 'status-topic' : '')}}">
         <text class="status-text">{{selectedTerm.displayStatus}}</text>
       </view>
     </view>
     <text class="modal-summary">{{selectedTerm.displaySummary}}</text>
-    <view class="modal-meta-grid">
-      <view class="meta-grid-item">
+    <view class="modal-score">
+      <view class="modal-score-head">
         <text class="meta-label">评分</text>
-        <text class="meta-value">{{selectedTerm.displayScore}}</text>
+        <text class="modal-score-value">{{selectedTerm.displayScore}}</text>
       </view>
+      <view class="score-track score-track-lg"><view class="score-fill" style="width: {{selectedTerm.score > 0 ? (selectedTerm.score > 1 ? 100 : selectedTerm.score * 100) : 0}}%;"></view></view>
+    </view>
+    <view class="modal-meta-grid">
       <view class="meta-grid-item">
         <text class="meta-label">热度</text>
         <text class="meta-value">{{selectedTerm.displayHeat}}</text>

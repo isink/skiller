@@ -9,9 +9,9 @@
   ],
   "window": {
     "navigationBarTitleText": "AISkill技能库",
-    "navigationBarBackgroundColor": "#0B0B0F",
+    "navigationBarBackgroundColor": "#0C0E12",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#0B0B0F",
+    "backgroundColor": "#0C0E12",
     "backgroundTextStyle": "light"
   },
   "style": "v2",

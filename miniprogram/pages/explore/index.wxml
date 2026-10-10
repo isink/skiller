@@ -9,10 +9,10 @@
 
   <view wx:if="{{error}}" class="notice">{{error}}</view>
   <view wx:if="{{loading && skills.length === 0}}" class="notice">正在加载技能…</view>
-  <view wx:for="{{skills}}" wx:key="id" class="card skill-card" data-id="{{item.id}}" bindtap="openSkill">
+  <view wx:for="{{skills}}" wx:key="id" class="card skill-card" hover-class="card-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="openSkill">
     <text class="skill-name">{{item.name}}</text>
     <text class="skill-desc">{{item.displayDescription}}</text>
-    <view class="meta"><text>{{item.displayCategory}} · {{item.author}}</text></view>
+    <view class="meta"><text class="meta-tag">{{item.displayCategory}}</text><text class="meta-author">{{item.author}}</text></view>
     <view class="source-meta"><text>{{item.displayStars}}</text><text>{{item.displayUpdated}}</text></view>
   </view>
   <view wx:if="{{!loading && skills.length === 0 && !error}}" class="empty">这个分类暂时没有技能</view>

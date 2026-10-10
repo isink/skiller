@@ -3,16 +3,18 @@
   <view wx:if="{{error}}" class="notice">{{error}}</view>
   <block wx:if="{{skill}}">
     <view class="detail-header">
-      <view class="row space-between">
+      <view class="row detail-title-row">
         <text class="detail-title">{{skill.name}}</text>
-        <text class="favorite-button {{favorited ? 'favorite-on' : ''}}" catchtap="onToggleFavorite">{{favorited ? '♥' : '♡'}}</text>
+        <view class="favorite-button {{favorited ? 'favorite-on' : ''}}" catchtap="onToggleFavorite">
+          <image class="favorite-icon" src="{{favorited ? '/assets/icons/heart-filled.png' : '/assets/icons/heart.png'}}" mode="aspectFit" />
+        </view>
       </view>
       <text class="detail-description">{{displayDescription}}</text>
       <view class="chip-row detail-tags">
-        <text class="tag">{{displayCategory}}</text>
+        <text class="tag tag-primary">{{displayCategory}}</text>
         <text wx:for="{{skill.tags}}" wx:key="*this" class="tag">{{item}}</text>
       </view>
-      <view class="detail-meta">作者 {{skill.author}}</view>
+      <view class="detail-meta"><text class="detail-meta-label">作者</text><text class="detail-meta-value">{{skill.author}}</text></view>
       <view class="detail-source-meta"><text>{{displayStars}}</text><text>{{displayUpdated}}</text></view>
       <view class="reading-note">
         <text class="reading-note-title">站内完整阅读</text>
