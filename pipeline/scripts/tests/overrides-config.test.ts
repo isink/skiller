@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
 
 import {
@@ -68,4 +70,25 @@ test("final sync rejects missing override targets", () => {
     }),
     /Override slugs not found: missing-skill/,
   );
+});
+
+test("sources.json only contains well-formed overrides without stale slugs", () => {
+  const overrides = parseOverrides(
+    JSON.parse(readFileSync(join(__dirname, "..", "import", "sources.json"), "utf8")),
+  );
+  const stale = [
+    "artifacts-builder",
+    "canva",
+    "data-analyst",
+    "financial-analysis",
+    "research-writer",
+  ];
+  const slugs = [
+    ...overrides.featured,
+    ...Object.keys(overrides.ranks),
+    ...Object.keys(overrides.categoryOverrides),
+  ];
+  for (const slug of stale) {
+    assert.equal(slugs.includes(slug), false, `${slug} should not be referenced`);
+  }
 });

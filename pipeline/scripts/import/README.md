@@ -58,6 +58,8 @@ Edit [`sources.json`](./sources.json) to:
 
 Re-run either importer and the overrides will be re-applied.
 
+Slugs that no longer exist in the catalog are reported as a warning and skipped, both in the importers and in `npm run apply:overrides` (so a renamed or removed upstream skill never fails the daily workflow). Set `OVERRIDES_STRICT=1` to make `apply:overrides` fail on missing slugs instead.
+
 ## Adding a new source
 
 Both scripts follow the same pattern: fetch → map → upsert → applyOverrides. To add, say, a SkillsMP import, drop a new file under `scripts/import/`, share `lib/`, and register it in `package.json` scripts.
