@@ -129,6 +129,16 @@ button::after { border: 0; }
   line-height: 1.5;
 }
 .meta-author { color: var(--color-text-2); font-size: var(--text-sm); }
+.fresh-row { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; margin-top: var(--space-1); gap: var(--space-1); }
+.fresh-hot, .fresh-new {
+  padding: 4rpx var(--space-1);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.fresh-hot { border: 1rpx solid var(--color-accent-line); background: var(--color-accent-soft); color: var(--color-accent); font-weight: var(--weight-semibold); }
+.fresh-new { background: var(--color-surface-2); color: var(--color-text-2); font-weight: var(--weight-medium); }
+.fresh-note { color: var(--color-text-3); font-size: var(--text-xs); }
 .source-meta {
   display: flex;
   flex-direction: row;

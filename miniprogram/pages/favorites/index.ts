@@ -3,11 +3,12 @@ import { cacheSkill, getFavoriteIds, readCache } from "../../services/storage";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
+import { skillFreshness } from "../../services/freshness";
 import type { Skill } from "../../types/skill";
 
-type FavoriteSkill = Skill & { displayDescription: string; displayCategory: string; displayStars: string; displayUpdated: string };
+type FavoriteSkill = Skill & { displayDescription: string; displayCategory: string; displayStars: string; displayUpdated: string; displayAdded: string };
 function present(skill: Skill): FavoriteSkill {
-  return { ...skill, displayDescription: skillDescriptionZh(skill), displayCategory: categoryName(skill.category), ...skillMetadata(skill) };
+  return { ...skill, displayDescription: skillDescriptionZh(skill), displayCategory: categoryName(skill.category), ...skillMetadata(skill), displayAdded: skillFreshness(skill).displayAdded };
 }
 
 Page({

@@ -14,11 +14,11 @@
  * 5000 req/hr authenticated).
  */
 
-import { db } from "./lib/supabase";
 import { env } from "./lib/env";
 import { idToDisplayName } from "./lib/slugify";
 import { mapCategory } from "./lib/category-map";
 import { applyOverrides } from "./lib/overrides";
+import { importNewOnly, loadExistingSlugs, upsertSkillsPreservingCuration } from "./lib/upsert";
 import { fetchRepoStars, repoStarsPatch } from "./lib/github";
 import { assertNoBatchFailures } from "../lib/batch-failures";
 import { fetchEarliestCommitDate } from "../lib/commit-history";
@@ -164,11 +164,17 @@ async function main() {
   const dirs = await listSkillDirs();
   console.log(`✓ Found ${dirs.length} directories`);
 
+  const existingSlugs = await loadExistingSlugs();
   let imported = 0;
   let skipped = 0;
+  let unchanged = 0;
   let failed = 0;
 
   for (const dir of dirs) {
+    if (importNewOnly && existingSlugs.has(dir)) {
+      unchanged++;
+      continue;
+    }
     const [md, publishedAt] = await Promise.all([
       fetchSkillMd(dir),
       fetchFirstCommitDate(dir),
@@ -213,17 +219,17 @@ async function main() {
       skill_md_content: md,
       ...repoStarsPatch(repoStars),
       ...(starsCheckedAt ? { github_stars_checked_at: starsCheckedAt } : {}),
-      rank: 80, // baseline for official skills; sources.json can override
+      // Seed values for a first import only; existing rows keep their curation.
+      rank: 80,
       score: 95,
       featured: true,
       ...(publishedAt ? { published_at: publishedAt } : {}),
     };
 
-    const { error } = await db
-      .from("skills")
-      .upsert(row, { onConflict: "slug" });
-    if (error) {
-      console.error(`  ✖ ${slug}: ${error.message}`);
+    try {
+      await upsertSkillsPreservingCuration([row], existingSlugs);
+    } catch (error) {
+      console.error(`  ✖ ${slug}: ${error instanceof Error ? error.message : String(error)}`);
       failed++;
       continue;
     }
@@ -233,7 +239,7 @@ async function main() {
   }
 
   process.stdout.write("\n");
-  console.log(`✓ Imported ${imported} skills, skipped ${skipped}, failed ${failed}`);
+  console.log(`✓ Imported ${imported} skills, unchanged ${unchanged}, skipped ${skipped}, failed ${failed}`);
 
   assertNoBatchFailures("skill upsert", failed);
 

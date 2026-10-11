@@ -8,6 +8,10 @@
 
 CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序不调用它们，也不需要先复制数据。
 
+## 首页分区
+
+首页依次显示：本周热门（`get_hot_skills`，7 天 Star 增长，不足 3 条时隐藏）、最新收录（`get_latest_skills`，每个仓库最多 2 条；RPC 不可用时退回按 `created_at` 排序并在客户端去重）、精选技能（最多 6 条）、分类浏览。卡片标签“本周 +N⭐”来自 `stars_growth`，“今天收录 / N 天前收录”按北京时间的日历日从 `created_at` 计算，超过 30 天不显示。两个 RPC 由 `pipeline/supabase/migrations/020_hot_and_latest_skills.sql` 创建；迁移执行前热门区自动隐藏，最新收录使用退回查询。
+
 ## 在微信开发者工具中试用
 
 1. 打开本目录。`project.config.json` 已填写正式小程序 AppID。

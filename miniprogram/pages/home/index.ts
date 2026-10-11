@@ -1,11 +1,17 @@
-import { fetchCategories, fetchCategoryCounts, fetchFeatured, fetchSkills, searchSkills } from "../../services/api";
+import { fetchCategories, fetchCategoryCounts, fetchFeatured, fetchHotSkills, fetchLatestSkills, searchSkills } from "../../services/api";
 import { readCache, writeCache } from "../../services/storage";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
+import { skillFreshness } from "../../services/freshness";
 import type { Category, Skill } from "../../types/skill";
 
-type HomeSkill = Skill & { displayDescription: string; displayCategory: string; displayStars: string; displayUpdated: string };
+type HomeSkill = Skill & {
+  displayDescription: string; displayCategory: string; displayStars: string; displayUpdated: string;
+  displayGrowth: string; displayAdded: string; displayRepoNote: string;
+};
+const FEATURED_LIMIT = 6;
+const SECTION_LIMIT = 10;
 let searchTimer: number | undefined;
 let searchSequence = 0;
 
@@ -15,11 +21,13 @@ function present(skill: Skill): HomeSkill {
     displayDescription: skillDescriptionZh(skill),
     displayCategory: categoryName(skill.category),
     ...skillMetadata(skill),
+    ...skillFreshness(skill),
   };
 }
 
 Page({
   data: {
+    hot: [] as HomeSkill[],
     featured: [] as HomeSkill[],
     latest: [] as HomeSkill[],
     categories: [] as Category[],
@@ -32,13 +40,15 @@ Page({
   },
 
   onLoad() {
+    const hot = readCache<Skill[]>("home:hot");
     const featured = readCache<Skill[]>("home:featured");
     const latest = readCache<Skill[]>("home:latest");
     const categories = readCache<Category[]>("categories");
     const counts = readCache<Record<string, number>>("category-counts");
-    if (featured || latest || categories || counts) {
+    if (hot || featured || latest || categories || counts) {
       this.setData({
-        featured: (featured || []).map(present),
+        hot: (hot || []).map(present),
+        featured: (featured || []).slice(0, FEATURED_LIMIT).map(present),
         latest: (latest || []).map(present),
         categories: categories || [],
         counts: counts || {},
@@ -52,24 +62,29 @@ Page({
 
   async loadHome() {
     this.setData({ error: "" });
-    const [freshFeatured, freshLatest, freshCategories, freshCounts] = await Promise.all([
-      fetchFeatured(20).catch(() => null),
-      fetchSkills({ limit: 10, orderBy: "created_at" }).catch(() => null),
+    const [freshHot, freshFeatured, freshLatest, freshCategories, freshCounts] = await Promise.all([
+      fetchHotSkills(SECTION_LIMIT).catch(() => null),
+      fetchFeatured(FEATURED_LIMIT).catch(() => null),
+      fetchLatestSkills(SECTION_LIMIT).catch(() => null),
       fetchCategories().catch(() => null),
       fetchCategoryCounts().catch(() => null),
     ]);
+    const hot = freshHot ?? readCache<Skill[]>("home:hot") ?? [];
     const featured = freshFeatured ?? readCache<Skill[]>("home:featured") ?? [];
     const latest = freshLatest ?? readCache<Skill[]>("home:latest") ?? [];
     const categories = freshCategories ?? readCache<Category[]>("categories") ?? [];
     const counts = freshCounts ?? readCache<Record<string, number>>("category-counts") ?? {};
+    // An empty hot list is a valid answer (no growth history yet), so it replaces the cache.
+    if (freshHot) writeCache("home:hot", freshHot);
     if (freshFeatured) writeCache("home:featured", freshFeatured);
     if (freshLatest) writeCache("home:latest", freshLatest);
     if (freshCategories) writeCache("categories", freshCategories);
     if (freshCounts) writeCache("category-counts", freshCounts);
+    // The hot section is optional and hidden below three rows, so its failure alone is not surfaced.
     const complete = freshFeatured !== null && freshLatest !== null && freshCategories !== null && freshCounts !== null;
     const hasCache = Boolean(readCache<Skill[]>("home:featured") || readCache<Skill[]>("home:latest"));
     this.setData({
-      featured: featured.map(present), latest: latest.map(present), categories, counts,
+      hot: hot.map(present), featured: featured.slice(0, FEATURED_LIMIT).map(present), latest: latest.map(present), categories, counts,
       loading: false,
       error: complete ? "" : hasCache ? "部分内容未能更新，显示已缓存内容。" : "部分内容加载失败，请下拉重试。",
     });

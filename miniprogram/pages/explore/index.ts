@@ -3,12 +3,13 @@ import { readCache, writeCache } from "../../services/storage";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
+import { skillFreshness } from "../../services/freshness";
 import type { Category, Skill } from "../../types/skill";
 
-type ExploreSkill = Skill & { displayDescription: string; displayCategory: string; displayStars: string; displayUpdated: string };
+type ExploreSkill = Skill & { displayDescription: string; displayCategory: string; displayStars: string; displayUpdated: string; displayAdded: string };
 let pageRequestSequence = 0;
 function present(skill: Skill): ExploreSkill {
-  return { ...skill, displayDescription: skillDescriptionZh(skill), displayCategory: categoryName(skill.category), ...skillMetadata(skill) };
+  return { ...skill, displayDescription: skillDescriptionZh(skill), displayCategory: categoryName(skill.category), ...skillMetadata(skill), displayAdded: skillFreshness(skill).displayAdded };
 }
 
 Page({

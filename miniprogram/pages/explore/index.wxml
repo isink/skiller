@@ -11,6 +11,7 @@
   <view wx:if="{{loading && skills.length === 0}}" class="notice">正在加载技能…</view>
   <view wx:for="{{skills}}" wx:key="id" class="card skill-card" hover-class="card-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="openSkill">
     <text class="skill-name">{{item.name}}</text>
+    <view wx:if="{{item.displayAdded}}" class="fresh-row"><text class="fresh-new">{{item.displayAdded}}</text></view>
     <text class="skill-desc">{{item.displayDescription}}</text>
     <view class="meta"><text class="meta-tag">{{item.displayCategory}}</text><text class="meta-author">{{item.author}}</text></view>
     <view class="source-meta"><text>{{item.displayStars}}</text><text>{{item.displayUpdated}}</text></view>
