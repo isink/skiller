@@ -13,5 +13,4 @@ export type TrendingTermDisplay = TrendingTerm & {
   displayHeat: string;
   displayDate: string;
   displayStatus: string;
-  statusColor: string;
 };

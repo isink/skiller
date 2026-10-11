@@ -1,23 +1,40 @@
 <view class="page landing-page">
-  <view class="hero">
-    <text class="eyebrow">AISkill</text>
-    <text class="hero-title">探索 AI 技能与趋势</text>
-    <text class="hero-subtitle">发现优质技能，追踪热门新词</text>
+  <view class="brand-header">
+    <image class="brand-mark" src="/assets/icons/brand.png" mode="aspectFit" />
+    <view class="brand-text">
+      <text class="brand-name">头山</text>
+      <text class="brand-tagline">AI 工具箱</text>
+    </view>
   </view>
 
-  <view class="entry-cards">
-    <view class="entry-card" bindtap="navigateToSkills">
-      <view class="entry-icon">🎯</view>
-      <text class="entry-title">AI 技能库</text>
-      <text class="entry-desc">浏览、搜索和收藏优质技能</text>
-      <view class="entry-arrow">›</view>
+  <view class="landing-intro">
+    <text class="landing-title">探索 AI 技能与趋势</text>
+    <text class="landing-subtitle">发现优质技能，追踪热门新词</text>
+  </view>
+
+  <text class="tool-section-label">全部工具</text>
+
+  <view class="tool-grid">
+    <view class="tool-tile" hover-class="tool-tile-hover" hover-stay-time="60" bindtap="navigateToSkills">
+      <view class="tool-tile-top">
+        <view class="tool-icon-box">
+          <image class="tool-icon" src="/assets/icons/layers.png" mode="aspectFit" />
+        </view>
+        <image class="tool-arrow" src="/assets/icons/chevron-right.png" mode="aspectFit" />
+      </view>
+      <text class="tool-title">AI 技能库</text>
+      <text class="tool-desc">浏览、搜索和收藏优质技能</text>
     </view>
 
-    <view class="entry-card" bindtap="navigateToRadar">
-      <view class="entry-icon">📡</view>
-      <text class="entry-title">新词雷达</text>
-      <text class="entry-desc">追踪AI领域热门新词与趋势</text>
-      <view class="entry-arrow">›</view>
+    <view class="tool-tile" hover-class="tool-tile-hover" hover-stay-time="60" bindtap="navigateToRadar">
+      <view class="tool-tile-top">
+        <view class="tool-icon-box">
+          <image class="tool-icon" src="/assets/icons/radar.png" mode="aspectFit" />
+        </view>
+        <image class="tool-arrow" src="/assets/icons/chevron-right.png" mode="aspectFit" />
+      </view>
+      <text class="tool-title">新词雷达</text>
+      <text class="tool-desc">追踪 AI 领域热门新词与趋势</text>
     </view>
   </view>
 </view>

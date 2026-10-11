@@ -9,6 +9,14 @@
       {
         "value": "node_modules",
         "type": "folder"
+      },
+      {
+        "value": "svg",
+        "type": "suffix"
+      },
+      {
+        "value": "docs",
+        "type": "folder"
       }
     ],
     "include": []

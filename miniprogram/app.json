@@ -8,11 +8,11 @@
     "pages/detail/index"
   ],
   "window": {
-    "navigationBarTitleText": "AISkill技能库",
-    "navigationBarBackgroundColor": "#0B0B0F",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#0B0B0F",
-    "backgroundTextStyle": "light"
+    "navigationBarTitleText": "头山 AI 工具箱",
+    "navigationBarBackgroundColor": "#F5F2EA",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F2EA",
+    "backgroundTextStyle": "dark"
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",

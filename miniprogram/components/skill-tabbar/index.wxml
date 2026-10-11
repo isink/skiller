@@ -1,15 +1,15 @@
 <view class="skill-tabbar">
   <view class="tabbar-items">
     <view class="tabbar-item {{active === 'home' ? 'active' : ''}}" bindtap="onTapHome">
-      <text class="tabbar-icon">🎯</text>
+      <image class="tabbar-icon" src="{{active === 'home' ? '/assets/icons/tab-discover-active.png' : '/assets/icons/tab-discover.png'}}" mode="aspectFit" />
       <text class="tabbar-label">发现</text>
     </view>
     <view class="tabbar-item {{active === 'explore' ? 'active' : ''}}" bindtap="onTapExplore">
-      <text class="tabbar-icon">📂</text>
+      <image class="tabbar-icon" src="{{active === 'explore' ? '/assets/icons/tab-category-active.png' : '/assets/icons/tab-category.png'}}" mode="aspectFit" />
       <text class="tabbar-label">分类</text>
     </view>
     <view class="tabbar-item {{active === 'favorites' ? 'active' : ''}}" bindtap="onTapFavorites">
-      <text class="tabbar-icon">⭐</text>
+      <image class="tabbar-icon" src="{{active === 'favorites' ? '/assets/icons/tab-favorite-active.png' : '/assets/icons/tab-favorite.png'}}" mode="aspectFit" />
       <text class="tabbar-label">收藏</text>
     </view>
   </view>
