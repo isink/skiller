@@ -5,14 +5,10 @@
     "docx",
     "xlsx",
     "pptx",
-    "canva",
-    "artifacts-builder",
+    "web-artifacts-builder",
     "webapp-testing",
     "mcp-builder",
-    "financial-analysis",
-    "data-analyst",
-    "skill-creator",
-    "research-writer"
+    "skill-creator"
   ],
   "ranks": {
     "skill-creator": 100,
@@ -20,13 +16,9 @@
     "docx": 98,
     "xlsx": 97,
     "pptx": 96,
-    "artifacts-builder": 95,
+    "web-artifacts-builder": 95,
     "webapp-testing": 94,
-    "mcp-builder": 93,
-    "data-analyst": 92,
-    "financial-analysis": 91,
-    "research-writer": 90,
-    "canva": 89
+    "mcp-builder": 93
   },
   "categoryOverrides": {
     "pdf": "office",
@@ -35,12 +27,8 @@
     "pptx": "office",
     "skill-creator": "official",
     "mcp-builder": "devops",
-    "artifacts-builder": "code",
+    "web-artifacts-builder": "code",
     "webapp-testing": "code",
-    "data-analyst": "data",
-    "financial-analysis": "data",
-    "research-writer": "research",
-    "canva": "design",
     "brand-guidelines": "design",
     "slack-gif-creator": "design",
     "algorithmic-art": "design",
