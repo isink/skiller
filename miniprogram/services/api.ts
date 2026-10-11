@@ -1,5 +1,6 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 import { categoryName } from "./presentation";
+import { limitPerRepo } from "./freshness";
 import type { Category, Skill } from "../types/skill";
 
 export const PAGE_SIZE = 30;
@@ -49,6 +50,24 @@ function listSkills(query: Query): Promise<Skill[]> {
 
 export function fetchFeatured(limit = 20): Promise<Skill[]> {
   return listSkills({ featured: "eq.true", order: "rank.desc", limit });
+}
+
+/** Star growth over the last 7 days, one skill per repository. Needs migration 020. */
+export function fetchHotSkills(limit = 10): Promise<Skill[]> {
+  return request<Skill[]>("/rest/v1/rpc/get_hot_skills", { p_days: 7, p_limit: limit, p_min_growth: 3 });
+}
+
+/**
+ * Newest enriched skills, at most two per repository. Falls back to the plain
+ * created_at order when the RPC is unavailable or nothing was added recently.
+ */
+export async function fetchLatestSkills(limit = 10): Promise<Skill[]> {
+  try {
+    const rows = await request<Skill[]>("/rest/v1/rpc/get_latest_skills", { p_limit: limit, p_per_repo: 2, p_within_days: 30 });
+    if (rows.length > 0) return rows;
+  } catch { /* Fall through to the direct query. */ }
+  const rows = await listSkills({ order: "created_at.desc", limit: 50 });
+  return limitPerRepo(rows, 2, limit);
 }
 
 const CATEGORY_ORDER = ["official", "ai", "code", "data", "devops", "security", "design", "docs", "office", "research", "misc"];

@@ -21,7 +21,7 @@ test("recent repository queries use a UTC pushed-date window", () => {
   const queries = recentRepoQueries(3, now);
   assert.ok(queries.length >= 3);
   for (const query of queries) {
-    assert.match(query, /^topic:[a-z-]+ pushed:>=2026-10-08 fork:false$/);
+    assert.match(query, /^topic:[a-z-]+ pushed:>=2026-10-08 stars:>=3 fork:false$/);
   }
   assert.throws(() => utcDateDaysAgo(0), /1 to 90/);
   assert.throws(() => utcDateDaysAgo(91), /1 to 90/);
@@ -37,6 +37,8 @@ test("tree scanning keeps only SKILL.md blobs, shallowest first, capped", () => 
     { path: "node_modules/x/SKILL.md", type: "blob" },
     { path: ".github/skills/SKILL.md", type: "blob" },
     { path: ".git/SKILL.md", type: "blob" },
+    { path: "template/SKILL.md", type: "blob" },
+    { path: "docs/Templates/x/SKILL.md", type: "blob" },
     { path: 42, type: "blob" },
   ]);
   assert.deepEqual(paths, ["SKILL.md", ".github/skills/SKILL.md", "skills/a/skill.md", "skills/b/SKILL.md"]);

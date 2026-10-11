@@ -18,6 +18,9 @@ export type Skill = {
   featured: boolean;
   created_at: string;
   published_at: string | null;
+  stars_growth?: number | null;
+  growth_days?: number | null;
+  repo_skill_count?: number | null;
   skill_md_content?: string | null;
 };
 

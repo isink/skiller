@@ -82,7 +82,18 @@ CloudBase 迁移脚本默认只读取 Supabase 并报告数据量；只有传入
 
 ## 运行方式
 
-主同步只手动跑。技能来源元数据由 Supabase Cron 每 15 分钟调用一次 `refresh-skill-metadata` Edge Function 分批刷新；它不会运行导入、富化或修改技能正文。先应用 `017_skill_source_freshness.sql` 和 `018_batched_skill_metadata_refresh.sql`，再部署函数并配置 Cron。只读 GitHub Token 放在 Edge Function Secret `SKILLER_GITHUB_TOKEN`，服务端密钥放在 Supabase Vault 供 Cron 调用，均不能放进小程序。`.github/workflows/refresh-skill-metadata.yml` 仅保留手动运行入口，避免两个定时器重复刷新。
+## 每日导入与首页新鲜度
+
+`.github/workflows/daily-import.yml` 每天 00:30 UTC 运行 `IMPORT_NEW_ONLY=1` 的导入：只插入库里还没有的技能（Antigravity 索引差异、Anthropic 官方目录、GitHub 代码搜索，以及 `DISCOVER_RECENT_DAYS`（默认 3）天内有推送的技能仓库），随后重新应用 `sources.json`、重分类 misc，并用 DeepSeek 富化最新技能（`LIMIT`，默认 300）。每周一 01:30 UTC 跑一次完整刷新（`IMPORT_NEW_ONLY=0`），同步已有技能的描述和 SKILL.md。也可手动 `workflow_dispatch`。
+
+- 所有导入器对已有技能都不再写 `rank`、`score`、`featured`；这三个字段只在新技能首次插入时作为初始值写入，之后只由 `sources.json` 和 `apply_skill_overrides` 修改（`scripts/lib/curation.ts`）。
+- GitHub 代码搜索限制为每分钟 10 次，脚本固定间隔 6.5 秒；仓库搜索限制为每分钟 30 次，间隔 2.5 秒。每次搜索最多返回 1,000 条，所以新仓库发现使用带推送日期窗口的仓库搜索，再用 git tree 找 `SKILL.md`。
+- 富化队列先处理没有中文描述的技能，再按 `created_at` 从新到旧，最后按 Star；新技能不会再排在历史积压之后。
+- Actions Secrets：`SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`DEEPSEEK_API_KEY`，以及建议配置的 `SKILLER_GITHUB_TOKEN`（只读 PAT；未配置时退回内置 `github.token`）。定时工作流只在默认分支上生效。
+
+首页“本周热门”读取 `github_repo_star_snapshots`：`apply_skill_repo_metadata` 在每次仓库刷新时顺带写入当天快照（不增加 GitHub 请求），`get_hot_skills` 取最近快照与约 7 天前基线的差值，每个仓库只返回一个代表技能。基线不足 2 天的仓库不会上榜，所以上线后头几天榜单可能少于 3 条，小程序此时会隐藏该区。`get_latest_skills` 返回每个仓库最多 2 个、已有中文描述的新技能。快照由 pg_cron 任务 `skiller-prune-star-snapshots` 每天保留 45 天。上线前在 SQL Editor 单独执行 `supabase/migrations/020_hot_and_latest_skills.sql`（可重复执行）。
+
+完整主同步（`npm run sync`）仍可手动运行。技能来源元数据由 Supabase Cron 每 15 分钟调用一次 `refresh-skill-metadata` Edge Function 分批刷新；它不会运行导入、富化或修改技能正文。先应用 `017_skill_source_freshness.sql` 和 `018_batched_skill_metadata_refresh.sql`，再部署函数并配置 Cron。只读 GitHub Token 放在 Edge Function Secret `SKILLER_GITHUB_TOKEN`，服务端密钥放在 Supabase Vault 供 Cron 调用，均不能放进小程序。`.github/workflows/refresh-skill-metadata.yml` 仅保留手动运行入口，避免两个定时器重复刷新。
 
 每轮最多请求 GitHub 60 次，优先核对 36 个仓库的 Star，剩余配额核对具体 `SKILL.md` 的最近提交日期。一个仓库每天最多核对一次；仓库没有新提交时，不重复请求文件。数据库记录每条成功进度，失败或超时的条目留到下一轮，不会把旧值标成当天核对。当前约 2,847 个仓库、7,818 个技能，首次补齐文件日期预计需要多天。函数保留 JWT 验证，并在内部再要求服务端密钥；数据库 RPC、游标和租约只授予 `service_role`。租约防止手动调用和 Cron 同时重复处理。
 

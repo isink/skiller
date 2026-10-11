@@ -28,7 +28,7 @@ export function utcDateDaysAgo(days: number, now: Date = new Date()): string {
 
 export function recentRepoQueries(days: number, now: Date = new Date()): string[] {
   const since = utcDateDaysAgo(days, now);
-  return DISCOVERY_TOPICS.map((topic) => `topic:${topic} pushed:>=${since} fork:false`);
+  return DISCOVERY_TOPICS.map((topic) => `topic:${topic} pushed:>=${since} stars:>=3 fork:false`);
 }
 
 export type TreeEntry = { path?: unknown; type?: unknown };
@@ -42,7 +42,7 @@ export function skillPathsFromTree(entries: readonly TreeEntry[], limit = 25): s
     .filter((path) => {
       const segments = path.split("/");
       return segments[segments.length - 1].toLowerCase() === "skill.md"
-        && !segments.some((segment) => segment === "node_modules" || segment === ".git");
+        && !segments.some((segment) => ["node_modules", ".git", "template", "templates"].includes(segment.toLowerCase()));
     });
   paths.sort((left, right) =>
     left.split("/").length - right.split("/").length

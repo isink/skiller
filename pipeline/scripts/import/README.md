@@ -7,7 +7,7 @@ Two one-shot scripts that populate the Supabase `skills` table.
 | `import:antigravity`| [`sickn33/antigravity-awesome-skills`](https://github.com/sickn33/antigravity-awesome-skills) `skills_index.json` | ~1,400  | metadata only  |
 | `import:anthropic`  | [`anthropics/skills`](https://github.com/anthropics/skills) directory tree                  | ~16     | full body      |
 
-Both are idempotent (`upsert` on `slug`), so you can re-run them at will.
+Both are idempotent (`upsert` on `slug`), so you can re-run them at will. Re-runs never touch `rank`, `score` or `featured` of skills that already exist; those are only seeded on first insert and are otherwise owned by `sources.json`. Set `IMPORT_NEW_ONLY=1` to insert unseen skills only (this is what the daily workflow does).
 
 ## Setup
 

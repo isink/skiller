@@ -2,7 +2,7 @@
 // Renders approximate 375px previews of the mini program pages in every colour theme.
 // This is NOT the WeChat renderer: WXML is evaluated with a tiny interpreter and drawn by Chrome (rpx -> px at 0.5).
 // Usage: node scripts/preview-miniprogram.mjs [--out <dir>] [--themes id,id] [--pages landing,home,radar]
-//        node scripts/preview-miniprogram.mjs --applied [--out <dir>] [--pages landing,home,radar,detail,radar-sheet]
+//        node scripts/preview-miniprogram.mjs --applied [--height 1800] [--out <dir>] [--pages landing,home,radar,detail,radar-sheet]
 // Default output: <out>/<theme>-<page>.png (375x812 @2x) and <out>/comparison.png (all themes side by side).
 // --applied renders the app exactly as shipped (app.wxss + assets/icons, no theme override) to <out>/<page>.png.
 import { spawn, spawnSync } from "node:child_process";
@@ -17,6 +17,7 @@ const MP = join(HERE, "..", "miniprogram");
 const arg = (name, fallback) => { const i = process.argv.indexOf(`--${name}`); return i > -1 ? process.argv[i + 1] : fallback; };
 const OUT = arg("out", join(HERE, "..", "preview-out"));
 const APPLIED = process.argv.includes("--applied");
+const HEIGHT = Number(arg("height", 812));
 const THEME_IDS = APPLIED ? ["applied"] : arg("themes", Object.keys(THEMES).join(",")).split(",");
 const PAGES = arg("pages", APPLIED ? "landing,home,radar,detail,radar-sheet" : "landing,home,radar").split(",");
 const CHROME = process.env.CHROME || "google-chrome-stable";
@@ -85,11 +86,20 @@ const BASE_CSS = `*::-webkit-scrollbar{display:none}body{margin:0;width:375px}di
 .wx-text{display:inline}.wx-image{display:inline-block}input{font-family:inherit;outline:none}`;
 
 /* ---------- sample data ---------- */
-const sk = (id, name, desc, cat, author, featured) => ({ id, name, featured, displayDescription: desc, displayCategory: cat, author, displayStars: "来源仓库 Star 12,480 · 2026-10-08 核对", displayUpdated: "技能更新于 2026-10-02" });
+const sk = (id, name, desc, cat, author, featured, fresh = {}) => ({ id, name, featured, displayDescription: desc, displayCategory: cat, author, displayStars: "来源仓库 Star 12,480 · 2026-10-08 核对", displayUpdated: "技能更新于 2026-10-02", displayGrowth: "", displayAdded: "", displayRepoNote: "", ...fresh });
 const skills = [
   sk("1", "frontend-design", "创建有辨识度、可用于生产环境的前端界面，避免千篇一律的 AI 风格，注重排版、色彩与动效细节。", "设计", "anthropics", true),
   sk("2", "pdf-toolkit", "读取、合并、拆分与填写 PDF 表单。", "文档", "doc-lab", false),
   sk("3", "deep-research", "围绕一个主题自动检索、交叉验证并生成带引用的调研报告。", "调研研究", "open-research", true),
+];
+const hot = [
+  sk("11", "frontend-design", "创建有辨识度、可用于生产环境的前端界面，注重排版、色彩与动效细节。", "设计", "anthropics", true, { displayGrowth: "本周 +1,284⭐", displayAdded: "12 天前收录", displayRepoNote: "同仓库 16 个技能" }),
+  sk("12", "deep-research", "围绕一个主题自动检索、交叉验证并生成带引用的调研报告。", "调研研究", "open-research", false, { displayGrowth: "本周 +342⭐", displayAdded: "3 天前收录" }),
+  sk("13", "pdf-toolkit", "读取、合并、拆分与填写 PDF 表单。", "文档", "doc-lab", false, { displayGrowth: "本周 +57⭐" }),
+];
+const latest = [
+  sk("21", "sql-explainer", "把复杂 SQL 拆解成通俗步骤，并指出潜在的性能问题。", "数据", "data-folks", false, { displayAdded: "今天收录" }),
+  sk("22", "release-notes", "根据提交记录自动整理面向用户的发布说明。", "文档", "ship-it", false, { displayAdded: "2 天前收录" }),
 ];
 const categories = [{ id: 1, slug: "official", name: "官方精选" }, { id: 2, slug: "code", name: "编程开发" }, { id: 3, slug: "design", name: "设计" }, { id: 4, slug: "docs", name: "文档" }];
 const term = (t, s, score, heat, status) => ({ term: t, displaySummary: s, score, displayScore: score == null ? "-" : `${Math.round(score * 100)}分`, displayHeat: heat, displayDate: "2026年10月8日", status, displayStatus: status || "待观察" });
@@ -121,7 +131,7 @@ const DATA = {
   landing: {},
   "radar-sheet": null,
   detail: DETAIL,
-  home: { query: "", featured: skills, latest: skills.slice(1), categories, counts: { official: 24, code: 132, design: 41, docs: 58 }, results: [], searching: false, loading: false, error: "" },
+  home: { query: "", hot, featured: skills, latest, categories, counts: { official: 24, code: 132, design: 41, docs: 58 }, results: [], searching: false, loading: false, error: "" },
   radar: { loading: false, error: "", hasMore: false, showDetail: false, selectedTerm: null, terms },
 };
 DATA["radar-sheet"] = { ...DATA.radar, showDetail: true, selectedTerm: terms[1] };
@@ -184,7 +194,7 @@ for (const [i, id] of THEME_IDS.entries()) {
       const html = join(work, `${id}-${page}.html`);
       writeFileSync(html, `<!doctype html><html><head><meta charset="utf-8"><style>${BASE_CSS}${css}${override}</style></head><body>${body}</body></html>`);
       const out = join(OUT, APPLIED ? `${page}.png` : `${id}-${page}.png`);
-      await shoot(send, html, { width: 375, height: 812, scale: 2, out });
+      await shoot(send, html, { width: 375, height: HEIGHT, scale: 2, out });
       written.push(out);
     }
   });
