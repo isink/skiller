@@ -9,10 +9,10 @@
   ],
   "window": {
     "navigationBarTitleText": "头山 AI 工具箱",
-    "navigationBarBackgroundColor": "#0C0E12",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#0C0E12",
-    "backgroundTextStyle": "light"
+    "navigationBarBackgroundColor": "#F5F2EA",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F2EA",
+    "backgroundTextStyle": "dark"
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",

@@ -54,16 +54,6 @@ function formatHeat(heat: number | null): string {
   return String(heat);
 }
 
-function getStatusColor(status: string | null): string {
-  switch (status) {
-    case "已命中": return "#4a9c6d";
-    case "已转选题": return "#d97757";
-    case "未命中": return "#6b6b75";
-    case "待观察": return "#8a8a94";
-    default: return "#6b6b75";
-  }
-}
-
 function present(term: TrendingTerm): TrendingTermDisplay {
   return {
     ...term,
@@ -72,7 +62,6 @@ function present(term: TrendingTerm): TrendingTermDisplay {
     displayHeat: formatHeat(term.heat),
     displayDate: formatDate(term.discovered_at),
     displayStatus: term.status || "待观察",
-    statusColor: getStatusColor(term.status),
   };
 }
 

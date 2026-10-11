@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Regenerates miniprogram/assets/icons/*.svg and transparent *.png rasters.
 // Usage: node scripts/render-miniprogram-icons.mjs [--theme <id>] [--out <dir>] [--port <n>]
-// Colours come from scripts/miniprogram-themes.mjs (default theme: ink-blue, the one the app uses).
+// Colours come from scripts/miniprogram-themes.mjs (default theme: paper-light, the one the app uses).
 // Requires Node 22+ and a Chrome/Chromium binary (set CHROME to override).
 import { spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readdirSync, readFileSync } from "node:fs";
@@ -19,7 +19,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = arg("out", join(HERE, "..", "miniprogram", "assets", "icons"));
 const CHROME = process.env.CHROME || "google-chrome-stable";
 const PORT = Number(arg("port", 9341));
-const theme = THEMES[arg("theme", "ink-blue")];
+const theme = THEMES[arg("theme", "paper-light")];
 if (!theme) throw new Error(`unknown theme, choose one of: ${Object.keys(THEMES).join(", ")}`);
 
 const ACCENT = theme.tokens["--color-accent"];

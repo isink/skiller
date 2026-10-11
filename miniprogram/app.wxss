@@ -5,27 +5,27 @@
  */
 page {
   /* color: surfaces, lowest to highest */
-  --color-bg: #0c0e12;
-  --color-surface: #14171d;
-  --color-surface-2: #1b1f27;
-  --color-surface-pressed: #202531;
-  --color-surface-glass: rgba(20, 23, 29, 0.96);
-  --color-border: #242a35;
-  --color-border-strong: #313947;
+  --color-bg: #f5f2ea;
+  --color-surface: #fffdf8;
+  --color-surface-2: #eeeadf;
+  --color-surface-pressed: #e6e1d3;
+  --color-surface-glass: rgba(255, 253, 248, 0.96);
+  --color-border: #e3ddcf;
+  --color-border-strong: #cdc5b3;
 
   /* color: text hierarchy */
-  --color-text: #f2f4f8;
-  --color-text-2: #aab3c1;
-  --color-text-3: #7f899a;
+  --color-text: #1c1a16;
+  --color-text-2: #4f4a43;
+  --color-text-3: #6b6459;
 
   /* color: accent (single) + semantic */
-  --color-accent: #7c9bff;
-  --color-accent-soft: rgba(124, 155, 255, 0.14);
-  --color-accent-line: rgba(124, 155, 255, 0.4);
-  --color-on-accent: #0c0e12;
-  --color-success: #4fc38a;
-  --color-success-soft: rgba(79, 195, 138, 0.14);
-  --color-overlay: rgba(5, 7, 10, 0.72);
+  --color-accent: #b4402a;
+  --color-accent-soft: rgba(180, 64, 42, 0.10);
+  --color-accent-line: rgba(180, 64, 42, 0.38);
+  --color-on-accent: #fffdf8;
+  --color-success: #2c7a4b;
+  --color-success-soft: rgba(44, 122, 75, 0.12);
+  --color-overlay: rgba(28, 26, 22, 0.42);
 
   /* spacing: 8pt grid in rpx */
   --space-half: 8rpx;

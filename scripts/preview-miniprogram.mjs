@@ -2,7 +2,9 @@
 // Renders approximate 375px previews of the mini program pages in every colour theme.
 // This is NOT the WeChat renderer: WXML is evaluated with a tiny interpreter and drawn by Chrome (rpx -> px at 0.5).
 // Usage: node scripts/preview-miniprogram.mjs [--out <dir>] [--themes id,id] [--pages landing,home,radar]
-// Output: <out>/<theme>-<page>.png (375x812 @2x) and <out>/comparison.png (all themes side by side).
+//        node scripts/preview-miniprogram.mjs --applied [--out <dir>] [--pages landing,home,radar,detail,radar-sheet]
+// Default output: <out>/<theme>-<page>.png (375x812 @2x) and <out>/comparison.png (all themes side by side).
+// --applied renders the app exactly as shipped (app.wxss + assets/icons, no theme override) to <out>/<page>.png.
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -14,8 +16,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const MP = join(HERE, "..", "miniprogram");
 const arg = (name, fallback) => { const i = process.argv.indexOf(`--${name}`); return i > -1 ? process.argv[i + 1] : fallback; };
 const OUT = arg("out", join(HERE, "..", "preview-out"));
-const THEME_IDS = arg("themes", Object.keys(THEMES).join(",")).split(",");
-const PAGES = arg("pages", "landing,home,radar").split(",");
+const APPLIED = process.argv.includes("--applied");
+const THEME_IDS = APPLIED ? ["applied"] : arg("themes", Object.keys(THEMES).join(",")).split(",");
+const PAGES = arg("pages", APPLIED ? "landing,home,radar,detail,radar-sheet" : "landing,home,radar").split(",");
 const CHROME = process.env.CHROME || "google-chrome-stable";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const rd = (p) => readFileSync(join(MP, p), "utf8");
@@ -90,16 +93,39 @@ const skills = [
 ];
 const categories = [{ id: 1, slug: "official", name: "官方精选" }, { id: 2, slug: "code", name: "编程开发" }, { id: 3, slug: "design", name: "设计" }, { id: 4, slug: "docs", name: "文档" }];
 const term = (t, s, score, heat, status) => ({ term: t, displaySummary: s, score, displayScore: score == null ? "-" : `${Math.round(score * 100)}分`, displayHeat: heat, displayDate: "2026年10月8日", status, displayStatus: status || "待观察" });
+const terms = [
+  term("Vibe Coding", "用自然语言描述意图，由模型生成并迭代代码的一种开发方式，近期社区讨论热度快速攀升。", 0.86, "2.4万", "已转选题"),
+  term("Context Engineering", "为模型精心组织上下文信息的工程实践。", 0.72, "8.1k", "已命中"),
+  term("Agent Harness", "围绕智能体的运行外壳。", 0.31, "560", "未命中"),
+  term("Memory Layer", "跨会话保存与检索信息的组件。", null, "-", null),
+];
+const t = (text) => ({ type: "text", text });
+const el = (name, text) => ({ name, children: [t(text)] });
+const DETAIL = {
+  loading: false, error: "", favorited: true, displayCategory: "设计",
+  skill: { name: "frontend-design", tags: ["代码", "前端", "界面"], author: "anthropics" },
+  displayDescription: skills[0].displayDescription, displayStars: skills[0].displayStars, displayUpdated: skills[0].displayUpdated,
+  blocks: [
+    { type: "heading", level: 1, inline: [t("前端设计指南")] },
+    { type: "paragraph", inline: [t("当你需要构建网页组件或整页界面时使用，请先运行 "), el("code", "npx skills add"), t(" 并阅读 "), el("strong", "注意事项"), t("。")] },
+    { type: "heading", level: 2, inline: [t("使用方式")] },
+    { type: "list", inline: [t("• 先确定视觉方向与排版")] },
+    { type: "list", inline: [t("• 再选择配色与动效")] },
+    { type: "quote", inline: [t("好的设计从约束开始。")] },
+    { type: "code", text: "npx skills add frontend-design\n# 然后在项目中引用" },
+    { type: "rule", inline: [] },
+    { type: "paragraph", inline: [t("更多细节见下文。")] },
+  ],
+};
 const DATA = {
   landing: {},
+  "radar-sheet": null,
+  detail: DETAIL,
   home: { query: "", featured: skills, latest: skills.slice(1), categories, counts: { official: 24, code: 132, design: 41, docs: 58 }, results: [], searching: false, loading: false, error: "" },
-  radar: { loading: false, error: "", hasMore: false, showDetail: false, selectedTerm: null, terms: [
-    term("Vibe Coding", "用自然语言描述意图，由模型生成并迭代代码的一种开发方式，近期社区讨论热度快速攀升。", 0.86, "2.4万", "已转选题"),
-    term("Context Engineering", "为模型精心组织上下文信息的工程实践。", 0.72, "8.1k", "已命中"),
-    term("Agent Harness", "围绕智能体的运行外壳。", 0.31, "560", "未命中"),
-    term("Memory Layer", "跨会话保存与检索信息的组件。", null, "-", null),
-  ] },
+  radar: { loading: false, error: "", hasMore: false, showDetail: false, selectedTerm: null, terms },
 };
+DATA["radar-sheet"] = { ...DATA.radar, showDetail: true, selectedTerm: terms[1] };
+const PAGE_OF = { "radar-sheet": "radar" };
 
 /* ---------- Chrome (CDP) ---------- */
 async function withChrome(port, fn) {
@@ -141,25 +167,30 @@ const written = [];
 
 for (const [i, id] of THEME_IDS.entries()) {
   const theme = THEMES[id];
-  const icons = join(work, `icons-${id}`);
-  const r = spawnSync("node", [join(HERE, "render-miniprogram-icons.mjs"), "--theme", id, "--out", icons, "--port", String(9360 + i)], { stdio: "inherit" });
-  if (r.status !== 0) throw new Error(`icon render failed for ${id}`);
-  const override = `:root,body{${Object.entries(theme.tokens).map(([k, v]) => `${k}:${v}`).join(";")}}`;
+  let icons = join(MP, "assets", "icons");
+  let override = "";
+  if (!APPLIED) {
+    icons = join(work, `icons-${id}`);
+    const r = spawnSync("node", [join(HERE, "render-miniprogram-icons.mjs"), "--theme", id, "--out", icons, "--port", String(9360 + i)], { stdio: "inherit" });
+    if (r.status !== 0) throw new Error(`icon render failed for ${id}`);
+    override = `:root,body{${Object.entries(theme.tokens).map(([k, v]) => `${k}:${v}`).join(";")}}`;
+  }
   await withChrome(9370 + i, async (send) => {
     for (const page of PAGES) {
-      const withTabbar = page === "home";
-      const body = render(parse(rd(`pages/${page}/index.wxml`)), DATA[page], { icons });
-      const css = toCss(["app.wxss", `pages/${page}/index.wxss`, ...(withTabbar ? ["components/skill-tabbar/index.wxss"] : [])]);
+      const dir = PAGE_OF[page] || page;
+      const withTabbar = dir === "home";
+      const body = render(parse(rd(`pages/${dir}/index.wxml`)), DATA[page], { icons });
+      const css = toCss(["app.wxss", `pages/${dir}/index.wxss`, ...(withTabbar ? ["components/skill-tabbar/index.wxss"] : [])]);
       const html = join(work, `${id}-${page}.html`);
       writeFileSync(html, `<!doctype html><html><head><meta charset="utf-8"><style>${BASE_CSS}${css}${override}</style></head><body>${body}</body></html>`);
-      const out = join(OUT, `${id}-${page}.png`);
+      const out = join(OUT, APPLIED ? `${page}.png` : `${id}-${page}.png`);
       await shoot(send, html, { width: 375, height: 812, scale: 2, out });
       written.push(out);
     }
   });
 }
 
-const sheetPages = ["landing", "radar"].filter((p) => PAGES.includes(p));
+const sheetPages = APPLIED ? [] : ["landing", "radar"].filter((p) => PAGES.includes(p));
 if (sheetPages.length) {
   const cell = (id, page) => `<figure><img src="file://${join(OUT, `${id}-${page}.png`)}" width="375" height="812"></figure>`;
   const cols = THEME_IDS.map((id) => `<section><h2>${THEMES[id].name}<small>${id} · ${THEMES[id].mode}</small></h2>${sheetPages.map((p) => cell(id, p)).join("")}</section>`).join("");
