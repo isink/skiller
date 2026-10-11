@@ -138,6 +138,10 @@ psql "$SKILLER_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security.
 6. 执行 `017_skill_source_freshness.sql`，确认三个展示字段与内部仓库刷新表存在、权限正确，然后才能运行 `refresh:metadata` 或上传显示新字段的小程序版本。
 7. 执行 `018_batched_skill_metadata_refresh.sql`，部署 Edge Function 并启动 Cron 后，按上面的运行记录核对实际刷新进度。
 
+排查提示：每日导入报 `Could not find the function public.apply_skill_overrides(...)` 或 `public.fill_skill_enrichment(...)` 时，说明线上库尚未执行 `016_lock_down_public_writes.sql`（可用 anon key 调 `increment_install_count` 验证：仍存在即 016 未执行）。`enrich:skills` 现在会在调用 DeepSeek 前预检该 RPC，缺失时立即失败。
+
+富化对 LLM 输出采用“修复 + 带反馈重试”：超长的描述/摘要在句子边界截断，一组超长的使用场景标签被丢弃（只要仍剩至少 3 组合规标签对），其余问题（过短、标签对不齐、JSON 非法）会把具体问题回传给模型最多重试 3 次。数据库函数的 50–80 / 150–250 / 4–8 字约束不变。
+
 这个项目早期迁移曾通过 SQL Editor 手工执行，远端对象可能存在、migration history 却为空。任何 linked push 之前都必须先运行只读的 `supabase migration list --linked` 和 `supabase db push --linked --dry-run`：只要 dry-run 仍列出 `001`–`013`，立即停止。不得直接 push；需先核对线上对象，再经单独授权修复 migration history。否则会重放含去重删除和旧公开写入口的历史迁移，并可能在中途失败后留下不安全状态。
 
 执行前还要只读检查孤儿收藏、负数安装计数和待处理的提交/举报数量。历史 ntfy topic 曾进入仓库，关闭触发器不能替代在 ntfy 侧轮换或停用该 topic。

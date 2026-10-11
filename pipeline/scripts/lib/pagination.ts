@@ -35,7 +35,9 @@ export async function collectKeysetPages<T>(
     for (const item of page) {
       const key = keyFor(item);
       if (!key || (after !== undefined && key <= after)) {
-        throw new Error("Keyset page must be strictly ordered after its cursor");
+        throw new Error(
+          `Keyset page must be strictly ordered after its cursor (key ${JSON.stringify(key)}, cursor ${JSON.stringify(after)})`,
+        );
       }
       after = key;
       collected.push(item);

@@ -23,10 +23,10 @@ import {
   enrichmentNeeds,
   preservedUseCaseSide,
   prioritizeEnrichment,
-  validateEnrichmentForExisting,
   type Enrichment,
   type ExistingEnrichment,
 } from "../lib/enrichment";
+import { generateEnrichment, type ChatMessage } from "../lib/enrichment-repair";
 import { parseOptionalPositiveInteger, parsePositiveInteger } from "../lib/env-number";
 import { collectKeysetPages } from "../lib/pagination";
 
@@ -67,40 +67,55 @@ async function enrichOne(skill: SkillRow): Promise<Enrichment> {
 英文描述：${skill.description}
 ${context ? `\n技能内容（节选）：\n${context}` : ""}
 
-请用 JSON 格式输出以下内容：
-1. description_zh：50-80 字的中文描述，准确传达该技能的核心功能，语言简洁自然
-2. use_cases：3-5 个中文使用场景短标签（每个 4-8 个字），描述用户会在什么情况下用到这个技能
-3. use_cases_en：use_cases 的英文版，3-5 个 Title Case 短标签（每个 1-3 个英文单词），与中文版语义对应
-4. skill_md_summary_zh：150-250 字的中文摘要，面向中文用户介绍这个技能的完整功能、使用方式和适用场景，语言流畅易懂
+请用 JSON 格式输出以下内容，字数限制会被程序严格校验：
+1. description_zh：中文描述，必须 50-80 个字（目标 65 字左右），准确传达该技能的核心功能，语言简洁自然
+2. use_cases：3-5 个中文使用场景短标签，每个必须正好 4-8 个汉字（例如“代码审查”“生成测试用例”），不要超过 8 个字，描述用户会在什么情况下用到这个技能
+3. use_cases_en：use_cases 的英文版，与中文逐项一一对应，每个是 Title Case 短标签，必须只有 1-3 个英文单词
+4. skill_md_summary_zh：中文摘要，必须 150-250 个字（目标 200 字左右，不要少于 150 字），面向中文用户介绍这个技能的完整功能、使用方式和适用场景，语言流畅易懂
 
 ${useCaseInstruction}
 
 只输出 JSON，格式如下：
 {"description_zh":"...","use_cases":["...","...","..."],"use_cases_en":["...","...","..."],"skill_md_summary_zh":"..."}`;
 
-  const res = await fetch("https://api.deepseek.com/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "deepseek-chat",
-      max_tokens: 600,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  if (!res.ok) throw new Error(`DeepSeek ${res.status}: ${await res.text()}`);
-  const json = await res.json() as { choices?: { message?: { content?: unknown } }[] };
-  const content = json.choices?.[0]?.message?.content;
-  if (typeof content !== "string" || !content.trim()) {
-    throw new Error("DeepSeek response did not contain message content");
+  return generateEnrichment({ chat: askDeepSeek, prompt, existing: skill });
+}
+
+const TRANSIENT_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
+const REQUEST_ATTEMPTS = 3;
+
+async function askDeepSeek(messages: ChatMessage[]): Promise<string> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          max_tokens: 1500,
+          response_format: { type: "json_object" },
+          messages,
+        }),
+      });
+      if (!res.ok) {
+        const error = new Error(`DeepSeek ${res.status}: ${await res.text()}`);
+        if (!TRANSIENT_STATUSES.has(res.status)) throw Object.assign(error, { permanent: true });
+        throw error;
+      }
+      const json = await res.json() as { choices?: { message?: { content?: unknown } }[] };
+      const content = json.choices?.[0]?.message?.content;
+      if (typeof content !== "string" || !content.trim()) {
+        throw new Error("DeepSeek response did not contain message content");
+      }
+      return content.trim();
+    } catch (error) {
+      if (attempt >= REQUEST_ATTEMPTS || (error as { permanent?: boolean }).permanent) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1_000 * 2 ** (attempt - 1)));
+    }
   }
-  const text = content.trim();
-  // Extract JSON even if wrapped in markdown code block
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error(`No JSON in response: ${text}`);
-  return validateEnrichmentForExisting(JSON.parse(jsonMatch[0]), skill);
 }
 
 async function fetchPendingSkills(): Promise<SkillRow[]> {
@@ -155,7 +170,29 @@ async function updateSkill(skill: SkillRow, enrichment: Enrichment): Promise<voi
   }
 }
 
+/**
+ * Fail before spending any LLM calls when the write RPC is missing. A call with
+ * a null payload is rejected by the function itself (22023) when it exists.
+ */
+async function assertEnrichmentRpcAvailable(): Promise<void> {
+  const { error } = await db.rpc("fill_skill_enrichment", {
+    p_skill_id: "00000000-0000-0000-0000-000000000000",
+    p_source_updated_at: null,
+    p_description_zh: null,
+    p_use_cases: null,
+    p_use_cases_en: null,
+    p_skill_md_summary_zh: null,
+  });
+  if (error?.code === "PGRST202") {
+    throw new Error(
+      "public.fill_skill_enrichment is missing in this database. " +
+        "Run pipeline/supabase/migrations/016_lock_down_public_writes.sql in the Supabase SQL editor.",
+    );
+  }
+}
+
 async function main() {
+  await assertEnrichmentRpcAvailable();
   console.log("→ Fetching skills to enrich...");
   const skills = await fetchPendingSkills();
   console.log(`→ ${skills.length} skills need enrichment`);
