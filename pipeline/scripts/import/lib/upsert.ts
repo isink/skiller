@@ -1,23 +1,18 @@
 import { db } from "./supabase";
-import { collectKeysetPages } from "../../lib/pagination";
+import { collectExistingSlugs, type SlugRow } from "../../lib/existing-slugs";
 import { planCuratedUpsert, parseFlag } from "../../lib/curation";
 
 /** IMPORT_NEW_ONLY=1 makes an importer insert unseen skills and touch nothing else. */
 export const importNewOnly = parseFlag("IMPORT_NEW_ONLY", process.env.IMPORT_NEW_ONLY);
 
 export async function loadExistingSlugs(): Promise<Set<string>> {
-  const rows = await collectKeysetPages(
-    1_000,
-    async (after, size): Promise<Array<{ slug: string }>> => {
-      let query = db.from("skills").select("slug").order("slug").limit(size);
-      if (after !== undefined) query = query.gt("slug", after);
-      const { data, error } = await query;
-      if (error) throw new Error(`load existing slugs: ${error.message}`);
-      return (data ?? []) as Array<{ slug: string }>;
-    },
-    (row) => row.slug,
-  );
-  return new Set(rows.map((row) => row.slug));
+  return collectExistingSlugs(async (after, size): Promise<SlugRow[]> => {
+    let query = db.from("skills").select("id, slug").order("id").limit(size);
+    if (after !== undefined) query = query.gt("id", after);
+    const { data, error } = await query;
+    if (error) throw new Error(`load existing slugs: ${error.message}`);
+    return (data ?? []) as SlugRow[];
+  });
 }
 
 export type UpsertSummary = { inserted: number; updated: number };

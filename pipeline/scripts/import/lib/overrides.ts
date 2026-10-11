@@ -32,7 +32,12 @@ export async function applyOverrides(
     p_category_overrides: overrides.categoryOverrides,
     p_strict: options.strict ?? false,
   });
-  if (error) throw new Error(`apply skill overrides: ${error.message}`);
+  if (error) {
+    const hint = error.code === "PGRST202"
+      ? " (run pipeline/supabase/migrations/016_lock_down_public_writes.sql in the Supabase SQL editor)"
+      : "";
+    throw new Error(`apply skill overrides: ${error.message}${hint}`);
+  }
   const result = parseOverrideApplicationResult(data);
 
   if (result.missingSlugs.length > 0) {
