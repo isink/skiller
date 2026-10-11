@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 // Regenerates miniprogram/assets/icons/*.svg and transparent *.png rasters.
+// Usage: node scripts/render-miniprogram-icons.mjs [--theme <id>] [--out <dir>] [--port <n>]
+// Colours come from scripts/miniprogram-themes.mjs (default theme: ink-blue, the one the app uses).
 // Requires Node 22+ and a Chrome/Chromium binary (set CHROME to override).
 import { spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readdirSync, readFileSync } from "node:fs";
@@ -7,13 +9,22 @@ import { tmpdir } from "node:os";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "miniprogram", "assets", "icons");
-const CHROME = process.env.CHROME || "google-chrome-stable";
-const PORT = 9341;
+import { THEMES } from "./miniprogram-themes.mjs";
 
-const ACCENT = "#7C9BFF";
-const MUTED = "#7F899A";
-const BG = "#0C0E12";
+const arg = (name, fallback) => {
+  const i = process.argv.indexOf(`--${name}`);
+  return i > -1 ? process.argv[i + 1] : fallback;
+};
+const HERE = dirname(fileURLToPath(import.meta.url));
+const OUT = arg("out", join(HERE, "..", "miniprogram", "assets", "icons"));
+const CHROME = process.env.CHROME || "google-chrome-stable";
+const PORT = Number(arg("port", 9341));
+const theme = THEMES[arg("theme", "ink-blue")];
+if (!theme) throw new Error(`unknown theme, choose one of: ${Object.keys(THEMES).join(", ")}`);
+
+const ACCENT = theme.tokens["--color-accent"];
+const MUTED = theme.tokens["--color-text-3"];
+const BG = theme.tokens["--color-on-accent"];
 
 const SHAPES = {
   compass: '<circle cx="12" cy="12" r="9.5"/><polygon points="15.8 8.2 13.6 13.6 8.2 15.8 10.4 10.4"/>',
