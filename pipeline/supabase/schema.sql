@@ -29,6 +29,11 @@ create table if not exists public.skills (
   skill_md_content text,
   skill_md_summary_zh text,
   github_stars integer,
+  github_stars_checked_at timestamptz,
+  source_updated_at timestamptz,
+  source_checked_at timestamptz,
+  source_repo_pushed_at timestamptz,
+  source_url_checked text,
   install_count integer not null default 0
     constraint skills_install_count_nonnegative check (install_count >= 0),
   rank integer not null default 0,
@@ -38,6 +43,20 @@ create table if not exists public.skills (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create table if not exists public.github_repo_refresh_state (
+  repo_key text primary key,
+  default_branch text not null,
+  stars integer,
+  pushed_at timestamptz,
+  checked_at timestamptz not null
+);
+
+alter table public.github_repo_refresh_state enable row level security;
+revoke all on table public.github_repo_refresh_state
+  from public, anon, authenticated, service_role;
+grant select, insert, update, delete on table public.github_repo_refresh_state
+  to service_role;
 
 create index if not exists skills_category_idx on public.skills (category);
 create index if not exists skills_rank_idx on public.skills (rank desc);
@@ -104,10 +123,24 @@ begin
 end;
 $$;
 
+-- Metadata-only writes (stars, check timestamps, rank, featured) keep updated_at,
+-- the content version used by fill_skill_enrichment's stale-write guard.
 drop trigger if exists skills_set_updated_at on public.skills;
 create trigger skills_set_updated_at
 before update on public.skills
-for each row execute function public.set_updated_at();
+for each row
+when (
+  (
+    old.name, old.description, old.category, old.tags, old.author,
+    old.github_url, old.skill_md_content, old.description_zh, old.use_cases,
+    old.use_cases_en, old.skill_md_summary_zh
+  ) is distinct from (
+    new.name, new.description, new.category, new.tags, new.author,
+    new.github_url, new.skill_md_content, new.description_zh, new.use_cases,
+    new.use_cases_en, new.skill_md_summary_zh
+  )
+)
+execute function public.set_updated_at();
 
 alter table public.skills enable row level security;
 alter table public.categories enable row level security;
@@ -662,5 +695,453 @@ revoke all on function public.fill_skill_enrichment(uuid, timestamptz, text, tex
   from public, anon, authenticated, service_role;
 grant execute on function public.fill_skill_enrichment(uuid, timestamptz, text, text[], text[], text)
   to service_role;
+
+-- Batched source-metadata refresh (migration 018).
+-- The Edge Function reads only the next small batch. Keep the cursor and lease
+-- inaccessible to mini-program clients.
+create or replace function public.skill_repo_key(p_url text)
+returns text
+language sql immutable strict
+as $$
+  select lower(substring(p_url from '^https://github[.]com/([^/]+/[^/?#]+)'));
+$$;
+
+create table if not exists public.skill_metadata_refresh_lease (
+  name text primary key,
+  holder uuid not null,
+  expires_at timestamptz not null
+);
+
+alter table public.skill_metadata_refresh_lease enable row level security;
+revoke all on table public.skill_metadata_refresh_lease
+  from public, anon, authenticated, service_role;
+grant select, insert, update, delete on table public.skill_metadata_refresh_lease
+  to service_role;
+
+create or replace function public.claim_skill_metadata_refresh(p_holder uuid)
+returns boolean
+language plpgsql
+as $$
+declare
+  claimed boolean;
+begin
+  insert into public.skill_metadata_refresh_lease (name, holder, expires_at)
+  values ('daily', p_holder, now() + interval '180 seconds')
+  on conflict (name) do update
+    set holder = excluded.holder, expires_at = excluded.expires_at
+    where public.skill_metadata_refresh_lease.expires_at < now()
+  returning true into claimed;
+  return coalesce(claimed, false);
+end;
+$$;
+
+create or replace function public.release_skill_metadata_refresh(p_holder uuid)
+returns void
+language sql
+as $$
+  delete from public.skill_metadata_refresh_lease
+  where name = 'daily' and holder = p_holder;
+$$;
+
+create or replace function public.skill_metadata_repos_due(p_limit integer)
+returns table (repo_key text, github_url text)
+language sql stable
+as $$
+  with repos as (
+    select public.skill_repo_key(s.github_url) as key, min(s.github_url) as url
+    from public.skills s
+    group by 1
+  )
+  select repos.key, repos.url
+  from repos
+  left join public.github_repo_refresh_state state on state.repo_key = repos.key
+  where repos.key is not null
+    and (
+      state.checked_at is null
+      or (state.checked_at at time zone 'UTC')::date
+        < (now() at time zone 'UTC')::date
+    )
+  order by state.checked_at nulls first, repos.key
+  limit least(greatest(coalesce(p_limit, 0), 0), 60);
+$$;
+
+create or replace function public.skill_metadata_files_due(p_limit integer)
+returns table (id uuid, github_url text, default_branch text, pushed_at timestamptz)
+language sql stable
+as $$
+  select s.id, s.github_url, state.default_branch, state.pushed_at
+  from public.skills s
+  join public.github_repo_refresh_state state
+    on state.repo_key = public.skill_repo_key(s.github_url)
+  where state.default_branch <> ''
+    and (state.checked_at at time zone 'UTC')::date
+      = (now() at time zone 'UTC')::date
+    and (
+      s.source_checked_at is null
+      or s.source_url_checked is distinct from s.github_url
+      or s.source_repo_pushed_at is distinct from state.pushed_at
+    )
+  order by s.source_checked_at nulls first, s.id
+  limit least(greatest(coalesce(p_limit, 0), 0), 60);
+$$;
+
+-- Update a repository and every skill that comes from it in one transaction.
+-- Also records the repository's daily star snapshot (migration 020).
+create or replace function public.apply_skill_repo_metadata(
+  p_repo_key text,
+  p_found boolean,
+  p_stars integer,
+  p_default_branch text,
+  p_pushed_at timestamptz
+)
+returns void
+language plpgsql
+as $$
+declare
+  checked timestamptz := now();
+begin
+  if p_repo_key is null or p_repo_key !~ '^[^/]+/[^/]+$'
+    or p_found is null
+    or (p_found and (p_stars is null or p_stars < 0
+      or nullif(p_default_branch, '') is null)) then
+    raise exception 'invalid repository metadata';
+  end if;
+
+  if p_found then
+    update public.skills
+    set github_stars = p_stars, github_stars_checked_at = checked
+    where public.skill_repo_key(github_url) = p_repo_key;
+  else
+    update public.skills
+    set github_stars = null, github_stars_checked_at = checked,
+      source_updated_at = null, source_checked_at = checked,
+      source_repo_pushed_at = null, source_url_checked = null
+    where public.skill_repo_key(github_url) = p_repo_key;
+  end if;
+
+  insert into public.github_repo_refresh_state
+    (repo_key, default_branch, stars, pushed_at, checked_at)
+  values (
+    p_repo_key,
+    case when p_found then p_default_branch else '' end,
+    case when p_found then p_stars else null end,
+    case when p_found then p_pushed_at else null end,
+    checked
+  )
+  on conflict (repo_key) do update
+    set default_branch = excluded.default_branch,
+        stars = excluded.stars,
+        pushed_at = excluded.pushed_at,
+        checked_at = excluded.checked_at;
+
+  if p_found then
+    insert into public.github_repo_star_snapshots (snapshot_date, repo_key, stars)
+    values ((checked at time zone 'UTC')::date, p_repo_key, p_stars)
+    on conflict (snapshot_date, repo_key) do update
+      set stars = excluded.stars, captured_at = excluded.captured_at;
+  end if;
+end;
+$$;
+
+revoke all on function public.skill_repo_key(text) from public, anon, authenticated;
+grant execute on function public.skill_repo_key(text) to service_role;
+revoke all on function public.claim_skill_metadata_refresh(uuid) from public, anon, authenticated;
+grant execute on function public.claim_skill_metadata_refresh(uuid) to service_role;
+revoke all on function public.release_skill_metadata_refresh(uuid) from public, anon, authenticated;
+grant execute on function public.release_skill_metadata_refresh(uuid) to service_role;
+revoke all on function public.skill_metadata_repos_due(integer) from public, anon, authenticated;
+grant execute on function public.skill_metadata_repos_due(integer) to service_role;
+revoke all on function public.skill_metadata_files_due(integer) from public, anon, authenticated;
+grant execute on function public.skill_metadata_files_due(integer) to service_role;
+revoke all on function public.apply_skill_repo_metadata(text, boolean, integer, text, timestamptz)
+  from public, anon, authenticated;
+grant execute on function public.apply_skill_repo_metadata(text, boolean, integer, text, timestamptz)
+  to service_role;
+
+-- Trending terms radar (migration 019)
+-- Trending AI terms radar. The base table keeps internal provenance (source,
+-- source_url, trends_heat) and is writable only by the service role. The mini
+-- program reads the restricted view below with the public anon key.
+create table if not exists public.trending_terms (
+  id uuid primary key default gen_random_uuid(),
+  term text not null unique,
+  summary_zh text,
+  score numeric check (score is null or (score >= 0 and score <= 1)),
+  heat numeric,
+  status text check (status is null or status in ('待观察', '已命中', '未命中', '已转选题')),
+  discovered_at date,
+  recheck_at date,
+  trends_heat numeric,
+  source text,
+  source_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists trending_terms_discovered_score_idx
+  on public.trending_terms (discovered_at desc nulls last, score desc nulls last);
+
+drop trigger if exists trending_terms_set_updated_at on public.trending_terms;
+create trigger trending_terms_set_updated_at
+before update on public.trending_terms
+for each row execute function public.set_updated_at();
+
+alter table public.trending_terms enable row level security;
+drop policy if exists "trending_terms select" on public.trending_terms;
+
+revoke all on table public.trending_terms from public, anon, authenticated, service_role;
+grant select, insert, update, delete on table public.trending_terms to service_role;
+
+-- Owner-run view (no security_invoker) so anon can read these columns without
+-- any access to the base table. source and source_url are intentionally absent.
+create or replace view public.trending_terms_public as
+select term, summary_zh, score, heat, status, discovered_at
+from public.trending_terms;
+
+revoke all on table public.trending_terms_public from public, anon, authenticated, service_role;
+grant select on table public.trending_terms_public to anon, authenticated, service_role;
+
+-- Hot and latest skills (migration 020)
+-- Repository key as a stored generated column. Adding it rewrites the table
+-- but does not fire row triggers, so updated_at is not touched.
+alter table public.skills
+  add column if not exists repo_key text
+  generated always as (public.skill_repo_key(github_url)) stored;
+
+create index if not exists skills_repo_key_idx on public.skills (repo_key);
+create index if not exists skills_created_at_idx on public.skills (created_at desc);
+
+-- One row per repository per UTC day. Internal: never exposed to clients.
+create table if not exists public.github_repo_star_snapshots (
+  snapshot_date date not null,
+  repo_key text not null,
+  stars integer not null check (stars >= 0),
+  source text not null default 'refresh' check (source in ('refresh', 'backfill')),
+  captured_at timestamptz not null default now(),
+  primary key (snapshot_date, repo_key)
+);
+
+alter table public.github_repo_star_snapshots enable row level security;
+revoke all on table public.github_repo_star_snapshots
+  from public, anon, authenticated, service_role;
+grant select, insert, update, delete on table public.github_repo_star_snapshots
+  to service_role;
+
+-- Retention: the growth window needs about ten days; keep six weeks.
+create or replace function public.prune_star_snapshots(p_keep_days integer default 45)
+returns integer
+language plpgsql
+set search_path = ''
+as $$
+declare
+  removed integer;
+begin
+  delete from public.github_repo_star_snapshots as snapshot
+  where snapshot.snapshot_date
+    < (now() at time zone 'UTC')::date - greatest(coalesce(p_keep_days, 45), 14);
+  get diagnostics removed = row_count;
+  return removed;
+end;
+$$;
+
+revoke all on function public.prune_star_snapshots(integer)
+  from public, anon, authenticated, service_role;
+grant execute on function public.prune_star_snapshots(integer) to service_role;
+
+-- Hot this week: star growth per repository, one representative skill each.
+--    SECURITY DEFINER because the snapshot table is internal; only the columns
+--    below leave the function. The baseline is the newest snapshot on or before
+--    (today - p_days) within three days of that target. While history is still
+--    short it falls back to the nearest later snapshot at least two days old, so
+--    the section works during the first week.
+create or replace function public.get_hot_skills(
+  p_days integer default 7,
+  p_limit integer default 10,
+  p_min_growth integer default 3
+)
+returns table (
+  id uuid,
+  slug text,
+  name text,
+  description text,
+  description_zh text,
+  category text,
+  tags text[],
+  use_cases text[],
+  author text,
+  github_url text,
+  github_stars integer,
+  github_stars_checked_at timestamptz,
+  source_updated_at timestamptz,
+  source_checked_at timestamptz,
+  rank integer,
+  score integer,
+  featured boolean,
+  created_at timestamptz,
+  published_at timestamptz,
+  stars_growth integer,
+  growth_days integer,
+  repo_skill_count bigint
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  with params as (
+    select
+      (now() at time zone 'UTC')::date as today,
+      least(greatest(coalesce(p_days, 7), 1), 30) as days
+  ), latest as (
+    select distinct on (snapshot.repo_key)
+      snapshot.repo_key, snapshot.snapshot_date, snapshot.stars
+    from public.github_repo_star_snapshots as snapshot, params
+    where snapshot.snapshot_date >= params.today - 2
+    order by snapshot.repo_key, snapshot.snapshot_date desc
+  ), base as (
+    select distinct on (snapshot.repo_key)
+      snapshot.repo_key, snapshot.snapshot_date, snapshot.stars
+    from public.github_repo_star_snapshots as snapshot, params
+    where snapshot.snapshot_date between params.today - params.days - 3
+                                     and params.today - 2
+    order by
+      snapshot.repo_key,
+      (snapshot.snapshot_date > params.today - params.days),
+      abs(snapshot.snapshot_date - (params.today - params.days))
+  ), growth as (
+    select
+      latest.repo_key,
+      latest.stars - base.stars as stars_growth,
+      latest.snapshot_date - base.snapshot_date as growth_days
+    from latest
+    join base on base.repo_key = latest.repo_key
+    where latest.snapshot_date - base.snapshot_date >= 2
+      and latest.stars - base.stars >= greatest(coalesce(p_min_growth, 3), 1)
+  ), representative as (
+    select distinct on (skill.repo_key)
+      skill.id, skill.slug, skill.name, skill.description, skill.description_zh,
+      skill.category, skill.tags, skill.use_cases, skill.author, skill.github_url,
+      skill.github_stars, skill.github_stars_checked_at, skill.source_updated_at,
+      skill.source_checked_at, skill.rank, skill.score, skill.featured,
+      skill.created_at, skill.published_at,
+      growth.stars_growth, growth.growth_days,
+      count(*) over (partition by skill.repo_key) as repo_skill_count
+    from public.skills as skill
+    join growth on growth.repo_key = skill.repo_key
+    where coalesce(skill.description_zh, '') <> ''
+    order by skill.repo_key, skill.featured desc, skill.rank desc,
+      skill.install_count desc, skill.id
+  )
+  select
+    representative.id, representative.slug, representative.name,
+    representative.description, representative.description_zh,
+    representative.category, representative.tags, representative.use_cases,
+    representative.author, representative.github_url, representative.github_stars,
+    representative.github_stars_checked_at, representative.source_updated_at,
+    representative.source_checked_at, representative.rank, representative.score,
+    representative.featured, representative.created_at, representative.published_at,
+    representative.stars_growth, representative.growth_days,
+    representative.repo_skill_count
+  from representative
+  order by representative.stars_growth desc,
+    representative.github_stars desc nulls last,
+    representative.id
+  limit least(greatest(coalesce(p_limit, 10), 1), 30);
+$$;
+
+-- Latest additions: newest first, at most p_per_repo skills per repository so
+--    one bulk-imported repository cannot fill the whole section. Only enriched
+--    skills (Chinese description present) are shown.
+create or replace function public.get_latest_skills(
+  p_limit integer default 10,
+  p_per_repo integer default 2,
+  p_within_days integer default 30
+)
+returns table (
+  id uuid,
+  slug text,
+  name text,
+  description text,
+  description_zh text,
+  category text,
+  tags text[],
+  use_cases text[],
+  author text,
+  github_url text,
+  github_stars integer,
+  github_stars_checked_at timestamptz,
+  source_updated_at timestamptz,
+  source_checked_at timestamptz,
+  rank integer,
+  score integer,
+  featured boolean,
+  created_at timestamptz,
+  published_at timestamptz,
+  stars_growth integer,
+  growth_days integer,
+  repo_skill_count bigint
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  with recent as (
+    select
+      skill.id, skill.slug, skill.name, skill.description, skill.description_zh,
+      skill.category, skill.tags, skill.use_cases, skill.author, skill.github_url,
+      skill.github_stars, skill.github_stars_checked_at, skill.source_updated_at,
+      skill.source_checked_at, skill.rank, skill.score, skill.featured,
+      skill.created_at, skill.published_at,
+      row_number() over (
+        partition by coalesce(skill.repo_key, skill.id::text)
+        order by skill.created_at desc, skill.id
+      ) as repo_position,
+      count(*) over (
+        partition by coalesce(skill.repo_key, skill.id::text)
+      ) as repo_skill_count
+    from public.skills as skill
+    where skill.created_at
+        > now() - make_interval(days => least(greatest(coalesce(p_within_days, 30), 1), 365))
+      and coalesce(skill.description_zh, '') <> ''
+  )
+  select
+    recent.id, recent.slug, recent.name, recent.description, recent.description_zh,
+    recent.category, recent.tags, recent.use_cases, recent.author, recent.github_url,
+    recent.github_stars, recent.github_stars_checked_at, recent.source_updated_at,
+    recent.source_checked_at, recent.rank, recent.score, recent.featured,
+    recent.created_at, recent.published_at,
+    null::integer, null::integer, recent.repo_skill_count
+  from recent
+  where recent.repo_position <= greatest(coalesce(p_per_repo, 2), 1)
+  order by recent.created_at desc, recent.id
+  limit least(greatest(coalesce(p_limit, 10), 1), 30);
+$$;
+
+revoke all on function public.get_hot_skills(integer, integer, integer)
+  from public, anon, authenticated, service_role;
+grant execute on function public.get_hot_skills(integer, integer, integer)
+  to anon, authenticated, service_role;
+revoke all on function public.get_latest_skills(integer, integer, integer)
+  from public, anon, authenticated, service_role;
+grant execute on function public.get_latest_skills(integer, integer, integer)
+  to anon, authenticated, service_role;
+
+-- Daily prune through pg_cron when it is available (Supabase Cron is already
+--    required by the metadata refresh job). cron.schedule replaces a job with
+--    the same name, so re-running this file does not create duplicates.
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    perform cron.schedule(
+      'skiller-prune-star-snapshots',
+      '17 3 * * *',
+      'select public.prune_star_snapshots(45)'
+    );
+  else
+    raise notice 'pg_cron is not enabled; run supabase/cron/prune-star-snapshots.sql after enabling it';
+  end if;
+end;
+$$;
 
 commit;

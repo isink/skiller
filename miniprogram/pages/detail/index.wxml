@@ -1,0 +1,36 @@
+<view class="page detail-page">
+  <view wx:if="{{loading}}" class="notice">正在加载技能详情…</view>
+  <view wx:if="{{error}}" class="notice">{{error}}</view>
+  <block wx:if="{{skill}}">
+    <view class="detail-header">
+      <view class="row detail-title-row">
+        <text class="detail-title">{{skill.name}}</text>
+        <view class="favorite-button {{favorited ? 'favorite-on' : ''}}" catchtap="onToggleFavorite">
+          <image class="favorite-icon" src="{{favorited ? '/assets/icons/heart-filled.png' : '/assets/icons/heart.png'}}" mode="aspectFit" />
+        </view>
+      </view>
+      <text class="detail-description">{{displayDescription}}</text>
+      <view class="chip-row detail-tags">
+        <text class="tag tag-primary">{{displayCategory}}</text>
+        <text wx:for="{{skill.tags}}" wx:key="*this" class="tag">{{item}}</text>
+      </view>
+      <view class="detail-meta"><text class="detail-meta-label">作者</text><text class="detail-meta-value">{{skill.author}}</text></view>
+      <view class="detail-source-meta"><text>{{displayStars}}</text><text>{{displayUpdated}}</text></view>
+      <view class="reading-note">
+        <text class="reading-note-title">站内完整阅读</text>
+        <text class="reading-note-text">下方提供完整技能说明，无需跳转即可查看。</text>
+      </view>
+    </view>
+    <view class="markdown-card">
+      <text class="markdown-title">技能说明全文</text>
+      <block wx:for="{{blocks}}" wx:key="index">
+        <view wx:if="{{item.type === 'heading'}}" class="md-heading md-h{{item.level}}"><rich-text nodes="{{item.inline}}" /></view>
+        <view wx:elif="{{item.type === 'paragraph'}}" class="md-paragraph"><rich-text nodes="{{item.inline}}" /></view>
+        <view wx:elif="{{item.type === 'list'}}" class="md-list"><rich-text nodes="{{item.inline}}" /></view>
+        <view wx:elif="{{item.type === 'quote'}}" class="md-quote"><rich-text nodes="{{item.inline}}" /></view>
+        <scroll-view wx:elif="{{item.type === 'code'}}" scroll-x class="md-code"><text selectable>{{item.text}}</text></scroll-view>
+        <view wx:elif="{{item.type === 'rule'}}" class="md-rule"></view>
+      </block>
+    </view>
+  </block>
+</view>

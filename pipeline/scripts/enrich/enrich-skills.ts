@@ -22,6 +22,7 @@ import { assertNoBatchFailures } from "../lib/batch-failures";
 import {
   enrichmentNeeds,
   preservedUseCaseSide,
+  prioritizeEnrichment,
   validateEnrichmentForExisting,
   type Enrichment,
   type ExistingEnrichment,
@@ -44,6 +45,7 @@ type SkillRow = ExistingEnrichment & {
   description: string;
   skill_md_content: string | null;
   updated_at: string;
+  created_at: string;
   github_stars: number | null;
 };
 
@@ -114,6 +116,7 @@ async function fetchPendingSkills(): Promise<SkillRow[]> {
         description,
         skill_md_content,
         updated_at,
+        created_at,
         github_stars,
         description_zh,
         use_cases,
@@ -130,15 +133,10 @@ async function fetchPendingSkills(): Promise<SkillRow[]> {
     (skill) => skill.id,
   );
 
-  const pending = all
-    .filter((skill) => {
-      const needs = enrichmentNeeds(skill);
-      return needs.descriptionZh || needs.useCasePair || needs.summaryZh;
-    })
-    .sort((left, right) =>
-      (right.github_stars ?? -1) - (left.github_stars ?? -1)
-        || left.id.localeCompare(right.id)
-    );
+  const pending = prioritizeEnrichment(all.filter((skill) => {
+    const needs = enrichmentNeeds(skill);
+    return needs.descriptionZh || needs.useCasePair || needs.summaryZh;
+  }));
   return LIMIT ? pending.slice(0, LIMIT) : pending;
 }
 

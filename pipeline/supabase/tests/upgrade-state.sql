@@ -64,6 +64,31 @@ select jsonb_build_object(
     ),
     'fill_skill_enrichment', pg_get_functiondef(
       'public.fill_skill_enrichment(uuid,timestamptz,text,text[],text[],text)'::regprocedure
+    ),
+    'apply_skill_repo_metadata', pg_get_functiondef(
+      'public.apply_skill_repo_metadata(text,boolean,integer,text,timestamptz)'::regprocedure
+    ),
+    'prune_star_snapshots', pg_get_functiondef(
+      'public.prune_star_snapshots(integer)'::regprocedure
+    ),
+    'get_hot_skills', pg_get_functiondef(
+      'public.get_hot_skills(integer,integer,integer)'::regprocedure
+    ),
+    'get_latest_skills', pg_get_functiondef(
+      'public.get_latest_skills(integer,integer,integer)'::regprocedure
     )
-  )
+  ),
+  'updated_at_trigger', (
+    select pg_get_triggerdef(oid)
+    from pg_trigger
+    where tgrelid = 'public.skills'::regclass and tgname = 'skills_set_updated_at'
+  ),
+  'repo_keys', coalesce((
+    select jsonb_agg(jsonb_build_array(id, repo_key) order by id)
+    from public.skills
+    where id in (
+      '00000000-0000-4000-8000-000000000202',
+      '00000000-0000-4000-8000-000000000203'
+    )
+  ), '[]'::jsonb)
 )::text;

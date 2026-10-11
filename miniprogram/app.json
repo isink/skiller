@@ -1,0 +1,20 @@
+{
+  "pages": [
+    "pages/landing/index",
+    "pages/home/index",
+    "pages/radar/index",
+    "pages/favorites/index",
+    "pages/explore/index",
+    "pages/detail/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "头山 AI 工具箱",
+    "navigationBarBackgroundColor": "#F5F2EA",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F2EA",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

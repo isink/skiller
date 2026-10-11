@@ -1,0 +1,51 @@
+.skill-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  border-top: 1rpx solid var(--color-border);
+  background: var(--color-surface-glass);
+}
+
+.tabbar-items {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  height: var(--tabbar-height);
+  padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+
+.tabbar-item {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-min);
+}
+
+.tabbar-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 4rpx;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  background: var(--color-accent);
+  transition: width 0.2s;
+}
+.tabbar-item.active::before { width: 48rpx; }
+
+.tabbar-icon { width: 44rpx; height: 44rpx; }
+
+.tabbar-label {
+  margin-top: 6rpx;
+  color: var(--color-text-3);
+  font-size: var(--text-xs);
+  line-height: 1.2;
+}
+.tabbar-item.active .tabbar-label { color: var(--color-accent); font-weight: var(--weight-semibold); }
+
+.tabbar-safe-area { height: env(safe-area-inset-bottom); }

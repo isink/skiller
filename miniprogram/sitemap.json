@@ -1,0 +1,4 @@
+{
+  "desc": "AISkill技能库页面可公开访问。",
+  "rules": [{ "action": "allow", "page": "*" }]
+}

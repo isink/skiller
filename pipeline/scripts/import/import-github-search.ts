@@ -7,20 +7,37 @@
  *
  *   npm run import:discover
  *
- * Rate limits:
- *   - Code search: 10 req/min (unauthenticated) / 30 req/min (authenticated)
- *   - Contents API: 60 req/hr (unauthenticated) / 5000 req/hr (authenticated)
+ * Optional environment:
+ *   IMPORT_NEW_ONLY=1       insert unseen skills only; existing rows are not
+ *                           fetched or written.
+ *   DISCOVER_RECENT_DAYS=N  also scan repositories pushed in the last N days
+ *                           (repository search by topic), which finds new
+ *                           skills that the capped, undated code search misses.
+ *   DISCOVER_MAX_REPOS=N    cap on repositories scanned that way (default 150).
+ *
+ * Rate limits (docs.github.com/en/rest/search/search):
+ *   - Code search: 10 req/min (authentication required)
+ *   - Repository search: 30 req/min; every search returns at most 1,000 results
+ *   - Core API (contents, trees): 60 req/hr unauthenticated / 5000 req/hr with a token
  *
  * Set GITHUB_TOKEN in .env to avoid hitting limits.
  */
 
-import { db } from "./lib/supabase";
 import { env } from "./lib/env";
 import { idToDisplayName, toSlug } from "./lib/slugify";
 import { mapCategory } from "./lib/category-map";
 import { assertNoBatchFailures } from "../lib/batch-failures";
 import { assertCompleteGitHubSearch } from "../lib/github-search";
 import { boundedRetryDelayMs } from "../lib/rate-limit";
+import { parseOptionalPositiveInteger } from "../lib/env-number";
+import {
+  CODE_SEARCH_MIN_INTERVAL_MS,
+  REPO_SEARCH_MIN_INTERVAL_MS,
+  contentsApiUrl,
+  recentRepoQueries,
+  skillPathsFromTree,
+} from "../lib/github-discovery";
+import { importNewOnly, loadExistingSlugs, upsertSkillsPreservingCuration } from "./lib/upsert";
 
 // Repos already handled by dedicated importers — skip them.
 const SKIP_REPOS = new Set([
@@ -32,8 +49,11 @@ const SKIP_REPOS = new Set([
 const MAX_PAGES = 10;
 const PER_PAGE = 100;
 
-// Delay between search page requests to respect the rate limit.
-const SEARCH_DELAY_MS = 2500; // ~24 req/min with token, safe margin
+// Code search allows 10 requests/minute; pace below that instead of relying on 403 retries.
+const SEARCH_DELAY_MS = CODE_SEARCH_MIN_INTERVAL_MS;
+const RECENT_DAYS = parseOptionalPositiveInteger("DISCOVER_RECENT_DAYS", process.env.DISCOVER_RECENT_DAYS);
+const MAX_RECENT_REPOS = parseOptionalPositiveInteger("DISCOVER_MAX_REPOS", process.env.DISCOVER_MAX_REPOS) ?? 150;
+const REPO_SEARCH_PAGES = 3;
 
 type SearchItem = {
   name: string;
@@ -43,7 +63,7 @@ type SearchItem = {
     html_url: string;
     description: string | null;
     stargazers_count: number;
-    default_branch: string;
+    default_branch?: string;
   };
   url: string; // contents API URL
 };
@@ -121,6 +141,100 @@ async function fetchSkillMdFromUrl(contentsUrl: string): Promise<string | undefi
   return decoded.replace(/\u0000/g, "");
 }
 
+type RepoSearchItem = {
+  full_name: string;
+  html_url: string;
+  description: string | null;
+  stargazers_count: number;
+  default_branch: string;
+  archived?: boolean;
+};
+
+async function githubJson<T>(url: string): Promise<T | undefined> {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, { headers: authHeaders(), signal: AbortSignal.timeout(30000) });
+    if (res.status === 404 || res.status === 409) return undefined;
+    if (res.status === 403 || res.status === 429) {
+      const delayMs = boundedRetryDelayMs(attempt, Number(res.headers.get("retry-after") ?? 60) * 1000);
+      if (delayMs === undefined) throw new Error(`GitHub ${res.status} after ${attempt + 1} attempts: ${url}`);
+      console.warn(`  ⚠ Rate limited — waiting ${Math.ceil(delayMs / 1000)}s`);
+      await sleep(delayMs);
+      continue;
+    }
+    if (!res.ok) throw new Error(`GitHub ${res.status} ${res.statusText}: ${url}`);
+    return (await res.json()) as T;
+  }
+}
+
+/** Skills in repositories pushed recently, found through topic search + git trees. */
+async function discoverRecentItems(days: number, skipRepos: Set<string>): Promise<SearchItem[]> {
+  const repos = new Map<string, RepoSearchItem>();
+  for (const q of recentRepoQueries(days)) {
+    for (let page = 1; page <= REPO_SEARCH_PAGES; page++) {
+      const url =
+        `https://api.github.com/search/repositories?q=${encodeURIComponent(q)}` +
+        `&sort=updated&order=desc&per_page=100&page=${page}`;
+      const result = await githubJson<{ incomplete_results: boolean; items: RepoSearchItem[] }>(url);
+      await sleep(REPO_SEARCH_MIN_INTERVAL_MS);
+      if (!result) break;
+      if (result.incomplete_results) console.warn(`  ⚠ Incomplete repository search for "${q}"`);
+      for (const repo of result.items) {
+        if (!repo.archived && !skipRepos.has(repo.full_name)) repos.set(repo.full_name, repo);
+      }
+      if (result.items.length < 100) break;
+    }
+  }
+
+  const selected = [...repos.values()]
+    .sort((left, right) => right.stargazers_count - left.stargazers_count)
+    .slice(0, MAX_RECENT_REPOS);
+  console.log(`✓ ${repos.size} recently active skill repos found; scanning ${selected.length}`);
+
+  const items: SearchItem[] = [];
+  for (const repo of selected) {
+    const tree = await githubJson<{ tree?: Array<{ path?: unknown; type?: unknown }>; truncated?: boolean }>(
+      `https://api.github.com/repos/${repo.full_name.split("/").map(encodeURIComponent).join("/")}` +
+        `/git/trees/${encodeURIComponent(repo.default_branch)}?recursive=1`,
+    );
+    if (!tree?.tree) continue;
+    if (tree.truncated) console.warn(`  ⚠ Tree truncated for ${repo.full_name}; some skills may be missed`);
+    for (const path of skillPathsFromTree(tree.tree)) {
+      items.push({
+        name: path.split("/").pop() ?? "SKILL.md",
+        path,
+        repository: {
+          full_name: repo.full_name,
+          html_url: repo.html_url,
+          description: repo.description,
+          stargazers_count: repo.stargazers_count,
+          default_branch: repo.default_branch,
+        },
+        url: contentsApiUrl(repo.full_name, path, repo.default_branch),
+      });
+    }
+  }
+  return items;
+}
+
+const defaultBranches = new Map<string, string>();
+
+/** Code-search repository objects can omit default_branch. Never write blob/undefined links. */
+async function getDefaultBranch(repo: SearchItem["repository"]): Promise<string> {
+  if (typeof repo.default_branch === "string" && repo.default_branch) return repo.default_branch;
+  const cached = defaultBranches.get(repo.full_name);
+  if (cached) return cached;
+  const res = await fetch(`https://api.github.com/repos/${repo.full_name.split("/").map(encodeURIComponent).join("/")}`, {
+    headers: authHeaders(), signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error(`Repository API ${res.status} ${res.statusText}: ${repo.full_name}`);
+  const data = (await res.json()) as { default_branch?: unknown };
+  if (typeof data.default_branch !== "string" || !data.default_branch) {
+    throw new Error(`Repository API returned no default branch: ${repo.full_name}`);
+  }
+  defaultBranches.set(repo.full_name, data.default_branch);
+  return data.default_branch;
+}
+
 /** Minimal YAML frontmatter parser (same approach as import-anthropic.ts) */
 function parseFrontmatter(md: string): {
   name?: string;
@@ -191,9 +305,21 @@ async function main() {
 
   process.stdout.write("\n");
 
-  // Filter out known repos and deduplicate by repo.
+  if (RECENT_DAYS !== undefined) {
+    console.log(`→ Scanning repositories pushed in the last ${RECENT_DAYS} day(s)...`);
+    const known = new Set(allItems.map((item) => item.url));
+    for (const item of await discoverRecentItems(RECENT_DAYS, SKIP_REPOS)) {
+      if (!known.has(item.url)) allItems.push(item);
+    }
+  }
+
+  const existingSlugs = await loadExistingSlugs();
+  console.log(`✓ ${existingSlugs.size} skills already in the catalog${importNewOnly ? " (new-only mode)" : ""}`);
+
+  // Filter out known repos and, in new-only mode, skills we already have.
   const filtered = allItems.filter(
     (item) => !SKIP_REPOS.has(item.repository.full_name)
+      && !(importNewOnly && existingSlugs.has(deriveSlug(item.repository.full_name, item.path)))
   );
 
   // Deduplicate: if a repo has multiple SKILL.md files, keep all of them
@@ -214,7 +340,15 @@ async function main() {
       `  ↳ [${i + 1}/${filtered.length}] ${repo.full_name}/${path}\r`
     );
 
-    const md = await fetchSkillMdFromUrl(url);
+    let md: string | undefined;
+    try {
+      md = await fetchSkillMdFromUrl(url);
+    } catch (error) {
+      // Keep importing the remaining files; the final assertion still fails the run.
+      console.error(`\n  ✖ ${repo.full_name}/${path}: ${error instanceof Error ? error.message : String(error)}`);
+      failed++;
+      continue;
+    }
     if (!md || md.trim().length < 20) {
       skipped++;
       continue;
@@ -249,6 +383,8 @@ async function main() {
     tags.push("community");
     const uniqueTags = Array.from(new Set(tags)).slice(0, 8);
 
+    const defaultBranch = await getDefaultBranch(repo);
+
     const row = {
       slug,
       name,
@@ -256,17 +392,20 @@ async function main() {
       category,
       tags: uniqueTags,
       author: repo.full_name.split("/")[0],
-      github_url: `${repo.html_url}/blob/${repo.default_branch}/${path}`,
+      github_url: `${repo.html_url}/blob/${defaultBranch}/${path}`,
       skill_md_content: md,
       github_stars: repo.stargazers_count,
+      github_stars_checked_at: new Date().toISOString(),
+      // Seed values for new rows only; existing rows keep their curation.
       rank: 0,
       score: 0,
       featured: false,
     };
 
-    const { error } = await db.from("skills").upsert(row, { onConflict: "slug" });
-    if (error) {
-      console.error(`\n  ✖ ${slug}: ${error.message}`);
+    try {
+      await upsertSkillsPreservingCuration([row], existingSlugs);
+    } catch (error) {
+      console.error(`\n  ✖ ${slug}: ${error instanceof Error ? error.message : String(error)}`);
       failed++;
       continue;
     }
@@ -275,7 +414,7 @@ async function main() {
   }
 
   process.stdout.write("\n");
-  console.log(`\n✅ Done. Imported ${imported} new skills, skipped ${skipped}, failed ${failed}.`);
+  console.log(`\n✅ Done. Imported ${imported} skills, skipped ${skipped}, failed ${failed}.`);
   assertNoBatchFailures("skill upsert", failed);
 }
 

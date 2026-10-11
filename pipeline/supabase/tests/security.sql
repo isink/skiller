@@ -78,6 +78,19 @@ begin
     raise exception 'client skills and categories grants must be read only';
   end if;
 
+  if (
+    select relrowsecurity
+    from pg_class
+    where oid = 'public.github_repo_refresh_state'::regclass
+  ) is distinct from true
+    or has_table_privilege('anon', 'public.github_repo_refresh_state', 'select')
+    or has_table_privilege('authenticated', 'public.github_repo_refresh_state', 'select')
+    or not has_table_privilege('service_role', 'public.github_repo_refresh_state', 'select')
+    or not has_table_privilege('service_role', 'public.github_repo_refresh_state', 'insert')
+    or not has_table_privilege('service_role', 'public.github_repo_refresh_state', 'update') then
+    raise exception 'repository refresh state must be private and service writable';
+  end if;
+
   if has_table_privilege('anon', 'public.submissions', 'select')
     or has_table_privilege('anon', 'public.submissions', 'insert')
     or has_table_privilege('anon', 'public.submissions', 'update')
@@ -864,6 +877,196 @@ begin
   ) then
     raise exception 'null submission decision changed submission state';
   end if;
+end;
+$$;
+
+reset role;
+
+-- Migration 020: snapshot table privileges, trigger scope and the home-feed RPCs.
+do $$
+begin
+  if (select relrowsecurity from pg_class
+      where oid = 'public.github_repo_star_snapshots'::regclass) is distinct from true then
+    raise exception 'star snapshots must have row level security enabled';
+  end if;
+
+  if has_table_privilege('anon', 'public.github_repo_star_snapshots', 'select')
+    or has_table_privilege('anon', 'public.github_repo_star_snapshots', 'insert')
+    or has_table_privilege('authenticated', 'public.github_repo_star_snapshots', 'select')
+    or has_table_privilege('authenticated', 'public.github_repo_star_snapshots', 'insert')
+    or has_table_privilege('authenticated', 'public.github_repo_star_snapshots', 'delete') then
+    raise exception 'clients must not access star snapshots';
+  end if;
+
+  if not has_table_privilege('service_role', 'public.github_repo_star_snapshots', 'select')
+    or not has_table_privilege('service_role', 'public.github_repo_star_snapshots', 'insert')
+    or not has_table_privilege('service_role', 'public.github_repo_star_snapshots', 'update')
+    or not has_table_privilege('service_role', 'public.github_repo_star_snapshots', 'delete')
+    or has_table_privilege('service_role', 'public.github_repo_star_snapshots', 'truncate') then
+    raise exception 'service_role star snapshot grants are incorrect';
+  end if;
+
+  if not has_function_privilege('anon', 'public.get_hot_skills(integer,integer,integer)', 'execute')
+    or not has_function_privilege('authenticated', 'public.get_hot_skills(integer,integer,integer)', 'execute')
+    or not has_function_privilege('anon', 'public.get_latest_skills(integer,integer,integer)', 'execute')
+    or not has_function_privilege('authenticated', 'public.get_latest_skills(integer,integer,integer)', 'execute') then
+    raise exception 'home feed RPCs must be executable by clients';
+  end if;
+
+  if has_function_privilege('anon', 'public.prune_star_snapshots(integer)', 'execute')
+    or has_function_privilege('authenticated', 'public.prune_star_snapshots(integer)', 'execute')
+    or not has_function_privilege('service_role', 'public.prune_star_snapshots(integer)', 'execute')
+    or has_function_privilege('anon', 'public.apply_skill_repo_metadata(text,boolean,integer,text,timestamptz)', 'execute')
+    or has_function_privilege('authenticated', 'public.apply_skill_repo_metadata(text,boolean,integer,text,timestamptz)', 'execute')
+    or not has_function_privilege('service_role', 'public.apply_skill_repo_metadata(text,boolean,integer,text,timestamptz)', 'execute') then
+    raise exception 'snapshot maintenance functions must be service_role only';
+  end if;
+
+  if not exists (
+    select 1 from pg_proc
+    where oid = 'public.get_hot_skills(integer,integer,integer)'::regprocedure
+      and prosecdef
+      and proconfig @> array['search_path=""']
+  ) then
+    raise exception 'get_hot_skills must be security definer with an empty search_path';
+  end if;
+
+  if exists (
+    select 1 from pg_proc
+    where oid = 'public.get_latest_skills(integer,integer,integer)'::regprocedure
+      and prosecdef
+  ) then
+    raise exception 'get_latest_skills must run with the caller privileges';
+  end if;
+end;
+$$;
+
+set local role service_role;
+
+do $$
+declare
+  today date := (now() at time zone 'UTC')::date;
+  version_before timestamptz;
+  version_after timestamptz;
+  pruned integer;
+begin
+  insert into public.skills
+    (slug, name, category, github_url, description_zh, github_stars, created_at, updated_at)
+  values
+    ('hot-alpha-1', 'Alpha 1', 'security-test-category', 'https://github.com/Hot-Test/Alpha/tree/main/one', '阿尔法一号', 150, now() - interval '200 days', '2000-01-01 00:00:00+00'),
+    ('hot-alpha-2', 'Alpha 2', 'security-test-category', 'https://github.com/hot-test/alpha/tree/main/two', '阿尔法二号', 150, now() - interval '200 days', '2000-01-01 00:00:00+00'),
+    ('hot-alpha-3', 'Alpha 3', 'security-test-category', 'https://github.com/hot-test/alpha/tree/main/three', '', 150, now() - interval '200 days', '2000-01-01 00:00:00+00'),
+    ('hot-beta', 'Beta', 'security-test-category', 'https://github.com/hot-test/beta/blob/main/SKILL.md', '贝塔', 60, now() - interval '200 days', '2000-01-01 00:00:00+00'),
+    ('hot-gamma', 'Gamma', 'security-test-category', 'https://github.com/hot-test/gamma/tree/main/g', '伽马', 40, now() - interval '200 days', '2000-01-01 00:00:00+00'),
+    ('hot-delta', 'Delta', 'security-test-category', 'https://github.com/hot-test/delta/tree/main/d', '德尔塔', 40, now() - interval '200 days', '2000-01-01 00:00:00+00'),
+    ('hot-epsilon', 'Epsilon', 'security-test-category', 'https://github.com/hot-test/epsilon/tree/main/e', '艾普西龙', 70, now() - interval '200 days', '2000-01-01 00:00:00+00'),
+    ('new-mono-1', 'Mono 1', 'security-test-category', 'https://github.com/new-test/mono/tree/main/a', '新一', 5, now() - interval '1 day', now()),
+    ('new-mono-2', 'Mono 2', 'security-test-category', 'https://github.com/new-test/mono/tree/main/b', '新二', 5, now() - interval '2 days', now()),
+    ('new-mono-3', 'Mono 3', 'security-test-category', 'https://github.com/new-test/mono/tree/main/c', '新三', 5, now() - interval '3 days', now()),
+    ('new-solo', 'Solo', 'security-test-category', 'https://github.com/new-test/solo/tree/main/s', '独立', 5, now() - interval '4 days', now()),
+    ('new-plain', 'Plain', 'security-test-category', 'https://github.com/new-test/plain/tree/main/p', '', 5, now() - interval '1 hour', now());
+
+  if (select repo_key from public.skills where slug = 'hot-alpha-1') is distinct from 'hot-test/alpha' then
+    raise exception 'repo_key must be the lowercase owner/repo';
+  end if;
+
+  insert into public.github_repo_star_snapshots (snapshot_date, repo_key, stars) values
+    (today - 8, 'hot-test/alpha', 1000), (today, 'hot-test/alpha', 1050),
+    (today - 7, 'hot-test/beta', 90),    (today, 'hot-test/beta', 100),
+    (today - 8, 'hot-test/gamma', 500),  (today, 'hot-test/gamma', 501),
+    (today, 'hot-test/delta', 800),
+    (today - 3, 'hot-test/epsilon', 10), (today, 'hot-test/epsilon', 30),
+    (today - 1, 'hot-test/alpha', 1040);
+
+  -- Metadata-only writes keep the enrichment content version.
+  update public.skills set github_stars = 151, github_stars_checked_at = now(),
+    rank = 3, featured = true, source_updated_at = now()
+  where slug = 'hot-alpha-1';
+  select updated_at into version_after from public.skills where slug = 'hot-alpha-1';
+  if version_after is distinct from '2000-01-01 00:00:00+00'::timestamptz then
+    raise exception 'metadata-only update must not change updated_at';
+  end if;
+
+  update public.skills set description_zh = '阿尔法新版' where slug = 'hot-alpha-1';
+  select updated_at into version_after from public.skills where slug = 'hot-alpha-1';
+  if version_after is not distinct from '2000-01-01 00:00:00+00'::timestamptz then
+    raise exception 'content update must change updated_at';
+  end if;
+  update public.skills set updated_at = '2000-01-01 00:00:00+00' where slug = 'hot-alpha-1';
+
+  -- The refresh path records exactly one snapshot per repository per UTC day.
+  perform public.apply_skill_repo_metadata('hot-test/zeta', true, 77, 'main', now());
+  perform public.apply_skill_repo_metadata('hot-test/zeta', true, 78, 'main', now());
+  if (select count(*) from public.github_repo_star_snapshots
+      where repo_key = 'hot-test/zeta' and snapshot_date = today and stars = 78) is distinct from 1
+    or (select count(*) from public.github_repo_star_snapshots
+        where repo_key = 'hot-test/zeta') is distinct from 1 then
+    raise exception 'apply_skill_repo_metadata must upsert one snapshot per day';
+  end if;
+  perform public.apply_skill_repo_metadata('hot-test/missing', false, null, '', null);
+  if exists (select 1 from public.github_repo_star_snapshots where repo_key = 'hot-test/missing') then
+    raise exception 'a missing repository must not create a snapshot';
+  end if;
+
+  -- Retention.
+  insert into public.github_repo_star_snapshots (snapshot_date, repo_key, stars)
+  values (today - 100, 'hot-test/old', 1);
+  pruned := public.prune_star_snapshots(45);
+  if pruned < 1
+    or exists (select 1 from public.github_repo_star_snapshots where repo_key = 'hot-test/old')
+    or not exists (select 1 from public.github_repo_star_snapshots where repo_key = 'hot-test/alpha' and snapshot_date = today) then
+    raise exception 'prune_star_snapshots removed the wrong rows';
+  end if;
+end;
+$$;
+
+set local role anon;
+
+do $$
+declare
+  ranked text[];
+begin
+  select array_agg(slug order by stars_growth desc, slug) into ranked
+  from public.get_hot_skills(7, 10, 3)
+  where slug like 'hot-%';
+  -- alpha: 1050 - 1000 = 50 over 8 days; epsilon: 20 over 3 days; beta: 10 over 7 days.
+  if ranked is distinct from array['hot-alpha-1', 'hot-epsilon', 'hot-beta'] then
+    raise exception 'get_hot_skills returned %', ranked;
+  end if;
+
+  if (select repo_skill_count from public.get_hot_skills(7, 10, 3) where slug = 'hot-alpha-1')
+       is distinct from 2::bigint
+    or (select stars_growth from public.get_hot_skills(7, 10, 3) where slug = 'hot-alpha-1')
+       is distinct from 50
+    or (select growth_days from public.get_hot_skills(7, 10, 3) where slug = 'hot-epsilon')
+       is distinct from 3 then
+    raise exception 'get_hot_skills growth projection is incorrect';
+  end if;
+
+  if exists (select 1 from public.get_hot_skills(7, 10, 3) where slug in ('hot-gamma', 'hot-delta', 'hot-alpha-2', 'hot-alpha-3'))
+    or (select count(*) from public.get_hot_skills(7, 2, 3)) is distinct from 2
+    or exists (select 1 from public.get_hot_skills(7, 10, 30) where slug = 'hot-beta') then
+    raise exception 'get_hot_skills filtering or limits are incorrect';
+  end if;
+
+  ranked := array(select slug from public.get_latest_skills(10, 2, 30) where slug like 'new-%' order by created_at desc);
+  if ranked is distinct from array['new-mono-1', 'new-mono-2', 'new-solo'] then
+    raise exception 'get_latest_skills returned %', ranked;
+  end if;
+
+  if exists (select 1 from public.get_latest_skills(30, 5, 30) where slug in ('hot-alpha-1', 'new-plain'))
+    or (select count(*) from public.get_latest_skills(30, 5, 30) where slug like 'new-mono-%') is distinct from 3
+    or (select repo_skill_count from public.get_latest_skills(30, 2, 30) where slug = 'new-mono-1')
+       is distinct from 3::bigint then
+    raise exception 'get_latest_skills window or enrichment filter is incorrect';
+  end if;
+
+  begin
+    perform 1 from public.github_repo_star_snapshots;
+    raise exception 'anon unexpectedly read star snapshots';
+  exception when insufficient_privilege then
+    null;
+  end;
 end;
 $$;
 
