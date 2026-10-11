@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   enrichmentNeeds,
+  prioritizeEnrichment,
   validateEnrichment,
   validateEnrichmentForExisting,
 } from "../lib/enrichment";
@@ -100,4 +101,27 @@ test("partial bilingual tags preserve the valid side during repair", () => {
     }, current).use_cases,
     current.use_cases,
   );
+});
+
+test("new skills are enriched before the star-ranked backlog", () => {
+  const complete = {
+    description_zh: generated.description_zh.trim(),
+    use_cases: ["代码审查", "文档生成", "数据分析"],
+    use_cases_en: ["Code Review", "Docs", "Data Analysis"],
+    skill_md_summary_zh: generated.skill_md_summary_zh.trim(),
+  };
+  const empty = { description_zh: null, use_cases: [], use_cases_en: [], skill_md_summary_zh: null };
+  const queue = prioritizeEnrichment([
+    { id: "old-popular", created_at: "2026-01-01T00:00:00Z", github_stars: 90_000, ...empty },
+    { id: "tags-only", created_at: "2026-10-10T00:00:00Z", github_stars: 5, ...complete, use_cases_en: [] },
+    { id: "new-low", created_at: "2026-10-10T00:00:00Z", github_stars: 1, ...empty },
+    { id: "newest", created_at: "2026-10-11T00:00:00Z", github_stars: null, ...empty },
+    { id: "old-tied-a", created_at: "2026-01-01T00:00:00Z", github_stars: 10, ...empty },
+    { id: "old-tied-b", created_at: "2026-01-01T00:00:00Z", github_stars: 10, ...empty },
+    { id: "bad-date", created_at: "not a date", github_stars: 500, ...empty },
+  ]);
+
+  assert.deepEqual(queue.map((skill) => skill.id), [
+    "newest", "new-low", "old-popular", "old-tied-a", "old-tied-b", "bad-date", "tags-only",
+  ]);
 });

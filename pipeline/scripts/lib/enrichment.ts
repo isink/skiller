@@ -109,6 +109,30 @@ export function enrichmentNeeds(value: ExistingEnrichment): EnrichmentNeeds {
   };
 }
 
+export type EnrichmentQueueEntry = ExistingEnrichment & {
+  id: string;
+  created_at: string;
+  github_stars: number | null;
+};
+
+/**
+ * Work order for the enrichment queue: skills without a usable Chinese
+ * description first (they cannot be shown on the home feed), then the most
+ * recently added, then by repository stars. Star-first ordering starved newly
+ * imported skills behind the historical backlog.
+ */
+export function prioritizeEnrichment<T extends EnrichmentQueueEntry>(skills: readonly T[]): T[] {
+  const createdAt = (skill: T): number => {
+    const time = Date.parse(skill.created_at);
+    return Number.isFinite(time) ? time : 0;
+  };
+  return [...skills].sort((left, right) =>
+    Number(enrichmentNeeds(right).descriptionZh) - Number(enrichmentNeeds(left).descriptionZh)
+      || createdAt(right) - createdAt(left)
+      || (right.github_stars ?? -1) - (left.github_stars ?? -1)
+      || (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+}
+
 export function preservedUseCaseSide(
   value: ExistingEnrichment,
 ): { field: "use_cases" | "use_cases_en"; values: string[] } | null {

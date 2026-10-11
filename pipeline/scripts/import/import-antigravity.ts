@@ -14,6 +14,7 @@ import { env } from "./lib/env";
 import { idToDisplayName } from "./lib/slugify";
 import { mapCategory, CURATED_CATEGORIES } from "./lib/category-map";
 import { applyOverrides } from "./lib/overrides";
+import { importNewOnly, loadExistingSlugs, upsertSkillsPreservingCuration } from "./lib/upsert";
 import { fetchRepoStars, repoStarsPatch } from "./lib/github";
 import { fetchSkillMarkdown, skillContentPatch } from "./lib/skill-content";
 import {
@@ -140,28 +141,21 @@ async function fetchUpstream(): Promise<UpstreamSkill[]> {
   return skills;
 }
 
-async function upsertBatch(rows: InsertSkill[]): Promise<void> {
-  const BATCH = 200;
-  for (let i = 0; i < rows.length; i += BATCH) {
-    const slice = rows.slice(i, i + BATCH);
-    const { error } = await db
-      .from("skills")
-      .upsert(slice, { onConflict: "slug" });
-    if (error) throw error;
-    process.stdout.write(`  ↳ upserted ${i + slice.length}/${rows.length}\r`);
-  }
-  process.stdout.write("\n");
-}
-
 async function main() {
   await ensureCategories();
+
+  const existingSlugs = await loadExistingSlugs();
+  console.log(`✓ ${existingSlugs.size} skills already in the catalog${importNewOnly ? " (new-only mode)" : ""}`);
 
   console.log("→ Fetching GitHub stars for antigravity repo");
   const repoStars = await fetchRepoStars("sickn33", "antigravity-awesome-skills");
   const starsCheckedAt = repoStars === undefined ? undefined : new Date().toISOString();
   console.log(`✓ Stars: ${repoStars ?? "n/a"}`);
 
-  const upstream = await fetchUpstream();
+  const fetchedUpstream = await fetchUpstream();
+  const upstream = importNewOnly
+    ? fetchedUpstream.filter((skill) => !existingSlugs.has(skill.id))
+    : fetchedUpstream;
 
   console.log(`→ Fetching SKILL.md for ${upstream.length} skills`);
   const mdMap = await fetchAllSkillMd(
@@ -171,11 +165,17 @@ async function main() {
   const rows: InsertSkill[] = upstream.map((u) => mapSkill(u, mdMap.get(u.id), repoStars, starsCheckedAt));
 
   console.log(`→ Upserting ${rows.length} skills`);
-  await upsertBatch(rows);
+  const summary = await upsertSkillsPreservingCuration(rows, existingSlugs, {
+    onProgress: (done, total) => process.stdout.write(`  ↳ upserted ${done}/${total}\r`),
+  });
+  process.stdout.write("\n");
 
   await applyOverrides();
 
-  console.log(`\n✅ Done. Imported ${rows.length} skills from Antigravity.`);
+  console.log(
+    `\n✅ Done. Antigravity: ${summary.inserted} new, ${summary.updated} refreshed, ` +
+      `${fetchedUpstream.length - rows.length} unchanged.`,
+  );
 }
 
 main().catch((err) => {

@@ -1,0 +1,86 @@
+name: Daily skill import
+
+on:
+  schedule:
+    # Every day: insert skills that are not in the catalog yet, then enrich them.
+    - cron: "30 0 * * *"
+    # Mondays: also refresh descriptions and SKILL.md of existing skills.
+    - cron: "30 1 * * 1"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "new-only inserts unseen skills; full also refreshes existing ones"
+        type: choice
+        options: [new-only, full]
+        default: new-only
+      recent_days:
+        description: "Scan repositories pushed in the last N days (1-90)"
+        type: string
+        default: "3"
+      enrich_limit:
+        description: "Maximum skills to enrich with DeepSeek in this run"
+        type: string
+        default: "300"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skill-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: pipeline
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Code search needs an authenticated token; the repository token is only a fallback.
+      GITHUB_TOKEN: ${{ secrets.SKILLER_GITHUB_TOKEN || github.token }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      DISCOVER_RECENT_DAYS: ${{ inputs.recent_days || '3' }}
+      LIMIT: ${{ inputs.enrich_limit || '300' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: pipeline/package-lock.json
+      - run: npm ci
+
+      - name: Choose import mode
+        env:
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+          INPUT_MODE: ${{ inputs.mode }}
+        run: |
+          if [ "$EVENT_SCHEDULE" = "30 1 * * 1" ] || [ "$INPUT_MODE" = "full" ]; then
+            echo "IMPORT_NEW_ONLY=0" >> "$GITHUB_ENV"
+          else
+            echo "IMPORT_NEW_ONLY=1" >> "$GITHUB_ENV"
+          fi
+
+      # Importers never write rank, score or featured for existing skills.
+      # Each later step still runs after an earlier failure, so one flaky source
+      # does not block enrichment; the job is still reported as failed.
+      - name: Import Antigravity index
+        run: npm run import:antigravity
+      - name: Import official Anthropic skills
+        if: ${{ !cancelled() }}
+        run: npm run import:anthropic
+      - name: Discover community skills
+        if: ${{ !cancelled() }}
+        run: npm run import:discover
+      - name: Re-apply curation overrides
+        if: ${{ !cancelled() }}
+        run: npm run apply:overrides
+      - name: Reclassify misc skills
+        if: ${{ !cancelled() }}
+        run: npm run reclassify
+      - name: Enrich newest skills first
+        if: ${{ !cancelled() }}
+        run: npm run enrich:skills

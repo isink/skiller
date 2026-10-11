@@ -7,6 +7,7 @@ on:
       - "miniprogram/**"
       - ".github/workflows/pipeline-checks.yml"
       - ".github/workflows/refresh-skill-metadata.yml"
+      - ".github/workflows/daily-import.yml"
   push:
     branches:
       - master
@@ -15,6 +16,7 @@ on:
       - "miniprogram/**"
       - ".github/workflows/pipeline-checks.yml"
       - ".github/workflows/refresh-skill-metadata.yml"
+      - ".github/workflows/daily-import.yml"
 
 permissions:
   contents: read
