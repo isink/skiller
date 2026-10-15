@@ -4,6 +4,7 @@ import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
 import { skillFreshness } from "../../services/freshness";
+import { shareExplore } from "../../services/share";
 import type { Category, Skill } from "../../types/skill";
 
 type ExploreSkill = Skill & { displayDescription: string; displayCategory: string; displayStars: string; displayUpdated: string; displayAdded: string };
@@ -26,6 +27,7 @@ Page({
   },
 
   onLoad(options: { category?: string }) {
+    wx.showShareMenu({ menus: ["shareAppMessage", "shareTimeline"] });
     const category = options.category || "";
     const categories = readCache<Category[]>("categories") || [];
     const counts = readCache<Record<string, number>>("category-counts") || {};
@@ -72,5 +74,17 @@ Page({
   onPullDownRefresh() { this.loadPage(true).finally(() => wx.stopPullDownRefresh()); },
   openSkill(event: { currentTarget: { dataset: { id: string } } }) {
     wx.navigateTo({ url: `/pages/detail/index?id=${encodeURIComponent(event.currentTarget.dataset.id)}` });
+  },
+
+  onShareAppMessage() {
+    const activeCategory = this.data.activeCategory;
+    const categoryObj = this.data.categories.find((cat: Category) => cat.slug === activeCategory);
+    return shareExplore(activeCategory, categoryObj ? categoryObj.name : undefined);
+  },
+
+  onShareTimeline() {
+    const activeCategory = this.data.activeCategory;
+    const categoryObj = this.data.categories.find((cat: Category) => cat.slug === activeCategory);
+    return shareExplore(activeCategory, categoryObj ? categoryObj.name : undefined);
   },
 });

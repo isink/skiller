@@ -4,6 +4,7 @@ import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
 import { skillFreshness } from "../../services/freshness";
+import { shareHome } from "../../services/share";
 import type { Category, Skill } from "../../types/skill";
 
 type HomeSkill = Skill & {
@@ -40,6 +41,7 @@ Page({
   },
 
   onLoad() {
+    wx.showShareMenu({ menus: ["shareAppMessage", "shareTimeline"] });
     const hot = readCache<Skill[]>("home:hot");
     const featured = readCache<Skill[]>("home:featured");
     const latest = readCache<Skill[]>("home:latest");
@@ -130,4 +132,7 @@ Page({
     wx.navigateTo({ url: `/pages/explore/index?category=${encodeURIComponent(event.currentTarget.dataset.slug)}` });
   },
   openAllCategories() { wx.navigateTo({ url: "/pages/explore/index" }); },
+
+  onShareAppMessage() { return shareHome(); },
+  onShareTimeline() { return shareHome(); },
 });
