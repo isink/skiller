@@ -5,6 +5,7 @@ import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
 import { skillInstallCommand } from "../../services/skill-install";
+import { shareSkillDetail } from "../../services/share";
 import type { Skill, SkillBlock } from "../../types/skill";
 
 Page({
@@ -22,6 +23,7 @@ Page({
   },
 
   onLoad(options: { id?: string }) {
+    wx.showShareMenu({ menus: ["shareAppMessage", "shareTimeline"] });
     const id = options.id || "";
     if (!id) { this.setData({ loading: false, error: "没有找到这个技能。" }); return; }
     const cached = cachedSkill(id);
@@ -65,5 +67,17 @@ Page({
     const ids = toggleFavorite(skill.id);
     this.setData({ favorited: ids.includes(skill.id) });
     wx.showToast({ title: ids.includes(skill.id) ? "已收藏" : "已取消收藏", icon: "none" });
+  },
+
+  onShareAppMessage() {
+    const skill = this.data.skill as Skill | null;
+    if (!skill) return { title: "头山 AI 工具箱", path: "/pages/home/index" };
+    return shareSkillDetail(skill);
+  },
+
+  onShareTimeline() {
+    const skill = this.data.skill as Skill | null;
+    if (!skill) return { title: "头山 AI 工具箱", path: "/pages/home/index" };
+    return shareSkillDetail(skill);
   },
 });

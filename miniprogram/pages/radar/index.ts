@@ -2,6 +2,7 @@ import { fetchTrendingSnapshot, TRENDING_PAGE_SIZE } from "../../services/trendi
 import type { TrendingMode, TrendingSnapshot, TrendingTermDisplay } from "../../types/trending-term";
 import { buildMonthDays, buildRecentDays, getLocalDateKey, isDateKey, shiftMonth } from "../../services/radar-calendar";
 import { getRadarFavoriteNames, toggleRadarFavorite } from "../../services/radar-favorites";
+import { shareRadar } from "../../services/share";
 
 const REFRESH_INTERVAL_MS = 60000;
 type RadarTermRow = TrendingTermDisplay & { isFavorite: boolean };
@@ -49,6 +50,7 @@ Page({
   _pendingSnapshot: null as TrendingSnapshot | null,
 
   onShow() {
+    wx.showShareMenu({ menus: ["shareAppMessage", "shareTimeline"] });
     this._visible = true;
     this.syncFavorites();
     this.loadTerms(this.data.terms.length > 0);
@@ -252,5 +254,8 @@ Page({
       }
     }
   },
+
+  onShareAppMessage() { return shareRadar(); },
+  onShareTimeline() { return shareRadar(); },
 
 });

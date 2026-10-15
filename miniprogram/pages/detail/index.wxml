@@ -24,6 +24,7 @@
         <text wx:if="{{installCommand}}" class="install-command" selectable>{{installCommand}}</text>
         <text class="install-hint">{{installHint}}</text>
       </view>
+      <button class="share-button" open-type="share" aria-label="分享给朋友">分享给朋友</button>
     </view>
     <view class="markdown-card">
       <text class="markdown-title">技能说明全文</text>

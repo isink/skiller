@@ -1,4 +1,10 @@
+import { shareLanding } from "../../services/share";
+
 Page({
+  onLoad() {
+    wx.showShareMenu({ menus: ["shareAppMessage", "shareTimeline"] });
+  },
+
   navigateToSkills() {
     wx.navigateTo({ url: "/pages/home/index" });
   },
@@ -6,4 +12,7 @@ Page({
   navigateToRadar() {
     wx.navigateTo({ url: "/pages/radar/index" });
   },
+
+  onShareAppMessage() { return shareLanding(); },
+  onShareTimeline() { return shareLanding(); },
 });

@@ -5,6 +5,7 @@ import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
 import { skillFreshness } from "../../services/freshness";
 import { getRadarFavorites, removeRadarFavorite } from "../../services/radar-favorites";
+import { shareFavorites } from "../../services/share";
 import type { RadarFavorite } from "../../services/radar-favorites";
 import type { Skill } from "../../types/skill";
 
@@ -32,6 +33,7 @@ Page({
   _favoriteRequestSequence: 0,
 
   onLoad(query: { tab?: string }) {
+    wx.showShareMenu({ menus: ["shareAppMessage", "shareTimeline"] });
     if (query.tab === "radar") this.setData({ tab: "radar" });
   },
   onShow() {
@@ -88,5 +90,8 @@ Page({
     this.setData({ radarFavorites: result.favorites.map(presentTerm) });
     wx.showToast({ title: "已取消收藏", icon: "none" });
   },
+
+  onShareAppMessage() { return shareFavorites(); },
+  onShareTimeline() { return shareFavorites(); },
 
 });
