@@ -1,0 +1,150 @@
+{
+  "recorded_at": "2026-10-12T14:17:39.220479+00:00",
+  "features": {
+    "radar": "Separate GitHub Stars / HF 30-day downloads boards, latest discoveries, foreground polling",
+    "detail": "Skill install command and copy button; full content retained"
+  },
+  "code_ready": true,
+  "live_database": {
+    "migration": "023_radar_popularity.sql",
+    "deployed": true,
+    "previous_error": "42703: column trending_terms_public.popularity_count does not exist",
+    "public_columns_readable": true,
+    "summary_guard_deployed": true,
+    "anon_write_allowed": false,
+    "anon_refresh_allowed": false
+  },
+  "edge_function": {
+    "name": "refresh-radar-popularity",
+    "deployed": true,
+    "verify_jwt": true
+  },
+  "cron": {
+    "name": "skiller-refresh-radar-popularity",
+    "enabled": true,
+    "schedule_prepared": "7,22,37,52 * * * *",
+    "job_id": 4,
+    "schedule": "7,22,37,52 * * * *"
+  },
+  "blocker": null,
+  "preview": {
+    "native_attempts": 3,
+    "new_qr_generated": true,
+    "layout_rendered": true,
+    "layout_uses_sample_data": true,
+    "directory": "/private/tmp/skiller-preview-20261012/popularity-final",
+    "qr_path": "/private/tmp/skiller-preview-20261012/popularity-qrcode-215903.png",
+    "package_bytes": 143425,
+    "previous_errors": [
+      "code 10: Network error, socket hang up",
+      "code 10: Network error"
+    ],
+    "last_error": null
+  },
+  "validation": {
+    "diff_check": "passed",
+    "tests": "not run; not requested",
+    "online_refresh": "Two manual batches returned HTTP 200; enabled Cron schedule read back. An automatic Cron execution has not yet been observed.",
+    "public_readback": {
+      "checked_at_utc": "2026-10-12T14:16:17.180187+00:00",
+      "total": 138,
+      "summary_verified_matches": 113,
+      "summary_mismatches": [],
+      "all_nonempty_summaries": 138,
+      "statuses": {
+        "None:None": 88,
+        "github:ok": 38,
+        "huggingface:ok": 11,
+        "huggingface:error": 1
+      }
+    },
+    "private_readback": {
+      "job": {
+        "id": 4,
+        "name": "skiller-refresh-radar-popularity",
+        "active": true,
+        "schedule": "7,22,37,52 * * * *"
+      },
+      "errors": [
+        {
+          "platform": "huggingface",
+          "source_id": "abenzerps/Qwen-Image-2.1-Uncensored-GGUF",
+          "failure_count": 1,
+          "next_attempt_at": "2026-10-12T14:24:40.895585+00:00"
+        }
+      ],
+      "sources": [
+        {
+          "status": "ok",
+          "sources": 11,
+          "platform": "huggingface",
+          "last_checked": "2026-10-12T14:16:06.727902+00:00"
+        },
+        {
+          "status": "error",
+          "sources": 1,
+          "platform": "huggingface",
+          "last_checked": null
+        },
+        {
+          "status": "ok",
+          "sources": 32,
+          "platform": "github",
+          "last_checked": "2026-10-12T14:09:40.011503+00:00"
+        }
+      ],
+      "rate_limits": null,
+      "lease_active": false,
+      "first_response": {
+        "body": "{\"skipped\":false,\"requests\":40,\"checked\":39,\"missing\":0,\"failed\":1}",
+        "status": 200,
+        "timed_out": false
+      },
+      "second_response": {
+        "body": "{\"skipped\":false,\"requests\":4,\"checked\":4,\"missing\":0,\"failed\":0}",
+        "status": 200,
+        "timed_out": false
+      }
+    },
+    "summary_restoration_verified": 113,
+    "http_requests": [
+      {
+        "id": 399,
+        "body": "{\"skipped\":false,\"requests\":40,\"checked\":39,\"missing\":0,\"failed\":1}",
+        "status": 200,
+        "timed_out": false
+      },
+      {
+        "id": 401,
+        "body": "{\"skipped\":false,\"requests\":4,\"checked\":4,\"missing\":0,\"failed\":0}",
+        "status": 200,
+        "timed_out": false
+      }
+    ],
+    "pending_error": "One HF source failed; its empty count is excluded from the board and a retry is scheduled. The reason was not retained by the current worker."
+  },
+  "release": {
+    "committed": false,
+    "published": false,
+    "wechat_uploaded": true,
+    "review_submitted": false,
+    "uploaded_version": "2.1.0",
+    "uploaded_at_utc": "2026-10-12T14:24:03.125728+00:00",
+    "appid": "wx05e688a750350665",
+    "upload_package_bytes": 143425,
+    "upload_result": "WeChat DevTools CLI exited 0 and reported upload success",
+    "upload_info": {
+      "size": {
+        "total": 143425,
+        "packages": [
+          {
+            "name": "TOTAL",
+            "size": 143425
+          }
+        ]
+      }
+    },
+    "source_changed_during_upload": []
+  },
+  "previous_blocker": "Desktop Chrome still shows native Reload site confirmation. AppleScript page access times out; automatic keystrokes previously denied by macOS. User action requested."
+}

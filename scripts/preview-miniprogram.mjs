@@ -2,7 +2,9 @@
 // Renders approximate 375px previews of the mini program pages in every colour theme.
 // This is NOT the WeChat renderer: WXML is evaluated with a tiny interpreter and drawn by Chrome (rpx -> px at 0.5).
 // Usage: node scripts/preview-miniprogram.mjs [--out <dir>] [--themes id,id] [--pages landing,home,radar]
-//        node scripts/preview-miniprogram.mjs --applied [--height 1800] [--out <dir>] [--pages landing,home,radar,detail,radar-sheet]
+//        node scripts/preview-miniprogram.mjs --applied [--height 1800] [--out <dir>] [--pages landing,home,radar,detail,radar-latest]
+// Calendar / saved-term samples: --applied --pages radar-latest,radar-calendar,favorites-radar
+// The TypeScript-only fixture helpers use Node's built-in type stripping (Node 22.18+ / 24+).
 // Default output: <out>/<theme>-<page>.png (375x812 @2x) and <out>/comparison.png (all themes side by side).
 // --applied renders the app exactly as shipped (app.wxss + assets/icons, no theme override) to <out>/<page>.png.
 import { spawn, spawnSync } from "node:child_process";
@@ -11,6 +13,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { THEMES } from "./miniprogram-themes.mjs";
+import { buildMonthDays, buildRecentDays } from "../miniprogram/services/radar-calendar.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MP = join(HERE, "..", "miniprogram");
@@ -19,7 +22,7 @@ const OUT = arg("out", join(HERE, "..", "preview-out"));
 const APPLIED = process.argv.includes("--applied");
 const HEIGHT = Number(arg("height", 812));
 const THEME_IDS = APPLIED ? ["applied"] : arg("themes", Object.keys(THEMES).join(",")).split(",");
-const PAGES = arg("pages", APPLIED ? "landing,home,radar,detail,radar-sheet" : "landing,home,radar").split(",");
+const PAGES = arg("pages", APPLIED ? "landing,home,radar,detail,radar-latest" : "landing,home,radar").split(",");
 const CHROME = process.env.CHROME || "google-chrome-stable";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const rd = (p) => readFileSync(join(MP, p), "utf8");
@@ -41,7 +44,7 @@ const strip = (v) => v.replace(/^\{\{|\}\}$/g, "");
 const ev = (expr, scope) => { try { return new Function("scope", `with(scope){return (${expr})}`)(scope); } catch (e) { console.error("EXPR FAIL", expr, e.message); return ""; } };
 const interp = (s, scope) => s.replace(/\{\{([\s\S]*?)\}\}/g, (_, e) => { const v = ev(e, scope); return v == null ? "" : v; });
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-const TAG = { view: "div", text: "span", "scroll-view": "div", image: "img", input: "input", "rich-text": "div" };
+const TAG = { view: "div", text: "span", button: "button", "scroll-view": "div", image: "img", input: "input", "rich-text": "div" };
 
 function render(nodes, scope, ctx) {
   let out = ""; let prevIf = null;
@@ -80,10 +83,12 @@ function one(n, scope, ctx) {
 const toCss = (files) => files.map(rd).join("\n")
   .replace(/(\d+(?:\.\d+)?)rpx/g, (_, n) => `${parseFloat(n) / 2}px`)
   .replace(/(^|[\s,}])page\s*\{/g, "$1:root,body{")
+  .replace(/(^|[,\s>+~])text(?=[\s,.#:\[{>+~])/g, "$1.wx-text")
   .replace(/env\(safe-area-inset-bottom\)/g, "34px");
 const BASE_CSS = `*::-webkit-scrollbar{display:none}body{margin:0;width:375px}div,span,img,input{box-sizing:border-box}
 .wx-view,.wx-scroll-view,.wx-rich-text{display:block}.wx-scroll-view{overflow-x:auto}
-.wx-text{display:inline}.wx-image{display:inline-block}input{font-family:inherit;outline:none}`;
+.wx-text{display:inline}.wx-image{display:inline-block}input{font-family:inherit;outline:none}
+button{font-family:inherit;border:0;box-sizing:border-box;cursor:pointer}`;
 
 /* ---------- sample data ---------- */
 const sk = (id, name, desc, cat, author, featured, fresh = {}) => ({ id, name, featured, displayDescription: desc, displayCategory: cat, author, displayStars: "来源仓库 Star 12,480 · 2026-10-08 核对", displayUpdated: "技能更新于 2026-10-02", displayGrowth: "", displayAdded: "", displayRepoNote: "", ...fresh });
@@ -102,19 +107,59 @@ const latest = [
   sk("22", "release-notes", "根据提交记录自动整理面向用户的发布说明。", "文档", "ship-it", false, { displayAdded: "2 天前收录" }),
 ];
 const categories = [{ id: 1, slug: "official", name: "官方精选" }, { id: 2, slug: "code", name: "编程开发" }, { id: 3, slug: "design", name: "设计" }, { id: 4, slug: "docs", name: "文档" }];
-const term = (t, s, score, heat, status) => ({ term: t, displaySummary: s, score, displayScore: score == null ? "-" : `${Math.round(score * 100)}分`, displayHeat: heat, displayDate: "2026年10月8日", status, displayStatus: status || "待观察" });
+// Illustration fixtures only: the actual mini program always requests live API data.
+const term = (t, s, score, count, needsRetry = false) => ({
+  term: t, displaySummary: s || "简介待补充", score,
+  displayScore: score == null ? "-" : `${Math.round(score * 100)}分`,
+  displayHeat: "-", displayDate: "2026年10月12日", displayDateGroup: "10月12日发现",
+  hasSummary: !!s, hasScore: Number.isFinite(score), hasHeat: false,
+  popularity_platform: "github", popularity_count: count,
+  popularity_checked_at: "2026-10-12T13:07:00Z", popularity_status: needsRetry ? "error" : "ok",
+  displayPopularity: count.toLocaleString("en-US"), displayPopularityLabel: "GitHub Star",
+  displayPopularityCheckedAt: "10月12日 21:07", hasPopularity: true,
+  popularityNeedsRetry: needsRetry, popularityIsStale: false,
+  isFavorite: false,
+});
 const terms = [
-  term("Vibe Coding", "用自然语言描述意图，由模型生成并迭代代码的一种开发方式，近期社区讨论热度快速攀升。", 0.86, "2.4万", "已转选题"),
-  term("Context Engineering", "为模型精心组织上下文信息的工程实践。", 0.72, "8.1k", "已命中"),
-  term("Agent Harness", "围绕智能体的运行外壳。", 0.31, "560", "未命中"),
-  term("Memory Layer", "跨会话保存与检索信息的组件。", null, "-", null),
+  term("Claude Obsidian", "将 Obsidian 笔记接入 Claude Code，作为可查阅的长期记忆。", 0.86, 12840),
+  term("Grimoire", "为 AI 编程助手整理可复用的提示词与技能。", 0.72, 8160),
+  term("Bot Bridge", "连接远程 AI 助手与本地 Obsidian 知识库。", 0.68, 5680, true),
+  term("Memory Layer", "跨会话保存与检索信息的组件。", null, 3480),
 ];
+const discovery = (name, summary, score, day = "15", isFavorite = false) => ({
+  ...term(name, summary, score, 0),
+  popularity_platform: null, popularity_count: null, popularity_checked_at: null,
+  hasPopularity: false, isFavorite,
+  displayDate: `2026年10月${day}日`, displayDateGroup: `10月${day}日发现`,
+});
+const discoveries = [
+  discovery("house-control", "Mac 菜单栏里的开源 3D 智能家居控制。", 0.82),
+  discovery("graphicle", "本地代码图谱与记忆，给编程智能体用。", 0.81, "15", true),
+  discovery("Ultramarine 1 Flash", "Paper Instruments 出的知识工作开源模型。", 0.79, "15", true),
+  discovery("Hermes Agent", "Nous 开源智能体桌面版更新。", 0.78),
+  discovery("Petal", "开源结对编程与窗口级屏幕共享工具。", 0.76),
+];
+const previousDiscoveries = [
+  discovery("LFM2.5-24B-A2B", "Liquid AI 的 24B MoE 端侧模型，激活约 2B，多语言。", 0.82, "14"),
+  discovery("Drama 3", "Fish 开源可控情感 TTS 模型。", 0.80, "14", true),
+  discovery("TrellisWM", "macOS 分栏窗口管理器，支持跨应用停靠、分页和嵌套窗口。", 0.77, "14"),
+];
+const calendarFixture = (selectedDate = "2026-10-15", expanded = false) => ({
+  today: "2026-10-15", selectedDate,
+  selectedDateLabel: selectedDate ? `2026年10月${Number(selectedDate.slice(8))}日` : "全部日期",
+  calendarExpanded: expanded, calendarMonth: "2026-10", calendarMonthLabel: "2026年10月",
+  canNextMonth: false, weekdays: ["一", "二", "三", "四", "五", "六", "日"],
+  recentDays: buildRecentDays("2026-10-15", selectedDate),
+  monthDays: buildMonthDays("2026-10", selectedDate, "2026-10-15"),
+});
 const t = (text) => ({ type: "text", text });
 const el = (name, text) => ({ name, children: [t(text)] });
 const DETAIL = {
   loading: false, error: "", favorited: true, displayCategory: "设计",
   skill: { name: "frontend-design", tags: ["代码", "前端", "界面"], author: "anthropics" },
   displayDescription: skills[0].displayDescription, displayStars: skills[0].displayStars, displayUpdated: skills[0].displayUpdated,
+  installCommand: "npx skills add https://github.com/anthropics/skills/tree/main/skills/frontend-design --skill frontend-design",
+  installHint: "在已安装 Node.js 的电脑终端运行，按提示选择要安装到的 AI 工具。",
   blocks: [
     { type: "heading", level: 1, inline: [t("前端设计指南")] },
     { type: "paragraph", inline: [t("当你需要构建网页组件或整页界面时使用，请先运行 "), el("code", "npx skills add"), t(" 并阅读 "), el("strong", "注意事项"), t("。")] },
@@ -122,20 +167,31 @@ const DETAIL = {
     { type: "list", inline: [t("• 先确定视觉方向与排版")] },
     { type: "list", inline: [t("• 再选择配色与动效")] },
     { type: "quote", inline: [t("好的设计从约束开始。")] },
-    { type: "code", text: "npx skills add frontend-design\n# 然后在项目中引用" },
+    { type: "code", text: "# 在 AI 工具中调用已安装的技能\n# 描述你的页面目标与约束" },
     { type: "rule", inline: [] },
     { type: "paragraph", inline: [t("更多细节见下文。")] },
   ],
 };
 const DATA = {
   landing: {},
-  "radar-sheet": null,
   detail: DETAIL,
   home: { query: "", hot, featured: skills, latest, categories, counts: { official: 24, code: 132, design: 41, docs: 58 }, results: [], searching: false, loading: false, error: "" },
-  radar: { loading: false, error: "", hasMore: false, showDetail: false, selectedTerm: null, terms },
+  radar: {
+    loading: false, error: "", hasMore: false, terms,
+    mode: "github", boardAvailable: true, displayCheckedAt: "10月12日 21:07", hasPendingUpdate: false,
+    favoriteCount: 3,
+    ...calendarFixture(""),
+  },
 };
-DATA["radar-sheet"] = { ...DATA.radar, showDetail: true, selectedTerm: terms[1] };
-const PAGE_OF = { "radar-sheet": "radar" };
+DATA["radar-latest"] = { ...DATA.radar, ...calendarFixture(), mode: "latest", terms: discoveries };
+DATA["radar-calendar"] = { ...DATA["radar-latest"], ...calendarFixture("2026-10-14", true), terms: previousDiscoveries };
+DATA["favorites-radar"] = {
+  tab: "radar", skills, loading: false, error: "", radarFavorites: [discoveries[2], discoveries[1], previousDiscoveries[1]],
+};
+const PAGE_OF = {
+  "radar-latest": "radar", "radar-calendar": "radar",
+  "favorites-radar": "favorites",
+};
 
 /* ---------- Chrome (CDP) ---------- */
 async function withChrome(port, fn) {
@@ -188,7 +244,7 @@ for (const [i, id] of THEME_IDS.entries()) {
   await withChrome(9370 + i, async (send) => {
     for (const page of PAGES) {
       const dir = PAGE_OF[page] || page;
-      const withTabbar = dir === "home";
+      const withTabbar = dir === "home" || dir === "favorites";
       const body = render(parse(rd(`pages/${dir}/index.wxml`)), DATA[page], { icons });
       const css = toCss(["app.wxss", `pages/${dir}/index.wxss`, ...(withTabbar ? ["components/skill-tabbar/index.wxss"] : [])]);
       const html = join(work, `${id}-${page}.html`);

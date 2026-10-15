@@ -3,6 +3,7 @@ import "dotenv/config";
 import { db } from "../import/lib/supabase";
 import { parseGitHubRepositoryURL } from "../lib/github-url";
 import { canonicalSkillSourceURL, fetchSkillFileDate, needsSourceCheck, resolveSkillSource } from "../lib/skill-source";
+import { applyRepositoryMetadata, type RepoRefreshState } from "../lib/repo-metadata-write";
 
 const token = process.env.GITHUB_TOKEN;
 if (!token) throw new Error("GITHUB_TOKEN is required for daily metadata refresh");
@@ -19,14 +20,6 @@ type SkillRow = {
   source_repo_pushed_at: string | null;
   source_url_checked: string | null;
 };
-type RepoState = {
-  repo_key: string;
-  default_branch: string;
-  stars: number | null;
-  pushed_at: string | null;
-  checked_at: string;
-};
-type RepoMetadata = { default_branch: string; stargazers_count: number; pushed_at: string | null };
 type RepoGroup = { owner: string; repo: string; skills: SkillRow[] };
 
 let requests = 0;
@@ -68,17 +61,10 @@ async function allRows<T>(table: string, columns: string): Promise<T[]> {
   }
 }
 
-async function updateSkills(ids: string[], patch: Record<string, unknown>): Promise<void> {
-  for (let index = 0; index < ids.length; index += 100) {
-    const { error } = await db.from("skills").update(patch).in("id", ids.slice(index, index + 100));
-    if (error) throw error;
-  }
-}
-
 async function main(): Promise<void> {
   const [skills, states] = await Promise.all([
     allRows<SkillRow>("skills", "id,github_url,source_checked_at,source_repo_pushed_at,source_url_checked"),
-    allRows<RepoState>("github_repo_refresh_state", "repo_key,default_branch,stars,pushed_at,checked_at"),
+    allRows<RepoRefreshState>("github_repo_refresh_state", "repo_key,default_branch,stars,pushed_at,checked_at"),
   ]);
   const stateByRepo = new Map(states.map((state) => [state.repo_key, state]));
   const groups = new Map<string, RepoGroup>();
@@ -95,7 +81,7 @@ async function main(): Promise<void> {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const metadata = new Map<string, RepoState>();
+  const metadata = new Map<string, RepoRefreshState>();
   let checkedRepos = 0;
   let missingRepos = 0;
   let pendingRepos = 0;
@@ -117,40 +103,12 @@ async function main(): Promise<void> {
     if (requests >= repoBudget) { pendingRepos++; continue; }
     const endpoint = `https://api.github.com/repos/${encodeURIComponent(group.owner)}/${encodeURIComponent(group.repo)}`;
     const result = await github(endpoint);
-    const now = new Date().toISOString();
+    const state = await applyRepositoryMetadata(db, key, result);
+    metadata.set(key, state);
     if (result.status === 404) {
-      await updateSkills(group.skills.map((skill) => skill.id), {
-        github_stars: null,
-        github_stars_checked_at: now,
-        source_updated_at: null,
-        source_checked_at: now,
-        source_repo_pushed_at: null,
-        source_url_checked: null,
-      });
-      const missing: RepoState = { repo_key: key, default_branch: "", stars: null, pushed_at: null, checked_at: now };
-      const { error } = await db.from("github_repo_refresh_state").upsert(missing, { onConflict: "repo_key" });
-      if (error) throw error;
-      metadata.set(key, missing);
       missingRepos++;
       continue;
     }
-    const body = result.body as Partial<RepoMetadata>;
-    if (!body || typeof body.default_branch !== "string" || !body.default_branch
-      || !Number.isInteger(body.stargazers_count) || (body.stargazers_count as number) < 0
-      || (body.pushed_at !== null && (typeof body.pushed_at !== "string" || !Number.isFinite(Date.parse(body.pushed_at))))) {
-      throw new Error(`Invalid GitHub repository metadata for ${key}`);
-    }
-    await updateSkills(group.skills.map((skill) => skill.id), {
-      github_stars: body.stargazers_count,
-      github_stars_checked_at: now,
-    });
-    const state: RepoState = {
-      repo_key: key, default_branch: body.default_branch,
-      stars: body.stargazers_count as number, pushed_at: body.pushed_at ?? null, checked_at: now,
-    };
-    const { error } = await db.from("github_repo_refresh_state").upsert(state, { onConflict: "repo_key" });
-    if (error) throw error;
-    metadata.set(key, state);
     checkedRepos++;
     if (checkedRepos % 100 === 0) console.log(`Repository stars: ${checkedRepos}/${groups.size}; GitHub requests: ${requests}`);
   }

@@ -53,7 +53,7 @@ npm run upsert:trending -- data/trending-terms.json
 
 **字段说明**:
 - `term` (必填): 新词名称,用作唯一键
-- `summary`: 中文简介(约30字)
+- `summary`: 中文简介(约30字)，兼容 `summary_zh`；仅补充缺失简介，已有内容默认保留
 - `score`: 评分 0-1
 - `heat`: 热度值
 - `status`: 状态(`待观察` | `已命中` | `未命中` | `已转选题`)
@@ -66,6 +66,27 @@ npm run upsert:trending -- data/trending-terms.json
 除 `term` 外其他字段均可选。脚本通过 `term` 字段执行 upsert。
 
 **数据库迁移**: 先在 Supabase SQL Editor 执行 `pipeline/supabase/migrations/019_trending_terms.sql`。
+
+已有雷达表再执行 `supabase/migrations/022_preserve_trending_term_summaries.sql`，使直接调用 REST 的旧导入程序也保留非空简介。它只增加触发器，不改写已有记录：非 `postgres` 角色的 UPDATE/upsert 不得覆盖已填写的简介，仍可更新评分等字段、插入新词和补充空简介。人工修订由 `postgres` 通过 SQL Editor 按词条及来源精确更新。保护不覆盖管理员直写或删除后重建记录。
+
+脚本先保存元数据，再按数据库条件补空简介；第二步失败会报错，可重跑。`NULL` 和空字符串可补，旧的纯空格内容需人工整理。本次来源核对与写入调查保存在 `../docs/data/`，不要用未经核对的整表内容覆盖人工简介。
+
+### 新词热榜
+
+榜单使用独立的来源数据，不把旧 `score` 或 `heat` 当作实时热度。**项目榜**按 GitHub 来源仓库的累计 Star 排序，**模型榜**按 Hugging Face 模型近 30 天下载量排序。它们衡量受欢迎程度，不代表最近涨幅。新闻、社交帖子和 HF Spaces 等没有对应指标的条目仍在“最新发现”中展示。
+
+部署顺序：
+
+1. 在 SQL Editor 执行 `supabase/migrations/023_radar_popularity.sql`，增加服务端来源状态表、租约、受限 RPC 和公开视图的四个热度字段。此迁移不修改简介、旧评分和旧热度。
+2. 部署 `supabase/functions/refresh-radar-popularity/index.ts` 为同名 Edge Function，保持 **Verify JWT** 开启。复用 Edge Function Secret `SKILLER_GITHUB_TOKEN`，无需把令牌放入小程序，也无需 HF 密钥（读取公开模型）。
+3. 确认现有 Vault Secret `skiller_refresh_service_role_key` 后，执行 `supabase/cron/refresh-radar-popularity.sql`。作业 `skiller-refresh-radar-popularity` 在每小时第 7、22、37、52 分钟运行，与技能元数据任务错峰；密钥只从 Vault 读取。
+4. 从 Cron 和函数日志核对 `checked`、`missing`、`failed`，并确认 `trending_terms_public.popularity_count` 和 `popularity_checked_at` 已有成功值。Cron 入队成功不等于外部抓取成功。
+
+每批最多处理 40 个来源，约 90 秒内结束，请求间隔至少 1 秒。同一来源成功后最早 60 分钟复查；来源多或请求失败时会更晚。已完成的每项结果立即保存，失败指数退避；403/429 将对应平台的冷却时间写入数据库，后续批次也遵守 `Retry-After`，没有有效时间时默认冷却 1 小时，另一平台继续。失败不更新成功核对时间，404 清空可展示值，保留诊断状态供后续重试。租约避免重叠执行。
+
+小程序前台每 60 秒读取最新榜单，热榜单次返回最多 50 条，标明指标和核对时间；超过 24 小时未核对的来源不参与热榜。用户向下阅读时先提示“榜单有更新”，点击后再换序。进入后台即停止轮询。数据库尚未应用 023 时自动显示原有最新发现列表；网络错误不会被误判成缺少迁移。数据定时更新后，下次请求即可看到；首次启用这些新界面仍需发布小程序代码。
+
+指标口径参考 [GitHub 仓库接口](https://docs.github.com/en/rest/repos/repos#get-a-repository) 与 [Hugging Face 下载统计](https://huggingface.co/docs/hub/models-download-stats)。
 
 ## Required env vars (.env)
 
@@ -87,6 +108,7 @@ CloudBase 迁移脚本默认只读取 Supabase 并报告数据量；只有传入
 `.github/workflows/daily-import.yml` 每天 00:30 UTC 运行 `IMPORT_NEW_ONLY=1` 的导入：只插入库里还没有的技能（Antigravity 索引差异、Anthropic 官方目录、GitHub 代码搜索，以及 `DISCOVER_RECENT_DAYS`（默认 3）天内有推送的技能仓库），随后重新应用 `sources.json`、重分类 misc，并用 DeepSeek 富化最新技能（`LIMIT`，默认 300）。每周一 01:30 UTC 跑一次完整刷新（`IMPORT_NEW_ONLY=0`），同步已有技能的描述和 SKILL.md。也可手动 `workflow_dispatch`。
 
 - 所有导入器对已有技能都不再写 `rank`、`score`、`featured`；这三个字段只在新技能首次插入时作为初始值写入，之后只由 `sources.json` 和 `apply_skill_overrides` 修改（`scripts/lib/curation.ts`）。
+- Anthropic 官方导入优先读取 `skills/<slug>/SKILL.md`，兼容旧根目录布局。移动目录后仍使用 `pdf`、`docx` 等原有 slug，正文、来源链接与提交日期都指向实际文件路径；完整刷新更新原记录，不生成重复技能。
 - GitHub 代码搜索限制为每分钟 10 次，脚本固定间隔 6.5 秒；仓库搜索限制为每分钟 30 次，间隔 2.5 秒。每次搜索最多返回 1,000 条，所以新仓库发现使用带推送日期窗口的仓库搜索，再用 git tree 找 `SKILL.md`。
 - 富化队列先处理没有中文描述的技能，再按 `created_at` 从新到旧，最后按 Star；新技能不会再排在历史积压之后。
 - Actions Secrets：`SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`DEEPSEEK_API_KEY`，以及建议配置的 `SKILLER_GITHUB_TOKEN`（只读 PAT；未配置时退回内置 `github.token`）。定时工作流只在默认分支上生效。
@@ -112,9 +134,17 @@ CloudBase 迁移脚本默认只读取 Supabase 并报告数据量；只有传入
 
 `npm run refresh:metadata` 及手动 GitHub Actions 工作流仍可作为运维备用方式。若手动运行，请先暂停 Supabase Cron，以免与 Edge Function 同时写入。
 
-`npm run check` 会先做完整 TypeScript 类型检查，再运行离线单元测试；`npm run check:full` 还会启动两套名称唯一、彼此隔离的本地 Supabase：一套验证最终 schema 和安全行为，另一套从带历史数据的代表性 013 基线 fixture 依次升级到 018，再在升级结果上重放 014–018 验证幂等性。两套实例都会删除容器与数据卷，清理失败也会让门禁失败。GitHub Actions 对 pipeline 相关改动自动运行这道完整门禁。流水线脚本只要有一条写入或 enrichment 失败，就必须返回非零退出码，不能把部分失败伪装成成功。Antigravity 索引少于 1,000 条会被视为异常截断并在写入前失败；若上游确实永久缩小，需要人工核对后再调整该安全线。
+`npm run check` 会先做完整 TypeScript 类型检查，再运行离线单元测试；`npm run check:full` 还会启动两套名称唯一、彼此隔离的本地 Supabase：一套验证最终 schema、安全行为和原文变化后的中文失效，另一套从带历史数据的代表性 013 基线 fixture 依次升级到 021，再在升级结果上重放 014–021 验证幂等性。两套实例都会删除容器与数据卷，清理失败也会让门禁失败。GitHub Actions 对 pipeline 相关改动自动运行这道完整门禁。流水线脚本只要有一条写入或 enrichment 失败，就必须返回非零退出码，不能把部分失败伪装成成功。Antigravity 索引少于 1,000 条会被视为异常截断并在写入前失败；若上游确实永久缩小，需要人工核对后再调整该安全线。
 
 `sources.json` 会先完整校验，再由 `apply_skill_overrides` 在一个数据库事务内应用。单来源导入阶段允许尚未出现的 slug 只告警；`sync` 在全部来源完成后会严格再应用一次，仍有遗漏就非零退出。富化会分页审计全部 skill，把空白、越界和双语标签不配对的历史数据重新入队；已有一侧合法标签时保留该侧、只生成对应翻译。`fill_skill_enrichment` 同时校验读取时的 `updated_at`，源内容在生成期间变化就拒绝旧结果并要求重跑。
+
+## 原文更新后的中文刷新
+
+现有库执行 `supabase/migrations/021_invalidate_changed_skill_enrichment.sql` 后，技能名称、英文介绍或 SKILL.md 正文实际变化时，数据库会同时清除旧中文简介、摘要和双语使用场景，使现有富化队列重新生成。相同原文重复导入、Star/核对时间更新和人工精选排序不会触发清除；源版本仍由 `updated_at` 校验，原文变化前生成的结果会被拒绝。等待富化的技能显示“中文简介待补充”，热门/最新收录区暂时略过它们。迁移本身不批量清空历史译文。
+
+社区代码搜索只提供部分仓库信息，导入会额外读取并缓存仓库 API 元数据，成功取得有效 Star 后才写核对时间；失败不更新旧数据。CLI 备用刷新与 Edge Function 都调用 `apply_skill_repo_metadata`，在同一事务中写 Star、核对状态与当天快照，避免备用任务遗漏热门榜历史。
+
+部署时先执行单独的 021 增量迁移，再发布更新的 pipeline。小程序的稳定分页和收藏返回刷新属于代码变更，需要上传、审核、发布后才对正式用户生效。
 
 ## 数据库变更与验证
 
@@ -137,6 +167,7 @@ psql "$SKILLER_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security.
 5. 016 成功并读回函数权限后，才更新/运行本版 pipeline；此前暂停 `sync`，因为精选配置和富化写入已依赖新的原子 RPC。
 6. 执行 `017_skill_source_freshness.sql`，确认三个展示字段与内部仓库刷新表存在、权限正确，然后才能运行 `refresh:metadata` 或上传显示新字段的小程序版本。
 7. 执行 `018_batched_skill_metadata_refresh.sql`，部署 Edge Function 并启动 Cron 后，按上面的运行记录核对实际刷新进度。
+8. 执行 `020_hot_and_latest_skills.sql` 建立 Star 快照和热门/最新收录 RPC，再执行 `021_invalidate_changed_skill_enrichment.sql`，使实际变化的原文进入重新中文化队列。最后发布包含上述修复的 pipeline 和小程序代码。
 
 排查提示：每日导入报 `Could not find the function public.apply_skill_overrides(...)` 或 `public.fill_skill_enrichment(...)` 时，说明线上库尚未执行 `016_lock_down_public_writes.sql`（可用 anon key 调 `increment_install_count` 验证：仍存在即 016 未执行）。`enrich:skills` 现在会在调用 DeepSeek 前预检该 RPC，缺失时立即失败。
 

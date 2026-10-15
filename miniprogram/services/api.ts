@@ -49,7 +49,7 @@ function listSkills(query: Query): Promise<Skill[]> {
 }
 
 export function fetchFeatured(limit = 20): Promise<Skill[]> {
-  return listSkills({ featured: "eq.true", order: "rank.desc", limit });
+  return listSkills({ featured: "eq.true", order: "rank.desc,id.asc", limit });
 }
 
 /** Star growth over the last 7 days, one skill per repository. Needs migration 020. */
@@ -66,7 +66,7 @@ export async function fetchLatestSkills(limit = 10): Promise<Skill[]> {
     const rows = await request<Skill[]>("/rest/v1/rpc/get_latest_skills", { p_limit: limit, p_per_repo: 2, p_within_days: 30 });
     if (rows.length > 0) return rows;
   } catch { /* Fall through to the direct query. */ }
-  const rows = await listSkills({ order: "created_at.desc", limit: 50 });
+  const rows = await listSkills({ order: "created_at.desc,id.asc", limit: 50 });
   return limitPerRepo(rows, 2, limit);
 }
 
@@ -96,7 +96,9 @@ export function fetchSkills(options: { category?: string; offset?: number; limit
   const limit = Math.min(50, Math.max(1, options.limit ?? PAGE_SIZE));
   return listSkills({
     ...(options.category ? { category: `eq.${options.category}` } : {}),
-    order: options.orderBy === "created_at" ? "created_at.desc" : "github_stars.desc.nullslast,rank.desc",
+    // Repository stars and ranks are shared by many skills; a unique final key
+    // keeps offset pages stable when those values tie.
+    order: options.orderBy === "created_at" ? "created_at.desc,id.asc" : "github_stars.desc.nullslast,rank.desc,id.asc",
     offset,
     limit,
   });
@@ -107,7 +109,7 @@ export function searchSkills(input: string): Promise<Skill[]> {
   if (!query) return Promise.resolve([]);
   const filter = ["name", "description", "description_zh", "author"]
     .map((column) => `${column}.ilike.%${query}%`).join(",");
-  return listSkills({ or: `(${filter})`, order: "rank.desc", limit: 50 });
+  return listSkills({ or: `(${filter})`, order: "rank.desc,id.asc", limit: 50 });
 }
 
 export async function fetchSkill(id: string): Promise<Skill | null> {

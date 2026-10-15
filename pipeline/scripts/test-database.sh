@@ -86,7 +86,8 @@ apply_hardening_migrations() {
     "$pipeline_dir/supabase/migrations/016_lock_down_public_writes.sql" \
     "$pipeline_dir/supabase/migrations/017_skill_source_freshness.sql" \
     "$pipeline_dir/supabase/migrations/018_batched_skill_metadata_refresh.sql" \
-    "$pipeline_dir/supabase/migrations/020_hot_and_latest_skills.sql"; do
+    "$pipeline_dir/supabase/migrations/020_hot_and_latest_skills.sql" \
+    "$pipeline_dir/supabase/migrations/021_invalidate_changed_skill_enrichment.sql"; do
     run_sql "$migration"
   done
 }
@@ -95,23 +96,26 @@ printf '%s\n' 'Testing the final schema snapshot...'
 start_instance snapshot
 run_sql "$pipeline_dir/supabase/schema.sql"
 run_sql "$pipeline_dir/supabase/tests/security.sql"
+run_sql "$pipeline_dir/supabase/tests/source-enrichment.sql"
 cleanup_active_instance
 
-printf '%s\n' 'Testing the representative 013 -> 020 upgrade path...'
+printf '%s\n' 'Testing the representative 013 -> 021 upgrade path...'
 start_instance upgrade
 run_sql "$pipeline_dir/supabase/tests/pre-014-schema.sql"
 apply_hardening_migrations
 run_sql "$pipeline_dir/supabase/tests/post-016-upgrade.sql"
 run_sql "$pipeline_dir/supabase/tests/security.sql"
+run_sql "$pipeline_dir/supabase/tests/source-enrichment.sql"
 
-printf '%s\n' 'Testing 014-020 idempotency on upgraded historical data...'
+printf '%s\n' 'Testing 014-021 idempotency on upgraded historical data...'
 upgrade_state_before="$(capture_upgrade_state)"
 apply_hardening_migrations
 upgrade_state_after="$(capture_upgrade_state)"
 if [[ "$upgrade_state_before" != "$upgrade_state_after" ]]; then
-  printf '%s\n' '014-020 changed data or function definitions on the second run' >&2
+  printf '%s\n' '014-021 changed data or function definitions on the second run' >&2
   exit 1
 fi
 run_sql "$pipeline_dir/supabase/tests/post-016-upgrade.sql"
 run_sql "$pipeline_dir/supabase/tests/security.sql"
+run_sql "$pipeline_dir/supabase/tests/source-enrichment.sql"
 cleanup_active_instance

@@ -1,0 +1,689 @@
+{
+  "observed_at_utc": "2026-10-12T13:16:46.026985+00:00",
+  "note": "原表按 term、已核对 source_url 和观察到的原简介同时匹配；SQL 返回 113 条，后续公共接口逐项比对 113 条均与核实简介一致。",
+  "applied": true,
+  "changes": [
+    {
+      "term": "Grass Contents API",
+      "source_url": "https://x.com/grass/status/2108294690823114862",
+      "observed_summary": "Grass的API，把公开网页转成AI可读的Markdown",
+      "verified_summary": "将公开网页整理为适合 AI 读取的网页、Markdown 或纯文本的接口"
+    },
+    {
+      "term": "ARTEX",
+      "source_url": "https://github.com/mhtsec/ARTEX",
+      "observed_summary": "开源AI自主渗透测试系统，自动做安全攻击测试",
+      "verified_summary": "由 AI 智能体执行渗透测试，整理资产与安全发现的系统"
+    },
+    {
+      "term": "Cloudflare clef",
+      "source_url": "https://huggingface.co/Cloudflare/clef",
+      "observed_summary": "Cloudflare在HF发布的模型，具体用途未核实",
+      "verified_summary": "把文字和图像转成选项概率，辅助软件自动决策的模型"
+    },
+    {
+      "term": "Qwen-Image-2.1",
+      "source_url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo",
+      "observed_summary": "阿里 Qwen 文生图模型 2.1 版",
+      "verified_summary": "用于文生图和图像编辑的千问模型，此来源为 Turbo 加速版"
+    },
+    {
+      "term": "EmbeddingGemma 2",
+      "source_url": "https://huggingface.co/google/embeddinggemma-2",
+      "observed_summary": "Google第二代Gemma文本嵌入模型，用于检索",
+      "verified_summary": "将文字、图像和音视频转为向量，用于本地语义检索"
+    },
+    {
+      "term": "iPhone-use Codex",
+      "source_url": "https://github.com/zhongerxin/iPhone-use",
+      "observed_summary": "开源工具，让Codex通过USB操作真实iPhone",
+      "verified_summary": "让 Codex 通过 USB 操作真实 iPhone 的 MCP 工具"
+    },
+    {
+      "term": "iPhone-use",
+      "source_url": "https://github.com/zhongerxin/iPhone-use",
+      "observed_summary": "让 Codex 通过 USB 操作真实 iPhone",
+      "verified_summary": "让 Codex 通过 USB 操作真实 iPhone 的 MCP 工具"
+    },
+    {
+      "term": "REA Reverse Engineer Anything",
+      "source_url": "https://github.com/morluto/rea",
+      "observed_summary": "morluto开源的逆向工程工具，号称能逆向任何东西",
+      "verified_summary": "通过 MCP 分析二进制、应用结构与运行行为的逆向工具"
+    },
+    {
+      "term": "Kolibri-1 Aleph Alpha",
+      "source_url": "https://huggingface.co/Aleph-Alpha/Kolibri-1",
+      "observed_summary": "Aleph Alpha在Hugging Face发布的新模型",
+      "verified_summary": "面向德语和英语，支持推理与工具调用的开放权重模型"
+    },
+    {
+      "term": "huashu art motion",
+      "source_url": "https://github.com/alchaincyf/huashu-art-motion",
+      "observed_summary": "alchaincyf做的艺术动画skill，用代码让画动起来",
+      "verified_summary": "用代码制作艺术风格动画和解说视频的智能体技能"
+    },
+    {
+      "term": "huashu-art-motion",
+      "source_url": "https://github.com/alchaincyf/huashu-art-motion",
+      "observed_summary": "alchaincyf做的艺术动画skill，用代码让画动起来",
+      "verified_summary": "用代码制作艺术风格动画和解说视频的智能体技能"
+    },
+    {
+      "term": "huashu art motion skill",
+      "source_url": "https://github.com/alchaincyf/huashu-art-motion",
+      "observed_summary": "花叔的艺术动画skill，让画动起来",
+      "verified_summary": "用代码制作艺术风格动画和解说视频的智能体技能"
+    },
+    {
+      "term": "wordcraft storytold",
+      "source_url": "https://github.com/storytold/wordcraft",
+      "observed_summary": "storytold的开源Word复刻，属Office克隆系列",
+      "verified_summary": "支持 Word 文档编辑、排版和修订的开源文字处理软件"
+    },
+    {
+      "term": "Monogamy AI skill",
+      "source_url": "https://x.com/YoAmmaar/status/2109020202008723881",
+      "observed_summary": "专注类AI技能，强制做完一件事再换下一件",
+      "verified_summary": "帮助集中完成当前任务，减少频繁切换的 AI 技能"
+    },
+    {
+      "term": "AgentDock",
+      "source_url": "https://www.producthunt.com/products/agentdock",
+      "observed_summary": "在一个收件箱里回复Claude Code和Codex提问",
+      "verified_summary": "在 Mac 集中查看编程智能体状态，统一回复提问与授权请求"
+    },
+    {
+      "term": "diagram-design",
+      "source_url": "https://github.com/cathrynlavery/diagram-design",
+      "observed_summary": "GitHub热门：让AI生成图表设计的技能仓库",
+      "verified_summary": "让 AI 按品牌风格绘制可编辑网页与矢量图解的技能"
+    },
+    {
+      "term": "diagram-design skill",
+      "source_url": "https://github.com/cathrynlavery/diagram-design",
+      "observed_summary": "AI生成图表设计的工具仓库",
+      "verified_summary": "让 AI 按品牌风格绘制可编辑网页与矢量图解的技能"
+    },
+    {
+      "term": "Pocketty",
+      "source_url": "https://news.ycombinator.com/item?id=50009634",
+      "observed_summary": "iPhone终端App，AI代理卡住时推送提醒",
+      "verified_summary": "在 iPhone 上远程连接终端，并接收编程智能体状态提醒"
+    },
+    {
+      "term": "WallHop",
+      "source_url": "https://news.ycombinator.com/item?id=50038634",
+      "observed_summary": "12ft.io停服后的绕付费墙替代工具",
+      "verified_summary": "输入文章链接，提取正文并减少广告干扰的网页阅读工具"
+    },
+    {
+      "term": "humanizer",
+      "source_url": "https://huggingface.co/jialinyyzz/humanizer",
+      "observed_summary": "HF热门：把AI文字改写得更像人写",
+      "verified_summary": "在本地改写中英文 AI 草稿，让表达更自然的语言模型"
+    },
+    {
+      "term": "BFS Best Face Swap",
+      "source_url": "https://huggingface.co/Alissonerdx/BFS-Best-Face-Swap",
+      "observed_summary": "HF热门AI换脸模型/应用",
+      "verified_summary": "用于图像人脸、头部与身体替换的 LoRA 模型合集"
+    },
+    {
+      "term": "Assist notch AI",
+      "source_url": "https://www.producthunt.com/products/assist-5",
+      "observed_summary": "住在MacBook刘海里的隐形AI助手",
+      "verified_summary": "驻留 Mac 刘海区域，提供会议记录与回应建议的 AI 助手"
+    },
+    {
+      "term": "DigUp mac search",
+      "source_url": "https://github.com/ARahim3/DigUp",
+      "observed_summary": "按内容搜索Mac照片PDF录音",
+      "verified_summary": "用自然语言在 Mac 本地查找文档、图片和音视频内容"
+    },
+    {
+      "term": "LiquidAI d1",
+      "source_url": "https://huggingface.co/LiquidAI/d1-3B",
+      "observed_summary": "Liquid AI发布的3B参数模型",
+      "verified_summary": "读取文字与图像，一次推理给出结构化选项的决策模型"
+    },
+    {
+      "term": "openai math",
+      "source_url": "https://github.com/openai/math",
+      "observed_summary": "OpenAI在GitHub新开的math仓库，用途未核实",
+      "verified_summary": "收录 AI 数学研究手稿与证明材料，部分附形式化证明"
+    },
+    {
+      "term": "bigwords.page",
+      "source_url": "https://news.ycombinator.com/item?id=49994443",
+      "observed_summary": "把任意屏幕变成告示牌的网页工具，URL即内容",
+      "verified_summary": "把手机、平板或电视变成大字标牌的浏览器工具"
+    },
+    {
+      "term": "AI agents draw on screen",
+      "source_url": "https://news.ycombinator.com/item?id=50018817",
+      "observed_summary": "让AI agent在你屏幕上画箭头、框和文字的工具",
+      "verified_summary": "让 AI 在 Mac 屏幕叠加箭头、框线和文字来指示操作"
+    },
+    {
+      "term": "big-arrow-on-the-screen",
+      "source_url": "https://github.com/franzenzenhofer/big-arrow-on-the-screen",
+      "observed_summary": "让 AI 智能体在屏幕上画箭头标注",
+      "verified_summary": "让 AI 在 Mac 屏幕叠加箭头、框线和文字来指示操作"
+    },
+    {
+      "term": "AI agent screen annotation",
+      "source_url": "https://news.ycombinator.com/item?id=50018817",
+      "observed_summary": "让 AI 代理在屏幕上画箭头框和文字的工具",
+      "verified_summary": "让 AI 在 Mac 屏幕叠加箭头、框线和文字来指示操作"
+    },
+    {
+      "term": "ai-newtab Claude",
+      "source_url": "https://github.com/ThariqS/ai-newtab",
+      "observed_summary": "开源工具，用Claude按浏览历史每天生成新标签页",
+      "verified_summary": "根据浏览内容生成个性化摘要首页的 Chrome 新标签页扩展"
+    },
+    {
+      "term": "ai-newtab",
+      "source_url": "https://github.com/ThariqS/ai-newtab",
+      "observed_summary": "Claude 按浏览记录每天生成新标签页",
+      "verified_summary": "根据浏览内容生成个性化摘要首页的 Chrome 新标签页扩展"
+    },
+    {
+      "term": "Leviathan agent memory",
+      "source_url": "https://github.com/elstongun/leviathan",
+      "observed_summary": "开源的agent记忆方案，支持大数据集深度记忆",
+      "verified_summary": "为大型表格和日志建立索引，向 AI 返回带出处的相关记录"
+    },
+    {
+      "term": "Sodabase",
+      "source_url": "https://x.com/santiviquez/status/2108122011234935290",
+      "observed_summary": "检测Supabase数据表被agent改坏的工具",
+      "verified_summary": "检测 Supabase 数据表异常，定位原因并辅助修复的工具"
+    },
+    {
+      "term": "DeepSeek V4.1 Flash",
+      "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+      "observed_summary": "DeepSeek的V4.1轻量快速模型",
+      "verified_summary": "支持图文理解与长上下文，优化缓存开销的多模态模型"
+    },
+    {
+      "term": "Qwen3.8",
+      "source_url": "https://huggingface.co/Qwen/Qwen3.8-27B",
+      "observed_summary": "阿里Qwen3.8开源大模型27B版",
+      "verified_summary": "支持图像、视频理解与推理的千问开放模型，可用于编程任务"
+    },
+    {
+      "term": "context-mode",
+      "source_url": "https://github.com/mksglu/context-mode",
+      "observed_summary": "AI编程助手的上下文管理工具",
+      "verified_summary": "压缩工具输出并检索会话记录，减少智能体上下文占用"
+    },
+    {
+      "term": "Typesafe AI",
+      "source_url": "https://news.ycombinator.com/item?id=50023450",
+      "observed_summary": "刚融资8.7亿美元的AI公司",
+      "verified_summary": "研发软件自动化决策模型的 AI 团队，推出 Jev 决策模型"
+    },
+    {
+      "term": "Clef Flash",
+      "source_url": "https://huggingface.co/Cloudflare/clef-flash",
+      "observed_summary": "Cloudflare 在 HF 发布的新模型",
+      "verified_summary": "把文字和图像转成选项概率，辅助自动决策的轻量模型"
+    },
+    {
+      "term": "Cloudflare Deno",
+      "source_url": "https://news.ycombinator.com/item?id=50019911",
+      "observed_summary": "Cloudflare 收购 JS 运行时 Deno",
+      "verified_summary": "关于 Deno 加入 Cloudflare 的官方公告与后续计划"
+    },
+    {
+      "term": "ts-rust",
+      "source_url": "https://github.com/pingdotgg/ts-rust",
+      "observed_summary": "把 TypeScript 7 编译器移植到 Rust 的实验项目",
+      "verified_summary": "用 Rust 重写 TypeScript 编译器与类型检查器的实验项目"
+    },
+    {
+      "term": "Claude Dashboards Motion",
+      "source_url": "https://www.producthunt.com/products/claude-dashboards-motion",
+      "observed_summary": "用Claude生成实时看板和动画讲解",
+      "verified_summary": "让 Claude 生成随数据更新的仪表盘和可编辑解说动画"
+    },
+    {
+      "term": "jev decision index",
+      "source_url": "https://huggingface.co/spaces/multimodalart/jev-decision-index",
+      "observed_summary": "HF上名含Jev的决策类Space，用途未核实",
+      "verified_summary": "汇集 Jev 开源复现与决策模型评测结果的追踪看板"
+    },
+    {
+      "term": "Grimoire",
+      "source_url": "https://x.com/jeremiahm382301/status/2109478222937395467",
+      "observed_summary": "自托管Agent记忆服务，用Jev抓过时事实",
+      "verified_summary": "为编程智能体保存长期记忆，并识别过期信息的自托管服务"
+    },
+    {
+      "term": "Matt Pocock skills",
+      "source_url": "https://github.com/mattpocock/skills",
+      "observed_summary": "Matt Pocock 整理的 AI 编程技能集",
+      "verified_summary": "面向实际软件工程的可组合智能体技能与工作流程合集"
+    },
+    {
+      "term": "Qwen-Image 2.1",
+      "source_url": "https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-GGUF",
+      "observed_summary": "阿里 Qwen 文生图模型 2.1 版",
+      "verified_summary": "面向本地图像生成的 Qwen Image 2.1 社区量化版本"
+    },
+    {
+      "term": "MiniMax H3",
+      "source_url": "https://huggingface.co/spaces/wank3r/minimax-h3",
+      "observed_summary": "MiniMax 新一代图像/视频生成模型",
+      "verified_summary": "基于 MiniMax H3 同时生成视频与配乐的社区演示"
+    },
+    {
+      "term": "Claude Dashboards",
+      "source_url": "https://www.producthunt.com/products/claude-dashboards-motion",
+      "observed_summary": "Claude 生成实时看板和动画讲解",
+      "verified_summary": "让 Claude 查询数据并生成可持续更新的仪表盘"
+    },
+    {
+      "term": "Krea 2",
+      "source_url": "https://huggingface.co/spaces/Aura1in/Krea-2-Turbo_v2",
+      "observed_summary": "Krea AI 图像生成模型第二代",
+      "verified_summary": "基于 Krea 2 Turbo 的社区文生图与图像编辑演示"
+    },
+    {
+      "term": "WoWBench",
+      "source_url": "https://x.com/djcows/status/2109047402648977723",
+      "observed_summary": "让 AI 智能体玩魔兽世界的评测",
+      "verified_summary": "通过《魔兽世界》中的实际操作评估 AI 智能体表现的基准"
+    },
+    {
+      "term": "knowledge-work-plugins",
+      "source_url": "https://github.com/anthropics/knowledge-work-plugins",
+      "observed_summary": "Anthropic 知识工作插件合集",
+      "verified_summary": "面向销售、办公等岗位，为 Claude 打包技能与连接器的插件合集"
+    },
+    {
+      "term": "Hypervibe",
+      "source_url": "https://www.producthunt.com/products/hypervibe-2",
+      "observed_summary": "无限画布上同时跑多个 AI 编程智能体",
+      "verified_summary": "在同一画布并行运行多个编程智能体，查看终端和实时预览"
+    },
+    {
+      "term": "OpenVids",
+      "source_url": "https://www.producthunt.com/products/openvids",
+      "observed_summary": "开源视频编辑器，和 AI 聊天来剪辑",
+      "verified_summary": "通过对话让 AI 剪辑时间线、添加动效和声音的视频编辑器"
+    },
+    {
+      "term": "Sorted AI",
+      "source_url": "https://www.producthunt.com/products/sorted-6",
+      "observed_summary": "Mac 上的本地 AI 文件整理工具",
+      "verified_summary": "在 Mac 本地分类文件、识别重复项，并按内容搜索文档"
+    },
+    {
+      "term": "ppt-master",
+      "source_url": "https://github.com/hugohe3/ppt-master",
+      "observed_summary": "开源 AI 生成 PPT 工具",
+      "verified_summary": "把文档整理成可继续编辑的 PowerPoint 演示文稿"
+    },
+    {
+      "term": "karpathy skills",
+      "source_url": "https://github.com/multica-ai/andrej-karpathy-skills",
+      "observed_summary": "Karpathy 风格的 AI 编程技能合集",
+      "verified_summary": "参考 Karpathy 编程观察整理的社区 AI 编码行为指南"
+    },
+    {
+      "term": "Porch AI coding",
+      "source_url": "https://www.producthunt.com/products/porch-6",
+      "observed_summary": "本地 AI 编程项目总结与花费追踪",
+      "verified_summary": "把编程智能体会话整理成项目总结，并跟踪时间和用量"
+    },
+    {
+      "term": "anatomy claude code skill",
+      "source_url": "https://github.com/wheresryan22/anatomy",
+      "observed_summary": "Claude Code 技能：把技术想法变成交互式等距架构图",
+      "verified_summary": "把概念做成交互式矢量图或三维结构图，便于理解原理"
+    },
+    {
+      "term": "anatomy agent skill",
+      "source_url": "https://github.com/wheresryan22/anatomy",
+      "observed_summary": "生成等距交互插画的agent skill",
+      "verified_summary": "把概念做成交互式矢量图或三维结构图，便于理解原理"
+    },
+    {
+      "term": "Farol terminal",
+      "source_url": "https://www.producthunt.com/products/farol-3",
+      "observed_summary": "显示哪个编程代理在等你的 macOS 终端",
+      "verified_summary": "在 Mac 并行管理编程智能体，查看任务状态和代码差异的终端"
+    },
+    {
+      "term": "tendedero",
+      "source_url": "https://github.com/alejandrobujan/tendedero",
+      "observed_summary": "macOS 截图挂绳小工具",
+      "verified_summary": "将截图与录屏收纳在 Mac 菜单栏下，便于复制、标注和拖放"
+    },
+    {
+      "term": "OpenScreen 2",
+      "source_url": "https://www.producthunt.com/products/openscreen-2",
+      "observed_summary": "录制演示后让 AI 代理剪辑",
+      "verified_summary": "美化屏幕录制，支持通过文字或 AI 智能体编辑演示视频"
+    },
+    {
+      "term": "FloorGen",
+      "source_url": "https://www.producthunt.com/products/floorgen",
+      "observed_summary": "AI 免费生成户型图",
+      "verified_summary": "用自然语言生成和修改房屋平面图，并查看三维效果"
+    },
+    {
+      "term": "omdrop",
+      "source_url": "https://github.com/t4t5/omdrop-owl",
+      "observed_summary": "非苹果设备的隔空投送",
+      "verified_summary": "配合 omdrop，在支持的 Linux 电脑与 iPhone 间传文件"
+    },
+    {
+      "term": "mailcheap",
+      "source_url": "https://github.com/marclou/mailcheap",
+      "observed_summary": "marclou 开源的自建 Newsletter 工具，基于 SES",
+      "verified_summary": "基于 Amazon SES 自托管邮件通讯，管理订阅与发布归档"
+    },
+    {
+      "term": "fsearch mac",
+      "source_url": "https://github.com/noahdunnagan/fsearch",
+      "observed_summary": "个人开发的 Mac 全盘模糊文件搜索工具",
+      "verified_summary": "支持文件名模糊匹配与内容索引的 Mac 全盘搜索工具"
+    },
+    {
+      "term": "helix foundry",
+      "source_url": "https://github.com/HelixDB/helix-foundry",
+      "observed_summary": "HelixDB 出的本地优先个人/公司数据本体库",
+      "verified_summary": "在本地连接数据库和业务工具，把分散数据组织成可查询关系"
+    },
+    {
+      "term": "agibot mac",
+      "source_url": "https://www.producthunt.com/products/agibot",
+      "observed_summary": "Mac 上自带 Key 的个人 AI 代理应用",
+      "verified_summary": "在 Mac 后台持续处理任务，生成简报并提醒变化的个人 AI 助手"
+    },
+    {
+      "term": "GridCraft",
+      "source_url": "https://github.com/storytold/gridcraft",
+      "observed_summary": "开源无授权的类Excel电子表格应用",
+      "verified_summary": "用于电子表格与数据处理的跨平台开源软件，支持 AI 调用"
+    },
+    {
+      "term": "PocketWebTools",
+      "source_url": "https://www.producthunt.com/products/pocketwebtools",
+      "observed_summary": "Mac本地AI聊天、转写和视频工具合集",
+      "verified_summary": "在本机处理语音、图像和视频的浏览器与 Mac AI 工具集"
+    },
+    {
+      "term": "Museum of Models",
+      "source_url": "https://www.producthunt.com/products/museum-of-models",
+      "observed_summary": "371 个模型同题回答对比的网站",
+      "verified_summary": "保留不同 AI 模型对同一组问题的原始回答，便于比较"
+    },
+    {
+      "term": "BetterWispr",
+      "source_url": "https://news.ycombinator.com/item?id=50042333",
+      "observed_summary": "免费开源的Mac语音听写工具",
+      "verified_summary": "按快捷键说话即可向 Mac 应用输入文字的本地语音听写工具"
+    },
+    {
+      "term": "openjev",
+      "source_url": "https://huggingface.co/spaces/AlexWortega/openjev",
+      "observed_summary": "Jev判断型小模型的开源复刻",
+      "verified_summary": "判断文字或图像是否支持一项说法，用于检索核查与重排序"
+    },
+    {
+      "term": "KernelAI",
+      "source_url": "https://www.producthunt.com/products/kernelai",
+      "observed_summary": "Product Hunt新品，用途未核实",
+      "verified_summary": "在手机本地运行 AI 模型，离线聊天、阅读文档与理解图片"
+    },
+    {
+      "term": "The Curator",
+      "source_url": "https://x.com/talirezun/status/2109527362777886955",
+      "observed_summary": "开源阅读转Markdown维基，MCP供Agent会话记忆",
+      "verified_summary": "用本地文档整理项目说明，让智能体通过 MCP 读取和积累上下文"
+    },
+    {
+      "term": "Ghost Core",
+      "source_url": "https://www.producthunt.com/products/ghost-core",
+      "observed_summary": "完全端侧运行的个人AI电脑",
+      "verified_summary": "在本地运行 AI 模型，连接应用和设备的个人电脑"
+    },
+    {
+      "term": "Halo",
+      "source_url": "https://www.producthunt.com/products/halo-11",
+      "observed_summary": "Mac刘海区通知、听写和AI Agent入口",
+      "verified_summary": "把通知、语音输入和 AI 智能体状态集中到 Mac 刘海区域"
+    },
+    {
+      "term": "Onepin",
+      "source_url": "https://www.producthunt.com/products/onepin",
+      "observed_summary": "AI配音，专把人名价格日期念准",
+      "verified_summary": "检查并修正 AI 配音中的人名、金额和日期读法"
+    },
+    {
+      "term": "Rezzy MCP",
+      "source_url": "https://x.com/rezzydotdev/status/2109468895283184116",
+      "observed_summary": "按JD和档案生成简历封面信的MCP服务",
+      "verified_summary": "根据职位描述和个人资料生成定制简历与求职信 PDF 的 MCP 服务"
+    },
+    {
+      "term": "HireKey",
+      "source_url": "https://www.producthunt.com/products/hirekey",
+      "observed_summary": "面向技术求职的招聘官视角AI副驾",
+      "verified_summary": "辅助技术求职，匹配岗位、调整简历并练习语音面试"
+    },
+    {
+      "term": "cadcraft",
+      "source_url": "https://github.com/storytold/cadcraft",
+      "observed_summary": "Storytold系AI CAD生成器",
+      "verified_summary": "支持图层、标注与 DXF 图纸的开源计算机辅助设计软件"
+    },
+    {
+      "term": "artcraft",
+      "source_url": "https://github.com/storytold/artcraft",
+      "observed_summary": "Storytold系AI艺术生成器",
+      "verified_summary": "结合二维构图与三维场景来制作 AI 图像和视频的创作工具"
+    },
+    {
+      "term": "Invited AI Reminder Scanner",
+      "source_url": "https://www.producthunt.com/products/invited-ai-reminder-scanner",
+      "observed_summary": "AI 扫描邀请并自动建提醒",
+      "verified_summary": "把账单、邀请函和 PDF 中的日期事项转成提醒"
+    },
+    {
+      "term": "craft-launcher",
+      "source_url": "https://github.com/storytold/craft-launcher",
+      "observed_summary": "ArtCraft 全家桶原生启动器",
+      "verified_summary": "统一安装、更新和启动 Craft 系列开源创作工具"
+    },
+    {
+      "term": "atrium AI",
+      "source_url": "https://x.com/atrium_dev/status/2109418745617629621",
+      "observed_summary": "可接自有 API 的多 agent 客户端",
+      "verified_summary": "集中运行多种编程智能体，支持自选模型服务与分支会话"
+    },
+    {
+      "term": "Strawberry AI browser",
+      "source_url": "https://www.producthunt.com/products/strawberry",
+      "observed_summary": "团队与 agent 共用的 AI 浏览器",
+      "verified_summary": "通过 AI 辅助网页研究、资料采集和重复操作的浏览器"
+    },
+    {
+      "term": "deckcraft",
+      "source_url": "https://github.com/storytold/deckcraft",
+      "observed_summary": "开源幻灯片 Craft 工具",
+      "verified_summary": "支持 PowerPoint 文件编辑与放映，可由 AI 操作的开源工具"
+    },
+    {
+      "term": "soundcraft",
+      "source_url": "https://github.com/storytold/soundcraft",
+      "observed_summary": "开源音频编辑 Craft 工具",
+      "verified_summary": "支持多轨录音、剪辑与混音，也可由 AI 调用的开源音频工作站"
+    },
+    {
+      "term": "Edi Life OS",
+      "source_url": "https://news.ycombinator.com/item?id=50014150",
+      "observed_summary": "自托管人生仪表盘，带 MCP 给 AI 读",
+      "verified_summary": "集中管理习惯、目标、财务和项目，并支持 AI 操作的自托管看板"
+    },
+    {
+      "term": "Talorys",
+      "source_url": "https://news.ycombinator.com/item?id=50031614",
+      "observed_summary": "跑在 Cloudflare 免费层的个人 AI 助手",
+      "verified_summary": "部署在自有 Cloudflare 账号，管理记忆、任务与定时提醒的 AI 助手"
+    },
+    {
+      "term": "Apogee Orbit",
+      "source_url": "https://news.ycombinator.com/item?id=50017301",
+      "observed_summary": "本地私有版Mozilla Orbit，重建浏览知识图谱",
+      "verified_summary": "在浏览器本地总结网页、视频和文档，并支持内容问答的 AI 扩展"
+    },
+    {
+      "term": "Microsoft Execution Containers",
+      "source_url": "https://news.ycombinator.com/item?id=50016956",
+      "observed_summary": "微软开源执行容器 MXC 1.0",
+      "verified_summary": "用独立策略限制 AI 智能体可访问的文件、网络和桌面资源的执行工具"
+    },
+    {
+      "term": "Anthropic Cyber Mission",
+      "source_url": "https://www.anthropic.com/news/anthropic-cyber-mission",
+      "observed_summary": "Anthropic 网络安全计划",
+      "verified_summary": "通过 AI 模型、工程支持和研究资源保护关键基础设施与开源软件的计划"
+    },
+    {
+      "term": "Anthropic OSS Scanner",
+      "source_url": "https://x.com/RubanBhatia/status/2108912963495289013",
+      "observed_summary": "Anthropic 用 Claude 免费定期扫描开源项目漏洞",
+      "verified_summary": "为自愿加入的开源项目定期扫描漏洞，报告由模型生成并交维护者核查"
+    },
+    {
+      "term": "Pensieve",
+      "source_url": "https://x.com/bykimdohoon/status/2109504968927436928",
+      "observed_summary": "本地MCP索引，给Claude/Codex/Cursor查代码和Obsidian库",
+      "verified_summary": "在 Mac 本地索引代码、文档与笔记，供智能体通过 MCP 检索"
+    },
+    {
+      "term": "Graphkasten",
+      "source_url": "https://x.com/jakub_zovi/status/2109220305914749004",
+      "observed_summary": "AI原生、图优先的Zettelkasten笔记系统",
+      "verified_summary": "以 Obsidian 关系图组织和审阅笔记，结合 AI 索引的知识管理方法"
+    },
+    {
+      "term": "Google Labs Playground",
+      "source_url": "https://www.producthunt.com/products/google-labs",
+      "observed_summary": "谷歌实验室 AI 做小游戏并分享",
+      "verified_summary": "通过文字描述创建、游玩和分享小游戏的 Google 实验平台"
+    },
+    {
+      "term": "Edgee Mod Claude Code",
+      "source_url": "https://www.producthunt.com/products/edgee",
+      "observed_summary": "在 Claude Code 里用任意模型的插件",
+      "verified_summary": "在 Claude Code 侧栏切换模型，查看用量、缓存与会话开销"
+    },
+    {
+      "term": "API Claws by Buda",
+      "source_url": "https://www.producthunt.com/products/buda-2",
+      "observed_summary": "一API搭可自我改进的Agent harness",
+      "verified_summary": "通过 API 为软硬件接入云端智能体，提供会话与知识库能力"
+    },
+    {
+      "term": "LTX-2.5",
+      "source_url": "https://huggingface.co/Lightricks/LTX-2.5",
+      "observed_summary": "Lightricks开源视频生成模型",
+      "verified_summary": "根据文字、图片或视频生成同步音视频，支持本地运行的开放权重模型"
+    },
+    {
+      "term": "SVG Spark",
+      "source_url": "https://news.ycombinator.com/item?id=50013931",
+      "observed_summary": "浏览器内 SVG 设计小工具合集",
+      "verified_summary": "在浏览器内转换 SVG、处理 PDF 和格式化代码的实用工具集"
+    },
+    {
+      "term": "Claude Haiku 5.5",
+      "source_url": "https://x.com/xppt8a/status/2108021384354127995",
+      "observed_summary": "Anthropic发布的最小模型，主打低成本",
+      "verified_summary": "面向摘要、分类和编程子任务，侧重低延迟与成本的小型 Claude 模型"
+    },
+    {
+      "term": "Kimi K3",
+      "source_url": "https://x.com/KanikaBK/status/2108150671602319672",
+      "observed_summary": "Moonshot发布的2.8T参数开放权重MoE大模型",
+      "verified_summary": "支持图像理解与长上下文，用于编程和多步骤任务的开放权重模型"
+    },
+    {
+      "term": "Gemini agent coworker",
+      "source_url": "https://x.com/ContextWindow/status/2108231939027320874",
+      "observed_summary": "Google办公agent，在Gmail和Docs里协作",
+      "verified_summary": "拥有独立工作身份，能在团队应用中持续处理任务的 Gemini 智能体"
+    },
+    {
+      "term": "DeepSeek Harness",
+      "source_url": "https://x.com/Leo_R_UK/status/2108225974949085293",
+      "observed_summary": "DeepSeek的开源编码agent工具",
+      "verified_summary": "通过可组合插件扩展模型、工具和工作流程的开源智能体运行框架"
+    },
+    {
+      "term": "Microsoft-Decision-1",
+      "source_url": "https://x.com/Gadget_Ry/status/2108821550648430919",
+      "observed_summary": "微软基于Qwen3.5-9B做的推理模型",
+      "verified_summary": "为预设选项评分，用于分类、模型路由和工作流程控制的决策模型"
+    },
+    {
+      "term": "Transect AISI",
+      "source_url": "https://x.com/AIooze/status/2108541100222808499",
+      "observed_summary": "英国AISI开源的agent评测记录时间线查看器",
+      "verified_summary": "把智能体评测日志整理为带标签时间线，方便回查行为与原始记录"
+    },
+    {
+      "term": "Goodfire monitors",
+      "source_url": "https://x.com/TechCrunch/status/2108228218092163272",
+      "observed_summary": "Goodfire用模型内部信号监控agent的方案",
+      "verified_summary": "监测模型内部信号，识别智能体异常行为并触发进一步复核的工具"
+    },
+    {
+      "term": "Hark AI agent",
+      "source_url": "https://x.com/JulianGoldieSEO/status/2108907520526090608",
+      "observed_summary": "新上线的消费级 AI 代办助手",
+      "verified_summary": "记住个人偏好，通过浏览器和已连接应用协助处理日常事务的 AI 助手"
+    },
+    {
+      "term": "OLMo-core 3",
+      "source_url": "https://x.com/rubbletag/status/2109048766963867797",
+      "observed_summary": "Ai2 开源 MoE 训练框架第三版",
+      "verified_summary": "面向大型混合专家模型，优化多 GPU 协作与训练效率的开源训练框架"
+    },
+    {
+      "term": "Google AI Edge Foresight",
+      "source_url": "https://x.com/kevin980606/status/2109124870336548891",
+      "observed_summary": "谷歌Mac端离线AI会议笔记，本地转录摘要",
+      "verified_summary": "在设备本地整理会议笔记，并检索回顾重要信息的实验性 AI 助手"
+    },
+    {
+      "term": "Hypit",
+      "source_url": "https://x.com/ChaiWithAi/status/2109356236093415674",
+      "observed_summary": "开源爆款视频复刻工具，作者称首月营收可观",
+      "verified_summary": "让编程智能体把参考视频转为可编辑流程，复用字幕、素材和特效"
+    },
+    {
+      "term": "GPT-6.1 Sol",
+      "source_url": "https://openai.com/index/asana-browser-agent",
+      "observed_summary": "OpenAI GPT-6.1 系列的 Sol 型号",
+      "verified_summary": "用于浏览器操作等多步骤任务的 OpenAI 模型，可配合智能体工作流程"
+    },
+    {
+      "term": "OpenAI Daybreak",
+      "source_url": "https://openai.com/index/sophos",
+      "observed_summary": "OpenAI 安全威胁调查产品",
+      "verified_summary": "结合前沿模型与安全团队经验，辅助威胁调查和响应的合作计划"
+    }
+  ],
+  "applied_at_utc": "2026-10-12T14:17:39.220479+00:00",
+  "rows_restored": 113,
+  "live_verified_matches": 113,
+  "live_verified_at_utc": "2026-10-12T14:16:17.180187+00:00"
+}

@@ -2,8 +2,8 @@
  * Import official Anthropic skills from https://github.com/anthropics/skills
  *
  * Unlike the antigravity index, anthropics/skills doesn't ship a manifest —
- * it's a flat list of directories, each containing a SKILL.md with YAML
- * frontmatter + markdown body. We walk the tree via the GitHub REST API,
+ * it has directories under skills/, each containing a SKILL.md with YAML
+ * frontmatter + markdown body (older layouts used the root). We walk the GitHub REST API,
  * parse each SKILL.md, and upsert into Supabase with the full markdown
  * preserved in `skill_md_content` so the app can render it on the detail
  * screen.
@@ -22,18 +22,11 @@ import { importNewOnly, loadExistingSlugs, upsertSkillsPreservingCuration } from
 import { fetchRepoStars, repoStarsPatch } from "./lib/github";
 import { assertNoBatchFailures } from "../lib/batch-failures";
 import { fetchEarliestCommitDate } from "../lib/commit-history";
+import { anthropicSkillURLs, discoverAnthropicSkillSources, type AnthropicSkillSource } from "../lib/anthropic-source";
 
 const OWNER = "anthropics";
 const REPO = "skills";
 const BRANCH = "main";
-
-type GhEntry = {
-  name: string;
-  path: string;
-  type: "dir" | "file";
-  sha: string;
-  url: string;
-};
 
 type Frontmatter = {
   name?: string;
@@ -61,30 +54,25 @@ async function ghJson<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-async function listSkillDirs(): Promise<string[]> {
-  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents?ref=${BRANCH}`;
-  const entries = await ghJson<GhEntry[]>(url);
-  return entries
-    .filter((e) => e.type === "dir" && !e.name.startsWith("."))
-    .map((e) => e.name);
-}
-
-async function fetchFirstCommitDate(dir: string): Promise<string | undefined> {
-  const path = `${dir}/SKILL.md`;
-  return fetchEarliestCommitDate(async (page, perPage) => {
-    const query = new URLSearchParams({
-      path,
-      per_page: String(perPage),
-      page: String(page),
-    });
-    const url = `https://api.github.com/repos/${OWNER}/${REPO}/commits?${query}`;
+async function listSkillDirs(): Promise<AnthropicSkillSource[]> {
+  return discoverAnthropicSkillSources((path) => {
+    const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+    const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodedPath}?ref=${BRANCH}`;
     return ghJson<unknown>(url);
   });
 }
 
-async function fetchSkillMd(dir: string): Promise<string | null> {
+async function fetchFirstCommitDate(commitsUrl: string): Promise<string | undefined> {
+  return fetchEarliestCommitDate(async (page, perPage) => {
+    const url = new URL(commitsUrl);
+    url.searchParams.set("per_page", String(perPage));
+    url.searchParams.set("page", String(page));
+    return ghJson<unknown>(url.toString());
+  });
+}
+
+async function fetchSkillMd(url: string): Promise<string | null> {
   // Raw URL is cheaper than going through the API again.
-  const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${dir}/SKILL.md`;
   const res = await fetch(url, { headers: { "User-Agent": "iskill-importer" } });
   if (res.status === 404) return null;
   if (!res.ok) {
@@ -166,14 +154,16 @@ async function main() {
   let unchanged = 0;
   let failed = 0;
 
-  for (const dir of dirs) {
-    if (importNewOnly && existingSlugs.has(dir)) {
+  for (const source of dirs) {
+    const slug = source.slug;
+    if (importNewOnly && existingSlugs.has(slug)) {
       unchanged++;
       continue;
     }
+    const urls = anthropicSkillURLs(source, { owner: OWNER, repo: REPO, branch: BRANCH });
     const [md, publishedAt] = await Promise.all([
-      fetchSkillMd(dir),
-      fetchFirstCommitDate(dir),
+      fetchSkillMd(urls.rawUrl),
+      fetchFirstCommitDate(urls.commitsUrl),
     ]);
     if (!md) {
       skipped++;
@@ -182,11 +172,10 @@ async function main() {
 
     const { frontmatter, body } = parseFrontmatter(md);
 
-    const slug = dir;
     const name =
       typeof frontmatter.name === "string"
         ? frontmatter.name
-        : idToDisplayName(dir);
+        : idToDisplayName(slug);
     const description =
       typeof frontmatter.description === "string"
         ? frontmatter.description
@@ -211,7 +200,7 @@ async function main() {
       category,
       tags: Array.from(new Set(tags)).slice(0, 8),
       author: "anthropics",
-      github_url: `https://github.com/${OWNER}/${REPO}/tree/${BRANCH}/${dir}`,
+      github_url: urls.githubUrl,
       skill_md_content: md,
       ...repoStarsPatch(repoStars),
       ...(starsCheckedAt ? { github_stars_checked_at: starsCheckedAt } : {}),

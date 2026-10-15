@@ -21,6 +21,8 @@
  *   ]
  *
  * All fields are optional except "term". The script upserts by term (unique key).
+ * Existing summaries are preserved. Only NULL or empty-string summaries are
+ * filled; reviewed content is corrected separately by an administrator.
  * Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env before running.
  */
 
@@ -30,6 +32,7 @@ import { db } from "./lib/supabase";
 type TrendingTermInput = {
   term: string;
   summary?: string;
+  summary_zh?: string;
   score?: number;
   heat?: number;
   status?: string;
@@ -54,11 +57,14 @@ type TrendingTermRow = {
 };
 
 async function main() {
-  const filePath = process.argv[2];
-  if (!filePath) {
-    console.error("\n✖ Usage: npm run upsert:trending -- path/to/terms.json\n");
+  const args = process.argv.slice(2);
+  if (args.length !== 1 || args[0].startsWith("--")) {
+    console.error(
+      "\n✖ Usage: npm run upsert:trending -- path/to/terms.json\n",
+    );
     process.exit(1);
   }
+  const filePath = args[0];
 
   console.log(`→ Reading ${filePath}`);
   const content = await readFile(filePath, "utf-8");
@@ -77,7 +83,10 @@ async function main() {
     }
 
     const row: TrendingTermRow = { term: item.term.trim() };
-    if (item.summary) row.summary_zh = item.summary;
+    const summary = [item.summary, item.summary_zh].find(
+      (value) => typeof value === "string" && value.trim().length > 0,
+    );
+    if (summary) row.summary_zh = summary.trim();
     if (item.score !== undefined) row.score = item.score;
     if (item.heat !== undefined) row.heat = item.heat;
     if (item.status) row.status = item.status;
@@ -91,22 +100,44 @@ async function main() {
   });
 
   console.log(`→ Upserting ${rows.length} terms into public.trending_terms`);
+  console.log("→ Summary mode: fill missing summaries only");
 
   let succeeded = 0;
   let failed = 0;
 
   for (const row of rows) {
-    const { error } = await db.from("trending_terms").upsert(row, {
+    // Never include the summary in the metadata upsert: a repeated import
+    // must not replace a reviewed summary before the conditional update below.
+    const { summary_zh: summary, ...metadata } = row;
+    const { error } = await db.from("trending_terms").upsert(metadata, {
       onConflict: "term",
     });
 
     if (error) {
       console.error(`  ✖ ${row.term}: ${error.message}`);
       failed++;
-    } else {
-      succeeded++;
-      process.stdout.write(`  ↳ ${succeeded} upserted · last: ${row.term}\r`);
+      continue;
     }
+
+    if (summary) {
+      // This predicate is evaluated atomically by PostgreSQL, including
+      // after a concurrent write. Do not replace it with a preflight SELECT.
+      const { error: summaryError } = await db
+        .from("trending_terms")
+        .update({ summary_zh: summary })
+        .eq("term", row.term)
+        .or("summary_zh.is.null,summary_zh.eq.");
+      if (summaryError) {
+        // Metadata may already be saved. Retrying the input is safe because
+        // the summary update continues to preserve nonempty values.
+        console.error(`  ✖ ${row.term} summary: ${summaryError.message}`);
+        failed++;
+        continue;
+      }
+    }
+
+    succeeded++;
+    process.stdout.write(`  ↳ ${succeeded} upserted · last: ${row.term}\r`);
   }
 
   process.stdout.write("\n");

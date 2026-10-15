@@ -40,3 +40,6 @@ additional_redirect_urls = []
 
 [functions.refresh-skill-metadata]
 verify_jwt = true
+
+[functions.refresh-radar-popularity]
+verify_jwt = true

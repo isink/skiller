@@ -1,0 +1,925 @@
+{
+  "checked_on": "2026-10-12",
+  "purpose": "为新词雷达补充便于扫读的中文用途简介；仅回填相同来源且简介仍为空的记录。",
+  "initial_total": 130,
+  "initial_missing": 115,
+  "summary_basis": "简介依据对应项目维护者的说明、模型卡、作者公告或产品发布页整理；未验证性能或效果承诺。",
+  "verified": [
+    {
+      "term": "Grass Contents API",
+      "source": "x",
+      "source_url": "https://x.com/grass/status/2108294690823114862",
+      "summary_zh": "将公开网页整理为适合 AI 读取的网页、Markdown 或纯文本的接口",
+      "evidence_url": "https://x.com/grass/status/2108294690823114862",
+      "evidence_sha256": "ebbb80cfd27e3535ec695359a570cb31215fbc35a0b225f9252ee6ed22ddbc17"
+    },
+    {
+      "term": "ARTEX",
+      "source": "github-search",
+      "source_url": "https://github.com/mhtsec/ARTEX",
+      "summary_zh": "由 AI 智能体执行渗透测试，整理资产与安全发现的系统",
+      "evidence_url": "https://raw.githubusercontent.com/mhtsec/ARTEX/HEAD/README.md",
+      "evidence_sha256": "c55f7893a0ed18698f4915e25265bbe421c1e1c24e0de41e5d775e3dcfa3fb0f"
+    },
+    {
+      "term": "Cloudflare clef",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/Cloudflare/clef",
+      "summary_zh": "把文字和图像转成选项概率，辅助软件自动决策的模型",
+      "evidence_url": "https://huggingface.co/Cloudflare/clef/raw/main/README.md",
+      "evidence_sha256": "16ee04d296b1ef5edcdb3c4d3d3cd369acdc627fb5d255b34264a73e224d821a"
+    },
+    {
+      "term": "Qwen-Image-2.1",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo",
+      "summary_zh": "用于文生图和图像编辑的千问模型，此来源为 Turbo 加速版",
+      "evidence_url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/raw/main/README.md",
+      "evidence_sha256": "9a262724d564444f1fd41a1a3fc1aae75bfb7873cd623abb3acd3d59f02ee4c5"
+    },
+    {
+      "term": "EmbeddingGemma 2",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/google/embeddinggemma-2",
+      "summary_zh": "将文字、图像和音视频转为向量，用于本地语义检索",
+      "evidence_url": "https://huggingface.co/google/embeddinggemma-2/raw/main/README.md",
+      "evidence_sha256": "b677a0ee2818c36f091b65fd3d9b4baea9f04d53b02b49cae916c74bf9682037"
+    },
+    {
+      "term": "iPhone-use Codex",
+      "source": "github-search",
+      "source_url": "https://github.com/zhongerxin/iPhone-use",
+      "summary_zh": "让 Codex 通过 USB 操作真实 iPhone 的 MCP 工具",
+      "evidence_url": "https://raw.githubusercontent.com/zhongerxin/iPhone-use/HEAD/README.md",
+      "evidence_sha256": "8fadc53993c3f00f913adca13e480b7d3443ea578bf5761dd8d94c9296a097e0"
+    },
+    {
+      "term": "iPhone-use",
+      "source": "github-search",
+      "source_url": "https://github.com/zhongerxin/iPhone-use",
+      "summary_zh": "让 Codex 通过 USB 操作真实 iPhone 的 MCP 工具",
+      "evidence_url": "https://raw.githubusercontent.com/zhongerxin/iPhone-use/HEAD/README.md",
+      "evidence_sha256": "8fadc53993c3f00f913adca13e480b7d3443ea578bf5761dd8d94c9296a097e0"
+    },
+    {
+      "term": "REA Reverse Engineer Anything",
+      "source": "github-trending",
+      "source_url": "https://github.com/morluto/rea",
+      "summary_zh": "通过 MCP 分析二进制、应用结构与运行行为的逆向工具",
+      "evidence_url": "https://raw.githubusercontent.com/morluto/rea/HEAD/README.md",
+      "evidence_sha256": "dfca8bde5c54550a9c70f5d28a12ceca7eada00b2e7d4c53798d1414341361e2"
+    },
+    {
+      "term": "Kolibri-1 Aleph Alpha",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/Aleph-Alpha/Kolibri-1",
+      "summary_zh": "面向德语和英语，支持推理与工具调用的开放权重模型",
+      "evidence_url": "https://huggingface.co/Aleph-Alpha/Kolibri-1/raw/main/README.md",
+      "evidence_sha256": "f5dab0374cf8dab312be49c72e098b3167ddc8591c7ae4230e361f72b3012b0a"
+    },
+    {
+      "term": "huashu art motion",
+      "source": "github-search",
+      "source_url": "https://github.com/alchaincyf/huashu-art-motion",
+      "summary_zh": "用代码制作艺术风格动画和解说视频的智能体技能",
+      "evidence_url": "https://raw.githubusercontent.com/alchaincyf/huashu-art-motion/HEAD/README.md",
+      "evidence_sha256": "3441a3924dc7ce8b349bf562efa3100411793133ffa0ecf2209be4f6057d9b23"
+    },
+    {
+      "term": "huashu-art-motion",
+      "source": "github-search",
+      "source_url": "https://github.com/alchaincyf/huashu-art-motion",
+      "summary_zh": "用代码制作艺术风格动画和解说视频的智能体技能",
+      "evidence_url": "https://raw.githubusercontent.com/alchaincyf/huashu-art-motion/HEAD/README.md",
+      "evidence_sha256": "3441a3924dc7ce8b349bf562efa3100411793133ffa0ecf2209be4f6057d9b23"
+    },
+    {
+      "term": "huashu art motion skill",
+      "source": "github-search",
+      "source_url": "https://github.com/alchaincyf/huashu-art-motion",
+      "summary_zh": "用代码制作艺术风格动画和解说视频的智能体技能",
+      "evidence_url": "https://raw.githubusercontent.com/alchaincyf/huashu-art-motion/HEAD/README.md",
+      "evidence_sha256": "3441a3924dc7ce8b349bf562efa3100411793133ffa0ecf2209be4f6057d9b23"
+    },
+    {
+      "term": "wordcraft storytold",
+      "source": "github-search",
+      "source_url": "https://github.com/storytold/wordcraft",
+      "summary_zh": "支持 Word 文档编辑、排版和修订的开源文字处理软件",
+      "evidence_url": "https://raw.githubusercontent.com/storytold/wordcraft/HEAD/README.md",
+      "evidence_sha256": "5e484c90fcb812caf33dfd3fe810088ecf3e5a86a0f1e8cc05e1aedd68e4cad7"
+    },
+    {
+      "term": "Monogamy AI skill",
+      "source": "x",
+      "source_url": "https://x.com/YoAmmaar/status/2109020202008723881",
+      "summary_zh": "帮助集中完成当前任务，减少频繁切换的 AI 技能",
+      "evidence_url": "https://x.com/YoAmmaar/status/2109020202008723881",
+      "evidence_sha256": "23bc2ebdbb3b2e2d909f824d6a002393cf293ec9ac353fb86502cec9a4054add"
+    },
+    {
+      "term": "AgentDock",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/agentdock",
+      "summary_zh": "在 Mac 集中查看编程智能体状态，统一回复提问与授权请求",
+      "evidence_url": "https://www.producthunt.com/products/agentdock",
+      "evidence_sha256": "5956e3b01d8d287d23b943f2dd301261ae6cafb56bc92d98d9cfdf735f746385"
+    },
+    {
+      "term": "diagram-design",
+      "source": "github-trending",
+      "source_url": "https://github.com/cathrynlavery/diagram-design",
+      "summary_zh": "让 AI 按品牌风格绘制可编辑网页与矢量图解的技能",
+      "evidence_url": "https://raw.githubusercontent.com/cathrynlavery/diagram-design/HEAD/README.md",
+      "evidence_sha256": "ae53663f000732ab35b1d7363563eeae2ed7e6be0a5fede8390ffe9b5029881f"
+    },
+    {
+      "term": "diagram-design skill",
+      "source": "github-trending",
+      "source_url": "https://github.com/cathrynlavery/diagram-design",
+      "summary_zh": "让 AI 按品牌风格绘制可编辑网页与矢量图解的技能",
+      "evidence_url": "https://raw.githubusercontent.com/cathrynlavery/diagram-design/HEAD/README.md",
+      "evidence_sha256": "ae53663f000732ab35b1d7363563eeae2ed7e6be0a5fede8390ffe9b5029881f"
+    },
+    {
+      "term": "Pocketty",
+      "source": "hn-show_hn",
+      "source_url": "https://news.ycombinator.com/item?id=50009634",
+      "summary_zh": "在 iPhone 上远程连接终端，并接收编程智能体状态提醒",
+      "evidence_url": "https://pocketty.app/",
+      "evidence_sha256": "d9b21d199107a766fd5c7bf8546801e9180a73deda639aecc0d1f51ef6a16b61"
+    },
+    {
+      "term": "WallHop",
+      "source": "hn-front_page",
+      "source_url": "https://news.ycombinator.com/item?id=50038634",
+      "summary_zh": "输入文章链接，提取正文并减少广告干扰的网页阅读工具",
+      "evidence_url": "https://wallhop.io/",
+      "evidence_sha256": "012f6030cb3692a943f796e636d30b6a88c1957a42db5bc9da01845ff3bb8581"
+    },
+    {
+      "term": "humanizer",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/jialinyyzz/humanizer",
+      "summary_zh": "在本地改写中英文 AI 草稿，让表达更自然的语言模型",
+      "evidence_url": "https://huggingface.co/jialinyyzz/humanizer/raw/main/README.md",
+      "evidence_sha256": "2c44b2b9854a546221a61c3d47f62bbd4aca5b53dfae5546f833bc60f7392fc9"
+    },
+    {
+      "term": "BFS Best Face Swap",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/Alissonerdx/BFS-Best-Face-Swap",
+      "summary_zh": "用于图像人脸、头部与身体替换的 LoRA 模型合集",
+      "evidence_url": "https://huggingface.co/Alissonerdx/BFS-Best-Face-Swap/raw/main/README.md",
+      "evidence_sha256": "f2d8bbd1f7161f24c32ff88745b1ca5fe9ab57af6a406ba7feeeee4b24d858c3"
+    },
+    {
+      "term": "Assist notch AI",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/assist-5",
+      "summary_zh": "驻留 Mac 刘海区域，提供会议记录与回应建议的 AI 助手",
+      "evidence_url": "https://www.producthunt.com/products/assist-5",
+      "evidence_sha256": "89d07f939ad77a8d01746c394d72cc8d37a7044c0d70a1d3b2368a4d554c83cc"
+    },
+    {
+      "term": "DigUp mac search",
+      "source": "github-search",
+      "source_url": "https://github.com/ARahim3/DigUp",
+      "summary_zh": "用自然语言在 Mac 本地查找文档、图片和音视频内容",
+      "evidence_url": "https://raw.githubusercontent.com/ARahim3/DigUp/HEAD/README.md",
+      "evidence_sha256": "e82ebf6c104d8db657e5c69d0e1e5d37515d9845f2b4c5056ab93cb11c8549df"
+    },
+    {
+      "term": "LiquidAI d1",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/LiquidAI/d1-3B",
+      "summary_zh": "读取文字与图像，一次推理给出结构化选项的决策模型",
+      "evidence_url": "https://huggingface.co/LiquidAI/d1-3B/raw/main/README.md",
+      "evidence_sha256": "175b0bd5f0b4272a67723e16d5e1994e7a8c2d162e7797c9f1c24c01fed83f1d"
+    },
+    {
+      "term": "openai math",
+      "source": "github-search",
+      "source_url": "https://github.com/openai/math",
+      "summary_zh": "收录 AI 数学研究手稿与证明材料，部分附形式化证明",
+      "evidence_url": "https://raw.githubusercontent.com/openai/math/HEAD/README.md",
+      "evidence_sha256": "5e8878ee04866f52ec942852552b9c28db278f65691c7ab49a87c9e93a9199fd"
+    },
+    {
+      "term": "bigwords.page",
+      "source": "hn-show_hn",
+      "source_url": "https://news.ycombinator.com/item?id=49994443",
+      "summary_zh": "把手机、平板或电视变成大字标牌的浏览器工具",
+      "evidence_url": "https://bigwords.page/",
+      "evidence_sha256": "49f43ad7878a0f820603c621ef1691c601c676e37ff69392648fbf1f2524df67"
+    },
+    {
+      "term": "AI agents draw on screen",
+      "source": "hn-show_hn",
+      "source_url": "https://news.ycombinator.com/item?id=50018817",
+      "summary_zh": "让 AI 在 Mac 屏幕叠加箭头、框线和文字来指示操作",
+      "evidence_url": "https://raw.githubusercontent.com/franzenzenhofer/big-arrow-on-the-screen/HEAD/README.md",
+      "evidence_sha256": "62645f013e4430446bbf4f5e524e499d2716fd08b8c6221fd1606b139bd19d60"
+    },
+    {
+      "term": "big-arrow-on-the-screen",
+      "source": "github-search",
+      "source_url": "https://github.com/franzenzenhofer/big-arrow-on-the-screen",
+      "summary_zh": "让 AI 在 Mac 屏幕叠加箭头、框线和文字来指示操作",
+      "evidence_url": "https://raw.githubusercontent.com/franzenzenhofer/big-arrow-on-the-screen/HEAD/README.md",
+      "evidence_sha256": "62645f013e4430446bbf4f5e524e499d2716fd08b8c6221fd1606b139bd19d60"
+    },
+    {
+      "term": "AI agent screen annotation",
+      "source": "hn-show_hn",
+      "source_url": "https://news.ycombinator.com/item?id=50018817",
+      "summary_zh": "让 AI 在 Mac 屏幕叠加箭头、框线和文字来指示操作",
+      "evidence_url": "https://raw.githubusercontent.com/franzenzenhofer/big-arrow-on-the-screen/HEAD/README.md",
+      "evidence_sha256": "62645f013e4430446bbf4f5e524e499d2716fd08b8c6221fd1606b139bd19d60"
+    },
+    {
+      "term": "ai-newtab Claude",
+      "source": "github-search",
+      "source_url": "https://github.com/ThariqS/ai-newtab",
+      "summary_zh": "根据浏览内容生成个性化摘要首页的 Chrome 新标签页扩展",
+      "evidence_url": "https://raw.githubusercontent.com/ThariqS/ai-newtab/HEAD/README.md",
+      "evidence_sha256": "e3001ed25915e895558f10d03d0aa57949aa53567559d5032f0afd36c0e232ea"
+    },
+    {
+      "term": "ai-newtab",
+      "source": "github-search",
+      "source_url": "https://github.com/ThariqS/ai-newtab",
+      "summary_zh": "根据浏览内容生成个性化摘要首页的 Chrome 新标签页扩展",
+      "evidence_url": "https://raw.githubusercontent.com/ThariqS/ai-newtab/HEAD/README.md",
+      "evidence_sha256": "e3001ed25915e895558f10d03d0aa57949aa53567559d5032f0afd36c0e232ea"
+    },
+    {
+      "term": "Leviathan agent memory",
+      "source": "github-search",
+      "source_url": "https://github.com/elstongun/leviathan",
+      "summary_zh": "为大型表格和日志建立索引，向 AI 返回带出处的相关记录",
+      "evidence_url": "https://raw.githubusercontent.com/elstongun/leviathan/HEAD/README.md",
+      "evidence_sha256": "4d0a0b8a0cd9476fdb27e6705e7f927fa385bb2f185e6b305af93db2aefdff3f"
+    },
+    {
+      "term": "Sodabase",
+      "source": "x",
+      "source_url": "https://x.com/santiviquez/status/2108122011234935290",
+      "summary_zh": "检测 Supabase 数据表异常，定位原因并辅助修复的工具",
+      "evidence_url": "https://x.com/santiviquez/status/2108122011234935290",
+      "evidence_sha256": "0310d1afafc94c376e301925667ef5e664e8df91d579d166fb4f421b2b60c93c"
+    },
+    {
+      "term": "DeepSeek V4.1 Flash",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+      "summary_zh": "支持图文理解与长上下文，优化缓存开销的多模态模型",
+      "evidence_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
+      "evidence_sha256": "347c9db4e5506acb531cbc3b724407ab88e9af8781679152f0823d7bac16d251"
+    },
+    {
+      "term": "Qwen3.8",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/Qwen/Qwen3.8-27B",
+      "summary_zh": "支持图像、视频理解与推理的千问开放模型，可用于编程任务",
+      "evidence_url": "https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/README.md",
+      "evidence_sha256": "57e4bdb258ee1a7d2635c5174ebd4e56abe392505cdb5f8bbb356b0dc4293641"
+    },
+    {
+      "term": "context-mode",
+      "source": "github-trending",
+      "source_url": "https://github.com/mksglu/context-mode",
+      "summary_zh": "压缩工具输出并检索会话记录，减少智能体上下文占用",
+      "evidence_url": "https://raw.githubusercontent.com/mksglu/context-mode/HEAD/README.md",
+      "evidence_sha256": "9308e09043c4746340662e7a72e68de155fc28d70a1dd316f5ff292596076d04"
+    },
+    {
+      "term": "Typesafe AI",
+      "source": "hn-front_page",
+      "source_url": "https://news.ycombinator.com/item?id=50023450",
+      "summary_zh": "研发软件自动化决策模型的 AI 团队，推出 Jev 决策模型",
+      "evidence_url": "https://typesafe.ai/blog/series-ai",
+      "evidence_sha256": "04dbff0c8b9ab823e2ec701e599f4df759012a308282746e791cbde3bf1343e8"
+    },
+    {
+      "term": "Clef Flash",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/Cloudflare/clef-flash",
+      "summary_zh": "把文字和图像转成选项概率，辅助自动决策的轻量模型",
+      "evidence_url": "https://huggingface.co/Cloudflare/clef-flash/raw/main/README.md",
+      "evidence_sha256": "53a3dc4ac96a1b2f17e6c03d9cf19a50b25ddad8d270fbe655902f6ce68bb4b5"
+    },
+    {
+      "term": "Cloudflare Deno",
+      "source": "hn-front_page",
+      "source_url": "https://news.ycombinator.com/item?id=50019911",
+      "summary_zh": "关于 Deno 加入 Cloudflare 的官方公告与后续计划",
+      "evidence_url": "https://deno.com/blog/cloudflare",
+      "evidence_sha256": "b56ed042228c8800ccae48e2f73c48945235b9b144ed1055d2e89a5ae9ccaa3d"
+    },
+    {
+      "term": "ts-rust",
+      "source": "github-search",
+      "source_url": "https://github.com/pingdotgg/ts-rust",
+      "summary_zh": "用 Rust 重写 TypeScript 编译器与类型检查器的实验项目",
+      "evidence_url": "https://raw.githubusercontent.com/pingdotgg/ts-rust/HEAD/README.md",
+      "evidence_sha256": "ccedc7a7dd1d543589ef41f7afd3735c3164273a44e94fac29db56d5a5e4d2fd"
+    },
+    {
+      "term": "Claude Dashboards Motion",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/claude-dashboards-motion",
+      "summary_zh": "让 Claude 生成随数据更新的仪表盘和可编辑解说动画",
+      "evidence_url": "https://www.producthunt.com/products/claude-dashboards-motion",
+      "evidence_sha256": "c8c5aeee326fed4c55d619bb7c9176faf1c7b7ae8ef5b1dfd45ec865d5a052b9"
+    },
+    {
+      "term": "jev decision index",
+      "source": "huggingface-spaces",
+      "source_url": "https://huggingface.co/spaces/multimodalart/jev-decision-index",
+      "summary_zh": "汇集 Jev 开源复现与决策模型评测结果的追踪看板",
+      "evidence_url": "https://huggingface.co/spaces/multimodalart/jev-decision-index/raw/main/README.md",
+      "evidence_sha256": "191c28c7535936d6adfa2f94e9ea0375ad05e65ad423a19f236b4fda93c22dc9"
+    },
+    {
+      "term": "Grimoire",
+      "source": "x",
+      "source_url": "https://x.com/jeremiahm382301/status/2109478222937395467",
+      "summary_zh": "为编程智能体保存长期记忆，并识别过期信息的自托管服务",
+      "evidence_url": "https://x.com/jeremiahm382301/status/2109478222937395467",
+      "evidence_sha256": "cf99de444c883c8dbe6c58bec9948ee87d13e07782a4a1bf36bdc876e6ffe24e"
+    },
+    {
+      "term": "Matt Pocock skills",
+      "source": "github-trending",
+      "source_url": "https://github.com/mattpocock/skills",
+      "summary_zh": "面向实际软件工程的可组合智能体技能与工作流程合集",
+      "evidence_url": "https://raw.githubusercontent.com/mattpocock/skills/HEAD/README.md",
+      "evidence_sha256": "345041d56cf1411b6b3ca1cc54014d26c563890f817f4cb9e2cb193dcd771a3e"
+    },
+    {
+      "term": "Qwen-Image 2.1",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-GGUF",
+      "summary_zh": "面向本地图像生成的 Qwen Image 2.1 社区量化版本",
+      "evidence_url": "https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-GGUF/raw/main/README.md",
+      "evidence_sha256": "f8e2a9bac6e0d086f4c47bca586ac7076efee23cb6116a9e149986e344f65185"
+    },
+    {
+      "term": "MiniMax H3",
+      "source": "huggingface-spaces",
+      "source_url": "https://huggingface.co/spaces/wank3r/minimax-h3",
+      "summary_zh": "基于 MiniMax H3 同时生成视频与配乐的社区演示",
+      "evidence_url": "https://huggingface.co/spaces/wank3r/minimax-h3/raw/main/README.md",
+      "evidence_sha256": "e8977a528340cd6656e61d39f2ab0b0b5cd9401def0d9be76de356bef68a1adb"
+    },
+    {
+      "term": "Claude Dashboards",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/claude-dashboards-motion",
+      "summary_zh": "让 Claude 查询数据并生成可持续更新的仪表盘",
+      "evidence_url": "https://www.producthunt.com/products/claude-dashboards-motion",
+      "evidence_sha256": "c8c5aeee326fed4c55d619bb7c9176faf1c7b7ae8ef5b1dfd45ec865d5a052b9"
+    },
+    {
+      "term": "Krea 2",
+      "source": "huggingface-spaces",
+      "source_url": "https://huggingface.co/spaces/Aura1in/Krea-2-Turbo_v2",
+      "summary_zh": "基于 Krea 2 Turbo 的社区文生图与图像编辑演示",
+      "evidence_url": "https://huggingface.co/spaces/Aura1in/Krea-2-Turbo_v2/raw/main/README.md",
+      "evidence_sha256": "cbb39c414b27562bae8ab9f6598e7075c1a68751ee30eb8d29a8217765574f8b"
+    },
+    {
+      "term": "WoWBench",
+      "source": "x",
+      "source_url": "https://x.com/djcows/status/2109047402648977723",
+      "summary_zh": "通过《魔兽世界》中的实际操作评估 AI 智能体表现的基准",
+      "evidence_url": "https://x.com/djcows/status/2109047402648977723",
+      "evidence_sha256": "9077d5ad3876f6638b0fb9beaa8e6a3454050bf7c392b614506cf526cacd174f"
+    },
+    {
+      "term": "knowledge-work-plugins",
+      "source": "github-trending",
+      "source_url": "https://github.com/anthropics/knowledge-work-plugins",
+      "summary_zh": "面向销售、办公等岗位，为 Claude 打包技能与连接器的插件合集",
+      "evidence_url": "https://raw.githubusercontent.com/anthropics/knowledge-work-plugins/HEAD/README.md",
+      "evidence_sha256": "6db45ae725346e38fa0b6b921aba4fe8489c4d9735986876d366ba5768010b14"
+    },
+    {
+      "term": "Hypervibe",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/hypervibe-2",
+      "summary_zh": "在同一画布并行运行多个编程智能体，查看终端和实时预览",
+      "evidence_url": "https://www.producthunt.com/products/hypervibe-2",
+      "evidence_sha256": "926223a90308600b565235f78f9ba52510f630123c3081c42e14719706245f55"
+    },
+    {
+      "term": "OpenVids",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/openvids",
+      "summary_zh": "通过对话让 AI 剪辑时间线、添加动效和声音的视频编辑器",
+      "evidence_url": "https://www.producthunt.com/products/openvids",
+      "evidence_sha256": "e7e8b40a29fa00519550e37f26500d24333dcd994bf89534251bf4bad9df2493"
+    },
+    {
+      "term": "Sorted AI",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/sorted-6",
+      "summary_zh": "在 Mac 本地分类文件、识别重复项，并按内容搜索文档",
+      "evidence_url": "https://www.producthunt.com/products/sorted-6",
+      "evidence_sha256": "b4de8b96c3c92171574f3bbe010f9a1848e9444752f6e57b80c8b3774b51df75"
+    },
+    {
+      "term": "ppt-master",
+      "source": "github-trending",
+      "source_url": "https://github.com/hugohe3/ppt-master",
+      "summary_zh": "把文档整理成可继续编辑的 PowerPoint 演示文稿",
+      "evidence_url": "https://raw.githubusercontent.com/hugohe3/ppt-master/HEAD/README.md",
+      "evidence_sha256": "fea82a40b8c7f49f5e709dc2a54ce3aa3e20f2441bae9614dc935bb15a561856"
+    },
+    {
+      "term": "karpathy skills",
+      "source": "github-trending",
+      "source_url": "https://github.com/multica-ai/andrej-karpathy-skills",
+      "summary_zh": "参考 Karpathy 编程观察整理的社区 AI 编码行为指南",
+      "evidence_url": "https://raw.githubusercontent.com/multica-ai/andrej-karpathy-skills/HEAD/README.md",
+      "evidence_sha256": "daf314efb31894b86d68b67786c820bd8470bb2126e578ba9cd0e3e2667883f8"
+    },
+    {
+      "term": "Porch AI coding",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/porch-6",
+      "summary_zh": "把编程智能体会话整理成项目总结，并跟踪时间和用量",
+      "evidence_url": "https://www.producthunt.com/products/porch-6",
+      "evidence_sha256": "7eb607f0c5ccb08b1343745bc9e8e4255c126420dba47acaf6e9acf76e11d2a7"
+    },
+    {
+      "term": "anatomy claude code skill",
+      "source": "github-search",
+      "source_url": "https://github.com/wheresryan22/anatomy",
+      "summary_zh": "把概念做成交互式矢量图或三维结构图，便于理解原理",
+      "evidence_url": "https://raw.githubusercontent.com/wheresryan22/anatomy/HEAD/README.md",
+      "evidence_sha256": "031b8d9533abafd3620a884839c4888198305307056639112a8f2f3f707c7d88"
+    },
+    {
+      "term": "anatomy agent skill",
+      "source": "github-search",
+      "source_url": "https://github.com/wheresryan22/anatomy",
+      "summary_zh": "把概念做成交互式矢量图或三维结构图，便于理解原理",
+      "evidence_url": "https://raw.githubusercontent.com/wheresryan22/anatomy/HEAD/README.md",
+      "evidence_sha256": "031b8d9533abafd3620a884839c4888198305307056639112a8f2f3f707c7d88"
+    },
+    {
+      "term": "Farol terminal",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/farol-3",
+      "summary_zh": "在 Mac 并行管理编程智能体，查看任务状态和代码差异的终端",
+      "evidence_url": "https://www.producthunt.com/products/farol-3",
+      "evidence_sha256": "735c3b9898fe43a40017a429bcd07fd9b7226cf53461eeeb21567603571fc407"
+    },
+    {
+      "term": "tendedero",
+      "source": "github-search",
+      "source_url": "https://github.com/alejandrobujan/tendedero",
+      "summary_zh": "将截图与录屏收纳在 Mac 菜单栏下，便于复制、标注和拖放",
+      "evidence_url": "https://raw.githubusercontent.com/alejandrobujan/tendedero/HEAD/README.md",
+      "evidence_sha256": "697bbc4c97023524d7e827ef29b1d5aa45f81353cf50d2f4e7bc75d45d1203af"
+    },
+    {
+      "term": "OpenScreen 2",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/openscreen-2",
+      "summary_zh": "美化屏幕录制，支持通过文字或 AI 智能体编辑演示视频",
+      "evidence_url": "https://www.producthunt.com/products/openscreen-2",
+      "evidence_sha256": "ad21aec67d2c9d959e5db40d6464bd468c1d45a4ba79b300fb64540eada9585d"
+    },
+    {
+      "term": "FloorGen",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/floorgen",
+      "summary_zh": "用自然语言生成和修改房屋平面图，并查看三维效果",
+      "evidence_url": "https://www.producthunt.com/products/floorgen",
+      "evidence_sha256": "30870fe90b923328dacfc2321c1a55d6d9274a3b2527dfdcb49388878f9fb8d4"
+    },
+    {
+      "term": "omdrop",
+      "source": "github-search",
+      "source_url": "https://github.com/t4t5/omdrop-owl",
+      "summary_zh": "配合 omdrop，在支持的 Linux 电脑与 iPhone 间传文件",
+      "evidence_url": "https://raw.githubusercontent.com/t4t5/omdrop-owl/HEAD/README.md",
+      "evidence_sha256": "267883375235ca682ca7342a66fc59bb45143efbc992c3d54cc8d40e10717289"
+    },
+    {
+      "term": "mailcheap",
+      "source": "github-search",
+      "source_url": "https://github.com/marclou/mailcheap",
+      "summary_zh": "基于 Amazon SES 自托管邮件通讯，管理订阅与发布归档",
+      "evidence_url": "https://raw.githubusercontent.com/marclou/mailcheap/HEAD/README.md",
+      "evidence_sha256": "9f50a04e01bd7119511d5c2301e15ef2f68758d1989c8ff0d706723a7e12902f"
+    },
+    {
+      "term": "fsearch mac",
+      "source": "github-search",
+      "source_url": "https://github.com/noahdunnagan/fsearch",
+      "summary_zh": "支持文件名模糊匹配与内容索引的 Mac 全盘搜索工具",
+      "evidence_url": "https://raw.githubusercontent.com/noahdunnagan/fsearch/HEAD/README.md",
+      "evidence_sha256": "118ef4c2187d061da831fcdc6b4d10db0685f3b8a9c6ae788212e564459d66e1"
+    },
+    {
+      "term": "helix foundry",
+      "source": "github-search",
+      "source_url": "https://github.com/HelixDB/helix-foundry",
+      "summary_zh": "在本地连接数据库和业务工具，把分散数据组织成可查询关系",
+      "evidence_url": "https://raw.githubusercontent.com/HelixDB/helix-foundry/HEAD/README.md",
+      "evidence_sha256": "8cc216c9d3ad90393dc96570a32d49fb345bc96a5592a3d0de0394a85df80839"
+    },
+    {
+      "term": "agibot mac",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/agibot",
+      "summary_zh": "在 Mac 后台持续处理任务，生成简报并提醒变化的个人 AI 助手",
+      "evidence_url": "https://www.producthunt.com/products/agibot",
+      "evidence_sha256": "4c1db32a3065d67b860aa578587ebdd11df4009e35b471ca2b27a71086c1d8bf"
+    },
+    {
+      "term": "GridCraft",
+      "source": "github-search",
+      "source_url": "https://github.com/storytold/gridcraft",
+      "summary_zh": "用于电子表格与数据处理的跨平台开源软件，支持 AI 调用",
+      "evidence_url": "https://raw.githubusercontent.com/storytold/gridcraft/HEAD/README.md",
+      "evidence_sha256": "a5a5c13aa963fe48621e06e37a9d07da57455703052aaa44b2a0ab1c80981201"
+    },
+    {
+      "term": "PocketWebTools",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/pocketwebtools",
+      "summary_zh": "在本机处理语音、图像和视频的浏览器与 Mac AI 工具集",
+      "evidence_url": "https://www.producthunt.com/products/pocketwebtools",
+      "evidence_sha256": "6bb2ec88101e36b678be7244f7823ee6654600afe971e5a5fd9e5e20716c8bab"
+    },
+    {
+      "term": "Museum of Models",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/museum-of-models",
+      "summary_zh": "保留不同 AI 模型对同一组问题的原始回答，便于比较",
+      "evidence_url": "https://www.producthunt.com/products/museum-of-models",
+      "evidence_sha256": "2727dfdbd729b92b7beaeae6a09ade5109f969571d2559a4fcc38a6f0c6ed79a"
+    },
+    {
+      "term": "BetterWispr",
+      "source": "hn-show_hn",
+      "source_url": "https://news.ycombinator.com/item?id=50042333",
+      "summary_zh": "按快捷键说话即可向 Mac 应用输入文字的本地语音听写工具",
+      "evidence_url": "https://betterwispr.com/",
+      "evidence_sha256": "1713d16080783b3feff249d5cc5cb09079abffd9301eadbe6e3d3ee7bcb77427"
+    },
+    {
+      "term": "openjev",
+      "source": "huggingface-spaces",
+      "source_url": "https://huggingface.co/spaces/AlexWortega/openjev",
+      "summary_zh": "判断文字或图像是否支持一项说法，用于检索核查与重排序",
+      "evidence_url": "https://huggingface.co/spaces/AlexWortega/openjev/raw/main/README.md",
+      "evidence_sha256": "782df32aff7401282a494bf98319f16e3c63ea70de2ccb4e8c061e3701d2b00b"
+    },
+    {
+      "term": "KernelAI",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/kernelai",
+      "summary_zh": "在手机本地运行 AI 模型，离线聊天、阅读文档与理解图片",
+      "evidence_url": "https://www.producthunt.com/products/kernelai",
+      "evidence_sha256": "930bd2f30032e1e6377957d7f7513a27dc87324b01924780ef35c9075ede432b"
+    },
+    {
+      "term": "The Curator",
+      "source": "x",
+      "source_url": "https://x.com/talirezun/status/2109527362777886955",
+      "summary_zh": "用本地文档整理项目说明，让智能体通过 MCP 读取和积累上下文",
+      "evidence_url": "https://x.com/talirezun/status/2109527362777886955",
+      "evidence_sha256": "f254227bf03ca4a6f6175afa99fe9b02931d20ad12b80424527bee0fe45c5e1a"
+    },
+    {
+      "term": "Ghost Core",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/ghost-core",
+      "summary_zh": "在本地运行 AI 模型，连接应用和设备的个人电脑",
+      "evidence_url": "https://www.producthunt.com/products/ghost-core",
+      "evidence_sha256": "9c510be6af18baac6fcdb86a589f712d9e31e179783a065ee392d7ba9c808e11"
+    },
+    {
+      "term": "Halo",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/halo-11",
+      "summary_zh": "把通知、语音输入和 AI 智能体状态集中到 Mac 刘海区域",
+      "evidence_url": "https://www.producthunt.com/products/halo-11",
+      "evidence_sha256": "7d330869360abaf7d12b3b4a4f39db43fdcfe63be8055f579a2608ae3d15f896"
+    },
+    {
+      "term": "Onepin",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/onepin",
+      "summary_zh": "检查并修正 AI 配音中的人名、金额和日期读法",
+      "evidence_url": "https://www.producthunt.com/products/onepin",
+      "evidence_sha256": "4ff925e67f021906e5883415c9a5620b00e2e4ea673718b0d737981d0af4d063"
+    },
+    {
+      "term": "Rezzy MCP",
+      "source": "x",
+      "source_url": "https://x.com/rezzydotdev/status/2109468895283184116",
+      "summary_zh": "根据职位描述和个人资料生成定制简历与求职信 PDF 的 MCP 服务",
+      "evidence_url": "https://x.com/rezzydotdev/status/2109468895283184116",
+      "evidence_sha256": "df917d64ece3c99056a8d65771286864fbfbeab55c94c0eb689c0b5096455dbc"
+    },
+    {
+      "term": "HireKey",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/hirekey",
+      "summary_zh": "辅助技术求职，匹配岗位、调整简历并练习语音面试",
+      "evidence_url": "https://www.producthunt.com/products/hirekey",
+      "evidence_sha256": "1ac0370b349b5774ca6d63f38ae2938088988ade6d108cf2226a96bd57ba44b8"
+    },
+    {
+      "term": "cadcraft",
+      "source": "github-search",
+      "source_url": "https://github.com/storytold/cadcraft",
+      "summary_zh": "支持图层、标注与 DXF 图纸的开源计算机辅助设计软件",
+      "evidence_url": "https://raw.githubusercontent.com/storytold/cadcraft/HEAD/README.md",
+      "evidence_sha256": "8723563205c43519d9b3b6c608d5560ca1c1b308c6a2fa25f8d1fcaad68452b4"
+    },
+    {
+      "term": "artcraft",
+      "source": "github-trending",
+      "source_url": "https://github.com/storytold/artcraft",
+      "summary_zh": "结合二维构图与三维场景来制作 AI 图像和视频的创作工具",
+      "evidence_url": "https://raw.githubusercontent.com/storytold/artcraft/HEAD/README.md",
+      "evidence_sha256": "933462209ceb7309defc4ec7df50b110ae17d26d9ab2ff38e241d1081d7045a1"
+    },
+    {
+      "term": "Invited AI Reminder Scanner",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/invited-ai-reminder-scanner",
+      "summary_zh": "把账单、邀请函和 PDF 中的日期事项转成提醒",
+      "evidence_url": "https://www.producthunt.com/products/invited-ai-reminder-scanner",
+      "evidence_sha256": "0aac3e2488430656d86c1375fbaa4c2c6ae9e6734c728810b2c91706bb948406"
+    },
+    {
+      "term": "craft-launcher",
+      "source": "github-search",
+      "source_url": "https://github.com/storytold/craft-launcher",
+      "summary_zh": "统一安装、更新和启动 Craft 系列开源创作工具",
+      "evidence_url": "https://raw.githubusercontent.com/storytold/craft-launcher/HEAD/README.md",
+      "evidence_sha256": "62bd5b43fbfdbc88610cd9ff8119427e2e92b78392fc7176f881da6cd6f829cd"
+    },
+    {
+      "term": "atrium AI",
+      "source": "x",
+      "source_url": "https://x.com/atrium_dev/status/2109418745617629621",
+      "summary_zh": "集中运行多种编程智能体，支持自选模型服务与分支会话",
+      "evidence_url": "https://x.com/atrium_dev/status/2109418745617629621",
+      "evidence_sha256": "035569cc089ef3af1cb6b88cda02b76cb13a83499064f5452ce8bfae4a2c04a2"
+    },
+    {
+      "term": "Strawberry AI browser",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/strawberry",
+      "summary_zh": "通过 AI 辅助网页研究、资料采集和重复操作的浏览器",
+      "evidence_url": "https://www.producthunt.com/products/strawberry",
+      "evidence_sha256": "a61cfe85db3ad7e24d952e60428c4e36665085d1a725aefd1a13e6ee515b9886"
+    },
+    {
+      "term": "deckcraft",
+      "source": "github-search",
+      "source_url": "https://github.com/storytold/deckcraft",
+      "summary_zh": "支持 PowerPoint 文件编辑与放映，可由 AI 操作的开源工具",
+      "evidence_url": "https://raw.githubusercontent.com/storytold/deckcraft/HEAD/README.md",
+      "evidence_sha256": "c6c2c577af9ff6109ad10d36425bbef78f56d2af1c55b289da46c576bf52e22b"
+    },
+    {
+      "term": "soundcraft",
+      "source": "github-search",
+      "source_url": "https://github.com/storytold/soundcraft",
+      "summary_zh": "支持多轨录音、剪辑与混音，也可由 AI 调用的开源音频工作站",
+      "evidence_url": "https://raw.githubusercontent.com/storytold/soundcraft/HEAD/README.md",
+      "evidence_sha256": "e0af29c4414d1771b7c463dcac841ab528101df45db70fe1362d2bfb920e2294"
+    },
+    {
+      "term": "Edi Life OS",
+      "source": "hn-show_hn",
+      "source_url": "https://news.ycombinator.com/item?id=50014150",
+      "evidence_url": "https://github.com/edrisranjbar/lifeos",
+      "summary_zh": "集中管理习惯、目标、财务和项目，并支持 AI 操作的自托管看板",
+      "evidence_note": "README describes ten workspaces, habits, goals, finances, projects and an optional MCP server.",
+      "evidence_sha256": "f56ab6e7d80650b92372db53e90a76f4f65d6ce9feb5b187f4ab9bcfb20b5643"
+    },
+    {
+      "term": "Talorys",
+      "source": "hn-front_page",
+      "source_url": "https://news.ycombinator.com/item?id=50031614",
+      "evidence_url": "https://github.com/rociiu/talorys",
+      "summary_zh": "部署在自有 Cloudflare 账号，管理记忆、任务与定时提醒的 AI 助手",
+      "evidence_note": "README identifies personal assistant in own Cloudflare account with memory, tasks, notes, projects and scheduled reminders.",
+      "evidence_sha256": "089183dfb0ec729c94efcc552337a9343fddb985c03194abdd0576d36444d9f0"
+    },
+    {
+      "term": "Apogee Orbit",
+      "source": "hn-show_hn",
+      "source_url": "https://news.ycombinator.com/item?id=50017301",
+      "evidence_url": "https://github.com/darshi1337/apogee",
+      "summary_zh": "在浏览器本地总结网页、视频和文档，并支持内容问答的 AI 扩展",
+      "evidence_note": "README identifies Apogee as local browser summarizer for pages, videos, PDFs and DOCX; discontinued Mozilla Orbit inspired it. Entry name combines both, but source links to Apogee.",
+      "evidence_sha256": "08c701109fd63e3054282f4fb148367956e91ffae40e26ad3225563ed89576bc"
+    },
+    {
+      "term": "Microsoft Execution Containers",
+      "source": "hn-front_page",
+      "source_url": "https://news.ycombinator.com/item?id=50016956",
+      "evidence_url": "https://blogs.windows.com/windowsdeveloper/2026/10/07/microsoft-execution-containers-policy-driven-containment-for-ai-agents/",
+      "summary_zh": "用独立策略限制 AI 智能体可访问的文件、网络和桌面资源的执行工具",
+      "evidence_note": "Official Windows blog defines policy-driven execution layer enforcing declared filesystem, network and UI boundaries.",
+      "evidence_sha256": "054918270a2126c2619c9b3243755c805e62deff0b22346a678d0524845dcc93"
+    },
+    {
+      "term": "Anthropic Cyber Mission",
+      "source": "official",
+      "source_url": "https://www.anthropic.com/news/anthropic-cyber-mission",
+      "evidence_url": "https://www.anthropic.com/news/anthropic-cyber-mission",
+      "summary_zh": "通过 AI 模型、工程支持和研究资源保护关键基础设施与开源软件的计划",
+      "evidence_note": "Official announcement launches long-term initiative initially covering critical infrastructure and open-source software.",
+      "evidence_sha256": "d619b8be1000f30edd8464abc81cff4cc2600c8b16d7e0bcfc8955467abd50ed"
+    },
+    {
+      "term": "Anthropic OSS Scanner",
+      "source": "x",
+      "source_url": "https://x.com/RubanBhatia/status/2108912963495289013",
+      "evidence_url": "https://www.anthropic.com/research/launching-opt-in-vuln-finding-service-for-open-source",
+      "summary_zh": "为自愿加入的开源项目定期扫描漏洞，报告由模型生成并交维护者核查"
+    },
+    {
+      "term": "Pensieve",
+      "source": "x",
+      "source_url": "https://x.com/bykimdohoon/status/2109504968927436928",
+      "evidence_url": "https://tedhaley.ca/pensieve/",
+      "summary_zh": "在 Mac 本地索引代码、文档与笔记，供智能体通过 MCP 检索",
+      "evidence_note": "Author website directly describes local index across files, git repos, agent sessions, Obsidian vaults and MCP access; distinctive 131/144 versus 123/144 benchmark matches source post.",
+      "evidence_sha256": "634fe7a4bd7318cd9ec73297246dc600f9c9723cb5c359b5b6ad1dfe93295511"
+    },
+    {
+      "term": "Graphkasten",
+      "source": "x",
+      "source_url": "https://x.com/jakub_zovi/status/2109220305914749004",
+      "evidence_url": "https://github.com/jakub-zovi/graphkasten",
+      "summary_zh": "以 Obsidian 关系图组织和审阅笔记，结合 AI 索引的知识管理方法",
+      "evidence_note": "Author X article links exact GitHub repository; README describes graph-centric Obsidian vault methodology, AI indexing and human graph review.",
+      "evidence_sha256": "e39e8324fda409d37460563b4d7541267b99c650552d2ebca74ca02832250710"
+    },
+    {
+      "term": "Google Labs Playground",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/google-labs",
+      "evidence_url": "https://labs.google/",
+      "summary_zh": "通过文字描述创建、游玩和分享小游戏的 Google 实验平台"
+    },
+    {
+      "term": "Edgee Mod Claude Code",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/edgee",
+      "evidence_url": "https://www.edgee.ai/claude-mod",
+      "summary_zh": "在 Claude Code 侧栏切换模型，查看用量、缓存与会话开销"
+    },
+    {
+      "term": "API Claws by Buda",
+      "source": "ph",
+      "source_url": "https://www.producthunt.com/products/buda-2",
+      "evidence_url": "https://buda.im/docs/developers/api-claws",
+      "summary_zh": "通过 API 为软硬件接入云端智能体，提供会话与知识库能力"
+    },
+    {
+      "term": "LTX-2.5",
+      "source": "huggingface-models",
+      "source_url": "https://huggingface.co/Lightricks/LTX-2.5",
+      "evidence_url": "https://huggingface.co/Lightricks/LTX-2.5",
+      "summary_zh": "根据文字、图片或视频生成同步音视频，支持本地运行的开放权重模型"
+    },
+    {
+      "term": "SVG Spark",
+      "source": "hn-show_hn",
+      "source_url": "https://news.ycombinator.com/item?id=50013931",
+      "evidence_url": "https://svg-spark.vercel.app/",
+      "summary_zh": "在浏览器内转换 SVG、处理 PDF 和格式化代码的实用工具集"
+    },
+    {
+      "term": "Claude Haiku 5.5",
+      "source": "x",
+      "source_url": "https://x.com/xppt8a/status/2108021384354127995",
+      "evidence_url": "https://www.anthropic.com/claude-haiku-5-5",
+      "summary_zh": "面向摘要、分类和编程子任务，侧重低延迟与成本的小型 Claude 模型"
+    },
+    {
+      "term": "Kimi K3",
+      "source": "x",
+      "source_url": "https://x.com/KanikaBK/status/2108150671602319672",
+      "evidence_url": "https://arxiv.org/abs/2607.24653",
+      "summary_zh": "支持图像理解与长上下文，用于编程和多步骤任务的开放权重模型"
+    },
+    {
+      "term": "Gemini agent coworker",
+      "source": "x",
+      "source_url": "https://x.com/ContextWindow/status/2108231939027320874",
+      "evidence_url": "https://cloud.google.com/blog/products/ai-machine-learning/welcome-to-gemini-at-work-2026",
+      "summary_zh": "拥有独立工作身份，能在团队应用中持续处理任务的 Gemini 智能体"
+    },
+    {
+      "term": "DeepSeek Harness",
+      "source": "x",
+      "source_url": "https://x.com/Leo_R_UK/status/2108225974949085293",
+      "evidence_url": "https://www.deepseek.com/en/harness/",
+      "summary_zh": "通过可组合插件扩展模型、工具和工作流程的开源智能体运行框架"
+    },
+    {
+      "term": "Microsoft-Decision-1",
+      "source": "x",
+      "source_url": "https://x.com/Gadget_Ry/status/2108821550648430919",
+      "evidence_url": "https://commandline.microsoft.com/microsoft-decision-1-model-foundry/",
+      "summary_zh": "为预设选项评分，用于分类、模型路由和工作流程控制的决策模型"
+    },
+    {
+      "term": "Transect AISI",
+      "source": "x",
+      "source_url": "https://x.com/AIooze/status/2108541100222808499",
+      "evidence_url": "https://www.aisi.gov.uk/blog/transect-making-large-scale-agentic-evaluations-easier-to-understand",
+      "summary_zh": "把智能体评测日志整理为带标签时间线，方便回查行为与原始记录"
+    },
+    {
+      "term": "Goodfire monitors",
+      "source": "x",
+      "source_url": "https://x.com/TechCrunch/status/2108228218092163272",
+      "evidence_url": "https://www.goodfire.com/blog/goodfire-baseten-partnership",
+      "summary_zh": "监测模型内部信号，识别智能体异常行为并触发进一步复核的工具"
+    },
+    {
+      "term": "Hark AI agent",
+      "source": "x",
+      "source_url": "https://x.com/JulianGoldieSEO/status/2108907520526090608",
+      "evidence_url": "https://hark.com/articles/introducing-hark-pro",
+      "summary_zh": "记住个人偏好，通过浏览器和已连接应用协助处理日常事务的 AI 助手"
+    },
+    {
+      "term": "OLMo-core 3",
+      "source": "x",
+      "source_url": "https://x.com/rubbletag/status/2109048766963867797",
+      "evidence_url": "https://allenai.org/blog/olmocore3",
+      "summary_zh": "面向大型混合专家模型，优化多 GPU 协作与训练效率的开源训练框架"
+    },
+    {
+      "term": "Google AI Edge Foresight",
+      "source": "x",
+      "source_url": "https://x.com/kevin980606/status/2109124870336548891",
+      "evidence_url": "https://labs.google/",
+      "summary_zh": "在设备本地整理会议笔记，并检索回顾重要信息的实验性 AI 助手"
+    },
+    {
+      "term": "Hypit",
+      "source": "x",
+      "source_url": "https://x.com/ChaiWithAi/status/2109356236093415674",
+      "evidence_url": "https://github.com/hypit-ai/hypit",
+      "summary_zh": "让编程智能体把参考视频转为可编辑流程，复用字幕、素材和特效"
+    },
+    {
+      "term": "GPT-6.1 Sol",
+      "source": "official",
+      "source_url": "https://openai.com/index/asana-browser-agent",
+      "evidence_url": "https://openai.com/index/asana-browser-agent/",
+      "summary_zh": "用于浏览器操作等多步骤任务的 OpenAI 模型，可配合智能体工作流程",
+      "evidence_note": "Official Asana case study describes GPT-6.1 Sol navigating websites, filling forms and gathering information through a browser agent."
+    },
+    {
+      "term": "OpenAI Daybreak",
+      "source": "official",
+      "source_url": "https://openai.com/index/sophos",
+      "evidence_url": "https://openai.com/index/sophos/",
+      "summary_zh": "结合前沿模型与安全团队经验，辅助威胁调查和响应的合作计划",
+      "evidence_note": "Official Sophos case study describes the Daybreak programme supporting investigation and response agents, with human oversight."
+    }
+  ],
+  "pending": [
+    {
+      "term": "Qwen 4",
+      "source": "x",
+      "source_url": "https://x.com/AGTPinsights/status/2108871379353293036",
+      "reason": "现有来源为第三方对含糊预告的解读，未找到明确的官方产品说明。"
+    },
+    {
+      "term": "Omni Image Editor",
+      "source": "huggingface-spaces",
+      "source_url": "https://huggingface.co/spaces/selfit-camera/Omni-Image-Editor",
+      "reason": "README 仅模板，app.py 只加载编译模块；公开演示配置请求超时，尚无充分用途说明。"
+    }
+  ],
+  "execution": {
+    "initial_fill_returned": 113,
+    "live_verification": "022 保护触发器部署后恢复 113 条核实简介；公共接口逐项比对 113/113 一致。138 条均非空，其中 2 条此前证据不足的用途说明仍未纳入核实回填。",
+    "investigation": "radar-import-investigation-2026-10-12.json",
+    "restoration_completed": true,
+    "restored_rows": 113,
+    "restoration_verified_at_utc": "2026-10-12T14:16:17.180187+00:00"
+  }
+}

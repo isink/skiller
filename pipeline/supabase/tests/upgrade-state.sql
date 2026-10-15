@@ -83,6 +83,14 @@ select jsonb_build_object(
     from pg_trigger
     where tgrelid = 'public.skills'::regclass and tgname = 'skills_set_updated_at'
   ),
+  'enrichment_invalidation_function', pg_get_functiondef(
+    'public.invalidate_changed_skill_enrichment()'::regprocedure
+  ),
+  'enrichment_invalidation_trigger', (
+    select pg_get_triggerdef(oid)
+    from pg_trigger
+    where tgrelid = 'public.skills'::regclass and tgname = 'skills_invalidate_enrichment'
+  ),
   'repo_keys', coalesce((
     select jsonb_agg(jsonb_build_array(id, repo_key) order by id)
     from public.skills

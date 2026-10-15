@@ -30,6 +30,7 @@ import { assertNoBatchFailures } from "../lib/batch-failures";
 import { assertCompleteGitHubSearch } from "../lib/github-search";
 import { boundedRetryDelayMs } from "../lib/rate-limit";
 import { parseOptionalPositiveInteger } from "../lib/env-number";
+import { checkedRepoStarsPatch, createGitHubRepoMetadataResolver } from "../lib/github-repo-metadata";
 import {
   CODE_SEARCH_MIN_INTERVAL_MS,
   REPO_SEARCH_MIN_INTERVAL_MS,
@@ -62,7 +63,8 @@ type SearchItem = {
     full_name: string;
     html_url: string;
     description: string | null;
-    stargazers_count: number;
+    // Code-search repository objects can omit stars; the repository API supplies them.
+    stargazers_count?: number;
     default_branch?: string;
   };
   url: string; // contents API URL
@@ -216,24 +218,9 @@ async function discoverRecentItems(days: number, skipRepos: Set<string>): Promis
   return items;
 }
 
-const defaultBranches = new Map<string, string>();
-
-/** Code-search repository objects can omit default_branch. Never write blob/undefined links. */
-async function getDefaultBranch(repo: SearchItem["repository"]): Promise<string> {
-  if (typeof repo.default_branch === "string" && repo.default_branch) return repo.default_branch;
-  const cached = defaultBranches.get(repo.full_name);
-  if (cached) return cached;
-  const res = await fetch(`https://api.github.com/repos/${repo.full_name.split("/").map(encodeURIComponent).join("/")}`, {
-    headers: authHeaders(), signal: AbortSignal.timeout(30000),
-  });
-  if (!res.ok) throw new Error(`Repository API ${res.status} ${res.statusText}: ${repo.full_name}`);
-  const data = (await res.json()) as { default_branch?: unknown };
-  if (typeof data.default_branch !== "string" || !data.default_branch) {
-    throw new Error(`Repository API returned no default branch: ${repo.full_name}`);
-  }
-  defaultBranches.set(repo.full_name, data.default_branch);
-  return data.default_branch;
-}
+const getRepoMetadata = createGitHubRepoMetadataResolver((fullName) => githubJson(
+  `https://api.github.com/repos/${fullName.split("/").map(encodeURIComponent).join("/")}`,
+));
 
 /** Minimal YAML frontmatter parser (same approach as import-anthropic.ts) */
 function parseFrontmatter(md: string): {
@@ -383,7 +370,14 @@ async function main() {
     tags.push("community");
     const uniqueTags = Array.from(new Set(tags)).slice(0, 8);
 
-    const defaultBranch = await getDefaultBranch(repo);
+    let repoMetadata;
+    try {
+      repoMetadata = await getRepoMetadata(repo.full_name);
+    } catch (error) {
+      console.error(`\n  ✖ ${repo.full_name}: ${error instanceof Error ? error.message : String(error)}`);
+      failed++;
+      continue;
+    }
 
     const row = {
       slug,
@@ -392,10 +386,9 @@ async function main() {
       category,
       tags: uniqueTags,
       author: repo.full_name.split("/")[0],
-      github_url: `${repo.html_url}/blob/${defaultBranch}/${path}`,
+      github_url: `${repo.html_url}/blob/${repoMetadata.defaultBranch}/${path}`,
       skill_md_content: md,
-      github_stars: repo.stargazers_count,
-      github_stars_checked_at: new Date().toISOString(),
+      ...checkedRepoStarsPatch(repoMetadata),
       // Seed values for new rows only; existing rows keep their curation.
       rank: 0,
       score: 0,

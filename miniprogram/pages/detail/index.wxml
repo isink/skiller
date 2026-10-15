@@ -16,9 +16,13 @@
       </view>
       <view class="detail-meta"><text class="detail-meta-label">作者</text><text class="detail-meta-value">{{skill.author}}</text></view>
       <view class="detail-source-meta"><text>{{displayStars}}</text><text>{{displayUpdated}}</text></view>
-      <view class="reading-note">
-        <text class="reading-note-title">站内完整阅读</text>
-        <text class="reading-note-text">下方提供完整技能说明，无需跳转即可查看。</text>
+      <view class="install-card">
+        <view class="install-heading">
+          <text class="install-title">安装 Skill</text>
+          <button wx:if="{{installCommand}}" class="install-copy" bindtap="onCopyInstall" aria-label="复制技能安装命令">复制命令</button>
+        </view>
+        <text wx:if="{{installCommand}}" class="install-command" selectable>{{installCommand}}</text>
+        <text class="install-hint">{{installHint}}</text>
       </view>
     </view>
     <view class="markdown-card">

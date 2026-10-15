@@ -2,3 +2,14 @@
 .page-title { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: 1.25; }
 .count-pill { padding: 4rpx var(--space-2); border-radius: var(--radius-pill); background: var(--color-surface-2); color: var(--color-text-2); font-size: var(--text-sm); }
 .skill-card { display: block; }
+.favorite-tabs { display: flex; gap: var(--space-half); margin-bottom: var(--space-2); padding: var(--space-half); border-radius: var(--radius-pill); background: var(--color-surface-2); }
+.favorite-tab { flex: 1; min-height: var(--tap-min); border-radius: var(--radius-pill); color: var(--color-text-2); font-size: var(--text-base); line-height: var(--tap-min); text-align: center; }
+.favorite-tab-active { background: var(--color-surface); color: var(--color-text); font-weight: var(--weight-semibold); }
+.favorite-local-note { display: block; margin: var(--space-1) 0; color: var(--color-text-3); font-size: var(--text-xs); }
+.radar-row { display: flex; align-items: flex-start; gap: var(--space-1); padding: var(--space-2) 0; border-bottom: 1rpx solid var(--color-border); }
+.radar-content { flex: 1; min-width: 0; }
+.radar-name { display: block; color: var(--color-text); font-size: var(--text-lg); font-weight: var(--weight-semibold); line-height: 1.35; word-break: break-word; overflow-wrap: anywhere; }
+.radar-summary { display: block; margin-top: var(--space-half); color: var(--color-text-2); font-size: var(--text-base); line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; }
+.favorite-button { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: var(--tap-min); height: var(--tap-min); margin: 0; padding: 0; border-radius: 50%; background: transparent; line-height: 1; }
+.favorite-button:active { background: var(--color-surface-2); }
+.favorite-icon { width: 40rpx; height: 40rpx; }

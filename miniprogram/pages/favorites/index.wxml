@@ -1,18 +1,37 @@
 <view class="page page-with-tabbar">
   <view class="row space-between title-row">
     <text class="page-title">已收藏</text>
-    <text class="count-pill">{{skills.length}} 个</text>
+    <text class="count-pill">{{tab === 'radar' ? radarFavorites.length : skills.length}} 个</text>
   </view>
-  <view wx:if="{{error}}" class="notice">{{error}}</view>
-  <view wx:if="{{loading}}" class="notice">正在读取收藏…</view>
-  <view wx:for="{{skills}}" wx:key="id" class="card skill-card" hover-class="card-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="openSkill">
-    <text class="skill-name">{{item.name}}</text>
-    <view wx:if="{{item.displayAdded}}" class="fresh-row"><text class="fresh-new">{{item.displayAdded}}</text></view>
-    <text class="skill-desc">{{item.displayDescription}}</text>
-    <view class="meta"><text class="meta-tag">{{item.displayCategory}}</text><text class="meta-author">{{item.author}}</text></view>
-    <view class="source-meta"><text>{{item.displayStars}}</text><text>{{item.displayUpdated}}</text></view>
+  <view class="favorite-tabs">
+    <view class="favorite-tab {{tab === 'skills' ? 'favorite-tab-active' : ''}}" data-tab="skills" bindtap="changeTab" aria-role="button" aria-label="查看收藏的技能">技能</view>
+    <view class="favorite-tab {{tab === 'radar' ? 'favorite-tab-active' : ''}}" data-tab="radar" bindtap="changeTab" aria-role="button" aria-label="查看收藏的新词">新词</view>
   </view>
-  <view wx:if="{{!loading && skills.length === 0}}" class="empty"><image class="empty-icon" src="/assets/icons/heart-large.png" mode="aspectFit" /><text class="empty-title">还没有收藏</text><text class="empty-desc">打开技能详情，点按爱心即可保存</text></view>
+
+  <block wx:if="{{tab === 'skills'}}">
+    <view wx:if="{{error}}" class="notice">{{error}}</view>
+    <view wx:if="{{loading}}" class="notice">正在读取收藏…</view>
+    <view wx:for="{{skills}}" wx:key="id" class="card skill-card" hover-class="card-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="openSkill">
+      <text class="skill-name">{{item.name}}</text>
+      <view wx:if="{{item.displayAdded}}" class="fresh-row"><text class="fresh-new">{{item.displayAdded}}</text></view>
+      <text class="skill-desc">{{item.displayDescription}}</text>
+      <view class="meta"><text class="meta-tag">{{item.displayCategory}}</text><text class="meta-author">{{item.author}}</text></view>
+      <view class="source-meta"><text>{{item.displayStars}}</text><text>{{item.displayUpdated}}</text></view>
+    </view>
+    <view wx:if="{{!loading && skills.length === 0}}" class="empty"><image class="empty-icon" src="/assets/icons/heart-large.png" mode="aspectFit" /><text class="empty-title">还没有收藏技能</text><text class="empty-desc">打开技能详情，点按爱心即可保存</text></view>
+  </block>
+
+  <block wx:else>
+    <text class="favorite-local-note">保存在本机，可离线查看收藏时的简介</text>
+    <view wx:for="{{radarFavorites}}" wx:key="term" class="radar-row">
+      <view class="radar-content">
+        <text class="radar-name">{{item.term}}</text>
+        <text class="radar-summary">{{item.displaySummary}}</text>
+      </view>
+      <button class="favorite-button" data-term="{{item.term}}" catchtap="removeTermFavorite" aria-label="取消收藏 {{item.term}}"><image class="favorite-icon" src="/assets/icons/heart-filled.png" mode="aspectFit" /></button>
+    </view>
+    <view wx:if="{{radarFavorites.length === 0}}" class="empty"><image class="empty-icon" src="/assets/icons/heart-large.png" mode="aspectFit" /><text class="empty-title">还没有收藏新词</text><text class="empty-desc">在新词雷达中，点按爱心即可保存</text></view>
+  </block>
 
   <skill-tabbar active="favorites"></skill-tabbar>
 </view>

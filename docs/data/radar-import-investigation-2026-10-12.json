@@ -1,0 +1,43 @@
+{
+  "checked_on": "2026-10-12",
+  "timezone": "Asia/Shanghai",
+  "summary": "简介回填后遭另一个 Python 客户端两次 REST 批量导入覆盖；尚不能确定设备或任务名称。",
+  "observed_requests": [
+    {
+      "at_utc": "2026-10-12T12:41:07Z",
+      "method": "POST",
+      "path": "/rest/v1/trending_terms?on_conflict=term",
+      "status": 201,
+      "user_agent": "Python-urllib/3.13"
+    },
+    {
+      "at_utc": "2026-10-12T12:42:24.607Z",
+      "method": "POST",
+      "path": "/rest/v1/trending_terms?on_conflict=term",
+      "status": 200,
+      "user_agent": "Python-urllib/3.13",
+      "log_id": "9b839c8c-41ee-4a93-9b17-0deee88e7190"
+    }
+  ],
+  "observations": [
+    "首次 SQL 按 term 和 source_url 匹配，仅回填空简介，返回 113 条成功。",
+    "随后公共接口返回 138 条记录，仅 4 条非空简介；之后 SQL 显示 138 条全部有简介。",
+    "后一次批量变更的 138 条 updated_at 相同：2026-10-12T12:42:25.427656+00:00。",
+    "旧版 API Gateway 日志确认是 REST POST/upsert；此前根据时间戳推测为整批 SQL，现由请求日志修正。",
+    "日志未提供来源 IP 或可归因的设备信息；User-Agent 本身也不能确定程序位置。"
+  ],
+  "excluded_paths": [
+    "Supabase Cron 两个任务仅刷新技能元数据/清理 Star 快照，不写 trending_terms。",
+    "仓库 GitHub Actions 未调用 upsert:trending；该脚本逐条使用 Node/Supabase SDK，不匹配已观察到的 Python 请求。",
+    "本机 crontab、已查 LaunchAgents 和指定本机自动化目录未找到雷达任务；不代表外部设备或其他客户端不存在。"
+  ],
+  "repair": {
+    "local_importer": "只补 NULL/空串简介，元数据 upsert 不携带 summary_zh。",
+    "database_guard_file": "pipeline/supabase/migrations/022_preserve_trending_term_summaries.sql",
+    "database_guard_deployed": true,
+    "verified_summaries_restored": true,
+    "boundary": "非 postgres UPDATE/upsert 保留非空简介。不会防止管理员直写、由管理员身份执行的函数，或删除后重建。",
+    "verified_summary_count": 113,
+    "verified_at_utc": "2026-10-12T14:16:17.180187+00:00"
+  }
+}
