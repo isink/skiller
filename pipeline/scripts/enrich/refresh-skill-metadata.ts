@@ -1,7 +1,7 @@
 /** Daily repository stars and per-SKILL.md commit dates. All progress is stored in Supabase. */
 import "dotenv/config";
 import { db } from "../import/lib/supabase";
-import { parseGitHubRepositoryURL } from "../lib/github-url";
+import { canonicalRepositoryURL, parseGitHubRepositoryURL, renamedRepoSlug } from "../lib/github-url";
 import { canonicalSkillSourceURL, fetchSkillFileDate, needsSourceCheck, resolveSkillSource } from "../lib/skill-source";
 import { applyRepositoryMetadata, type RepoRefreshState } from "../lib/repo-metadata-write";
 
@@ -15,6 +15,7 @@ if (!Number.isInteger(maxRequests) || maxRequests < 1 || maxRequests > 10000) {
 
 type SkillRow = {
   id: string;
+  slug: string;
   github_url: string;
   source_checked_at: string | null;
   source_repo_pushed_at: string | null;
@@ -61,12 +62,43 @@ async function allRows<T>(table: string, columns: string): Promise<T[]> {
   }
 }
 
+/**
+ * GitHub redirects a renamed repository. Move its skills to the canonical
+ * owner/repo first so metadata and star snapshots are stored under one key.
+ */
+async function moveToCanonicalRepo(
+  group: RepoGroup, key: string, fullName: string, slugs: Set<string>, groups: Map<string, RepoGroup>,
+): Promise<string> {
+  const canonicalKey = fullName.toLowerCase();
+  console.warn(`${key} was renamed to ${fullName}; refreshing under ${fullName}`);
+  const [owner, repo] = fullName.split("/");
+  const target = groups.get(canonicalKey) ?? { owner, repo, skills: [] };
+  for (const skill of group.skills) {
+    const slug = renamedRepoSlug(skill.slug, key, canonicalKey);
+    if (slug !== skill.slug && slugs.has(slug)) {
+      console.warn(`  ${skill.slug}: ${slug} already exists, left under ${key}`);
+      continue;
+    }
+    const patch = { slug, github_url: canonicalRepositoryURL(skill.github_url, fullName) };
+    const { error } = await db.from("skills").update(patch).eq("id", skill.id);
+    if (error) throw error;
+    slugs.delete(skill.slug);
+    slugs.add(slug);
+    Object.assign(skill, patch);
+    target.skills.push(skill);
+  }
+  groups.delete(key);
+  groups.set(canonicalKey, target);
+  return canonicalKey;
+}
+
 async function main(): Promise<void> {
   const [skills, states] = await Promise.all([
-    allRows<SkillRow>("skills", "id,github_url,source_checked_at,source_repo_pushed_at,source_url_checked"),
+    allRows<SkillRow>("skills", "id,slug,github_url,source_checked_at,source_repo_pushed_at,source_url_checked"),
     allRows<RepoRefreshState>("github_repo_refresh_state", "repo_key,default_branch,stars,pushed_at,checked_at"),
   ]);
   const stateByRepo = new Map(states.map((state) => [state.repo_key, state]));
+  const slugs = new Set(skills.map((skill) => skill.slug));
   const groups = new Map<string, RepoGroup>();
   let invalidUrls = 0;
   for (const skill of skills) {
@@ -95,6 +127,7 @@ async function main(): Promise<void> {
   });
   // Refresh repository stars first, including rows that already have a count.
   for (const [key, group] of orderedGroups) {
+    if (metadata.has(key)) continue;
     const previous = stateByRepo.get(key);
     if (previous?.checked_at.slice(0, 10) === today) {
       metadata.set(key, previous);
@@ -103,8 +136,12 @@ async function main(): Promise<void> {
     if (requests >= repoBudget) { pendingRepos++; continue; }
     const endpoint = `https://api.github.com/repos/${encodeURIComponent(group.owner)}/${encodeURIComponent(group.repo)}`;
     const result = await github(endpoint);
-    const state = await applyRepositoryMetadata(db, key, result);
-    metadata.set(key, state);
+    const fullName = (result.body as { full_name?: unknown } | null)?.full_name;
+    const canonicalKey = typeof fullName === "string" && fullName.toLowerCase() !== key
+      ? await moveToCanonicalRepo(group, key, fullName, slugs, groups)
+      : key;
+    const state = await applyRepositoryMetadata(db, canonicalKey, result);
+    metadata.set(canonicalKey, state);
     if (result.status === 404) {
       missingRepos++;
       continue;

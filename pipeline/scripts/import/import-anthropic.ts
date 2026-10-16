@@ -19,8 +19,9 @@ import { idToDisplayName } from "./lib/slugify";
 import { mapCategory } from "./lib/category-map";
 import { applyOverrides } from "./lib/overrides";
 import { importNewOnly, loadExistingSlugs, upsertSkillsPreservingCuration } from "./lib/upsert";
-import { fetchRepoStars, repoStarsPatch } from "./lib/github";
+import { getRepoMetadata } from "./lib/github";
 import { assertNoBatchFailures } from "../lib/batch-failures";
+import { checkedRepoStarsPatch } from "../lib/github-repo-metadata";
 import { fetchEarliestCommitDate } from "../lib/commit-history";
 import { anthropicSkillURLs, discoverAnthropicSkillSources, type AnthropicSkillSource } from "../lib/anthropic-source";
 
@@ -139,10 +140,10 @@ const KNOWN_CATEGORIES: Record<string, string> = {
 };
 
 async function main() {
-  console.log(`→ Fetching GitHub stars for ${OWNER}/${REPO}`);
-  const repoStars = await fetchRepoStars(OWNER, REPO);
-  const starsCheckedAt = repoStars === undefined ? undefined : new Date().toISOString();
-  console.log(`✓ Stars: ${repoStars ?? "n/a"}`);
+  console.log(`→ Fetching GitHub metadata for ${OWNER}/${REPO}`);
+  const repoMetadata = await getRepoMetadata(`${OWNER}/${REPO}`);
+  const [owner, repo] = repoMetadata.fullName.split("/");
+  console.log(`✓ Stars: ${repoMetadata.stars}`);
 
   console.log(`→ Listing ${OWNER}/${REPO} skill directories`);
   const dirs = await listSkillDirs();
@@ -160,7 +161,7 @@ async function main() {
       unchanged++;
       continue;
     }
-    const urls = anthropicSkillURLs(source, { owner: OWNER, repo: REPO, branch: BRANCH });
+    const urls = anthropicSkillURLs(source, { owner, repo, branch: BRANCH });
     const [md, publishedAt] = await Promise.all([
       fetchSkillMd(urls.rawUrl),
       fetchFirstCommitDate(urls.commitsUrl),
@@ -202,8 +203,7 @@ async function main() {
       author: "anthropics",
       github_url: urls.githubUrl,
       skill_md_content: md,
-      ...repoStarsPatch(repoStars),
-      ...(starsCheckedAt ? { github_stars_checked_at: starsCheckedAt } : {}),
+      ...checkedRepoStarsPatch(repoMetadata),
       // Seed values for a first import only; existing rows keep their curation.
       rank: 80,
       score: 95,

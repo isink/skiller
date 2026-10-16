@@ -15,8 +15,9 @@ import { idToDisplayName } from "./lib/slugify";
 import { mapCategory, CURATED_CATEGORIES } from "./lib/category-map";
 import { applyOverrides } from "./lib/overrides";
 import { importNewOnly, loadExistingSlugs, upsertSkillsPreservingCuration } from "./lib/upsert";
-import { fetchRepoStars, repoStarsPatch } from "./lib/github";
+import { getRepoMetadata } from "./lib/github";
 import { fetchSkillMarkdown, skillContentPatch } from "./lib/skill-content";
+import { checkedRepoStarsPatch, type GitHubRepoMetadata } from "../lib/github-repo-metadata";
 import {
   validateAntigravitySkills,
   type AntigravitySkill as UpstreamSkill,
@@ -24,8 +25,7 @@ import {
 
 const SOURCE_URL =
   "https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/skills_index.json";
-const REPO_TREE_BASE =
-  "https://github.com/sickn33/antigravity-awesome-skills/tree/main/";
+const REPO = "sickn33/antigravity-awesome-skills";
 
 type InsertSkill = {
   slug: string;
@@ -96,8 +96,7 @@ function deriveTags(upstream: UpstreamSkill): string[] {
 function mapSkill(
   upstream: UpstreamSkill,
   skillMd: string | undefined,
-  githubStars: number | undefined,
-  starsCheckedAt: string | undefined,
+  repo: GitHubRepoMetadata,
 ): InsertSkill {
   return {
     slug: upstream.id,
@@ -106,10 +105,9 @@ function mapSkill(
     category: mapCategory(upstream.category),
     tags: deriveTags(upstream),
     author: authorFromSource(upstream.source),
-    github_url: REPO_TREE_BASE + upstream.path,
+    github_url: `https://github.com/${repo.fullName}/tree/main/${upstream.path}`,
     ...skillContentPatch(skillMd),
-    ...repoStarsPatch(githubStars),
-    ...(starsCheckedAt ? { github_stars_checked_at: starsCheckedAt } : {}),
+    ...checkedRepoStarsPatch(repo),
     rank: 0,
     score: 0,
     featured: false,
@@ -147,10 +145,9 @@ async function main() {
   const existingSlugs = await loadExistingSlugs();
   console.log(`✓ ${existingSlugs.size} skills already in the catalog${importNewOnly ? " (new-only mode)" : ""}`);
 
-  console.log("→ Fetching GitHub stars for antigravity repo");
-  const repoStars = await fetchRepoStars("sickn33", "antigravity-awesome-skills");
-  const starsCheckedAt = repoStars === undefined ? undefined : new Date().toISOString();
-  console.log(`✓ Stars: ${repoStars ?? "n/a"}`);
+  console.log("→ Fetching GitHub metadata for antigravity repo");
+  const repoMetadata = await getRepoMetadata(REPO);
+  console.log(`✓ Stars: ${repoMetadata.stars}`);
 
   const fetchedUpstream = await fetchUpstream();
   const upstream = importNewOnly
@@ -162,7 +159,7 @@ async function main() {
     upstream.map((u) => ({ slug: u.id, path: u.path }))
   );
 
-  const rows: InsertSkill[] = upstream.map((u) => mapSkill(u, mdMap.get(u.id), repoStars, starsCheckedAt));
+  const rows: InsertSkill[] = upstream.map((u) => mapSkill(u, mdMap.get(u.id), repoMetadata));
 
   console.log(`→ Upserting ${rows.length} skills`);
   const summary = await upsertSkillsPreservingCuration(rows, existingSlugs, {

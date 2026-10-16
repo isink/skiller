@@ -1,7 +1,5 @@
 import { env } from "./env";
-import { fetchRepoStarsFromGitHub } from "../../lib/repo-stars";
-
-export { repoStarsPatch } from "../../lib/repo-stars";
+import { createGitHubRepoMetadataResolver, logRepoRename } from "../../lib/github-repo-metadata";
 
 function authHeaders(): Record<string, string> {
   const h: Record<string, string> = {
@@ -13,7 +11,11 @@ function authHeaders(): Record<string, string> {
   return h;
 }
 
-/** A missing repo is omitted; request or schema failures abort the import. */
-export async function fetchRepoStars(owner: string, repo: string): Promise<number | undefined> {
-  return fetchRepoStarsFromGitHub(owner, repo, authHeaders());
-}
+/** Canonical name, default branch and stars for a repository, fetched once per run. */
+export const getRepoMetadata = createGitHubRepoMetadataResolver(async (fullName) => {
+  const res = await fetch(`https://api.github.com/repos/${fullName.split("/").map(encodeURIComponent).join("/")}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`GitHub repo API ${res.status} ${res.statusText}: ${fullName}`);
+  return res.json();
+}, undefined, logRepoRename);
