@@ -19,11 +19,41 @@
       <view class="install-card">
         <view class="install-heading">
           <text class="install-title">安装 Skill</text>
-          <button wx:if="{{installCommand}}" class="install-copy" bindtap="onCopyInstall" aria-label="复制技能安装命令">复制命令</button>
+          <button wx:if="{{installCommand}}" class="install-copy" bindtap="onCopyInstall" aria-label="{{installCopyLabel}}">{{installCopyLabel}}</button>
         </view>
         <text wx:if="{{installCommand}}" class="install-command" selectable>{{installCommand}}</text>
         <text class="install-hint">{{installHint}}</text>
+        <view wx:if="{{installAlternatives.length}}" class="install-alts">
+          <view wx:for="{{installAlternatives}}" wx:key="label" class="install-alt" data-index="{{index}}" bindtap="onCopyAlternative">
+            <text class="install-alt-label">{{item.label}} · 点按复制</text>
+            <text class="install-alt-command">{{item.command}}</text>
+          </view>
+        </view>
+        <view wx:if="{{installSteps.length}}" class="install-steps">
+          <text class="install-steps-title">3 步装好</text>
+          <view wx:for="{{installSteps}}" wx:key="index" class="install-step">
+            <text class="install-step-no">{{index + 1}}</text>
+            <text class="install-step-text">{{item}}</text>
+          </view>
+        </view>
       </view>
+      <view class="source-card">
+        <view wx:if="{{sourceUrl}}" class="source-row">
+          <text class="source-label">原链接</text>
+          <text class="source-value" selectable>{{sourceUrl}}</text>
+          <button class="source-action" bindtap="onCopySource" aria-label="复制原链接">复制</button>
+        </view>
+        <view wx:if="{{displayLicense}}" class="source-row">
+          <text class="source-label">许可证</text>
+          <text class="source-value">{{displayLicense}}</text>
+        </view>
+        <view class="source-row">
+          <text class="source-label">作者</text>
+          <text class="source-value">是作者？申请下架或反馈</text>
+          <button class="source-action" bindtap="onFeedback" aria-label="作者申请下架或反馈">联系</button>
+        </view>
+      </view>
+      <button class="share-button" open-type="share" aria-label="推荐给同事">推荐给同事</button>
     </view>
     <view class="markdown-card">
       <text class="markdown-title">技能说明全文</text>
@@ -36,5 +66,6 @@
         <view wx:elif="{{item.type === 'rule'}}" class="md-rule"></view>
       </block>
     </view>
+    <canvas type="2d" id="share-canvas" class="share-canvas"></canvas>
   </block>
 </view>

@@ -1,0 +1,196 @@
+import assert from "node:assert/strict";
+import test, { type TestContext } from "node:test";
+import type { Skill } from "../../../miniprogram/types/skill";
+import { CONTACT_EMAIL } from "../../../miniprogram/services/config";
+
+type Share = { title: string; path: string; imageUrl?: string; promise?: Promise<{ title: string; path: string; imageUrl?: string }> };
+type DetailPage = {
+  data: Record<string, any>;
+  _cardPath: string;
+  _cardKey: string;
+  setData(patch: Record<string, unknown>, callback?: () => void): void;
+  showSkill(skill: Skill, clearError: boolean): void;
+  onCopyInstall(): void;
+  onCopyAlternative(event: { currentTarget: { dataset: { index: number } } }): void;
+  onCopySource(): void;
+  onFeedback(): void;
+  onShareAppMessage(event?: { from?: string }): Share;
+  onShareTimeline(): { title: string; query: string };
+};
+
+const globals = globalThis as typeof globalThis & { wx: unknown; Page: unknown };
+let definition: Omit<DetailPage, "setData">;
+const originalPage = globals.Page;
+globals.Page = (page: typeof definition) => { definition = page; };
+require("../../../miniprogram/pages/detail/index");
+globals.Page = originalPage;
+
+let sequence = 0;
+function makeSkill(overrides: Partial<Skill> = {}): Skill {
+  const n = ++sequence;
+  return {
+    id: `0000000${n}-0000-0000-0000-00000000000${n}`.slice(0, 36),
+    slug: `skill-${n}`, name: `skill-${n}`, description: "Source",
+    description_zh: "读取和处理 PDF 文件。支持合并与拆分。",
+    category: "office", tags: [], use_cases: [], author: "acme",
+    github_url: "https://github.com/acme/tools/tree/main/skills/pdf",
+    github_stars: 1234, rank: 0, score: 0, featured: false, created_at: "2026-10-01T00:00:00Z", published_at: null,
+    skill_md_content: "---\nname: pdf-reader\nlicense: MIT\n---\n# PDF",
+    ...overrides,
+  };
+}
+
+function harness(t: TestContext, options: { exportFails?: boolean } = {}) {
+  const original = globals.wx;
+  const events: Array<Record<string, any>> = [];
+  const clipboard: string[] = [];
+  const toasts: string[] = [];
+  const modals: Array<Record<string, any>> = [];
+  globals.wx = {
+    getStorageSync: () => "",
+    setStorageSync() {},
+    setNavigationBarTitle() {},
+    showToast: ({ title }: { title: string }) => { toasts.push(title); },
+    setClipboardData: ({ data, success }: { data: string; success(): void }) => { clipboard.push(data); success(); },
+    showModal: (modal: Record<string, any>) => { modals.push(modal); },
+    request: ({ url, data, success }: { url: string; data: Record<string, any>; success(r: { statusCode: number }): void }) => {
+      if (url.endsWith("/rest/v1/mp_events")) events.push(data);
+      success({ statusCode: 201 });
+    },
+    createSelectorQuery: () => ({
+      select: () => ({
+        fields: () => ({
+          exec: (callback: (result: unknown[]) => void) => callback([{
+            node: { width: 0, height: 0, getContext: () => ({
+              fillRect() {}, fillText() {}, measureText: (text: string) => ({ width: text.length * 10 }),
+            }) },
+          }]),
+        }),
+      }),
+    }),
+    canvasToTempFilePath: ({ success, fail }: { success(r: { tempFilePath: string }): void; fail(): void }) => {
+      if (options.exportFails) fail(); else success({ tempFilePath: "wxfile://detail-card.jpg" });
+    },
+  };
+  t.after(() => { globals.wx = original; });
+  const page: DetailPage = {
+    ...definition,
+    data: JSON.parse(JSON.stringify(definition.data)),
+    setData(patch, callback) { Object.assign(this.data, patch); callback?.(); },
+  };
+  return { page, events, clipboard, toasts, modals };
+}
+
+const settle = () => new Promise((resolve) => setImmediate(resolve));
+
+test("the detail page shows the install command, three steps, source link and license", (t) => {
+  const { page } = harness(t);
+  page.showSkill(makeSkill(), true);
+  assert.equal(page.data.installCommand, "npx skills add https://github.com/acme/tools/tree/main/skills/pdf --skill pdf-reader");
+  assert.equal(page.data.installSteps.length, 3);
+  assert.equal(page.data.sourceUrl, "https://github.com/acme/tools/tree/main/skills/pdf");
+  assert.equal(page.data.displayLicense, "MIT");
+});
+
+test("copying the install command reports a copy_install event", async (t) => {
+  const { page, clipboard, toasts, events } = harness(t);
+  const skill = makeSkill();
+  page.showSkill(skill, true);
+  page.onCopyInstall();
+  await settle();
+
+  assert.deepEqual(clipboard, [page.data.installCommand]);
+  assert.deepEqual(toasts, ["安装命令已复制"]);
+  const event = events.find((row) => row.event === "copy_install");
+  assert.ok(event);
+  assert.equal(event.page, "pages/detail/index");
+  assert.deepEqual(event.meta, { action: "copy_install", id: skill.id, slug: skill.slug, kind: "npx", target: "primary" });
+});
+
+test("a skill without an inferable command copies the GitHub link", async (t) => {
+  const { page, clipboard, toasts, events } = harness(t);
+  page.showSkill(makeSkill({ skill_md_content: "no frontmatter", github_url: "https://github.com/acme/tools/blob/main/skills/pdf/SKILL.md" }), true);
+  page.onCopyInstall();
+  await settle();
+  assert.deepEqual(clipboard, ["https://github.com/acme/tools/blob/main/skills/pdf/SKILL.md"]);
+  assert.deepEqual(toasts, ["GitHub 链接已复制"]);
+  assert.equal(events.find((row) => row.event === "copy_install")?.meta.kind, "link");
+});
+
+test("alternatives and the source link are copied and reported separately", async (t) => {
+  const { page, clipboard, events } = harness(t);
+  page.showSkill(makeSkill({ github_url: "https://github.com/acme/tidy", skill_md_content: "---\nname: tidy\n---\n" }), true);
+  page.onCopyAlternative({ currentTarget: { dataset: { index: 0 } } });
+  page.onCopySource();
+  page.onCopyAlternative({ currentTarget: { dataset: { index: 9 } } });
+  await settle();
+  assert.deepEqual(clipboard, ["git clone https://github.com/acme/tidy.git ~/.claude/skills/tidy", "https://github.com/acme/tidy"]);
+  assert.deepEqual(events.filter((row) => row.event === "copy_install").map((row) => row.meta.target).sort(), ["alternative", "source_link"]);
+});
+
+test("a failed clipboard write reports nothing", async (t) => {
+  const { page, events } = harness(t);
+  page.showSkill(makeSkill(), true);
+  (globals.wx as { setClipboardData: unknown }).setClipboardData = ({ fail }: { fail(): void }) => fail();
+  page.onCopyInstall();
+  await settle();
+  assert.equal(events.filter((row) => row.event === "copy_install").length, 0);
+});
+
+test("the takedown entry offers to copy the contact email", (t) => {
+  const { page, modals, clipboard } = harness(t);
+  page.showSkill(makeSkill({ name: "PDF 助手" }), true);
+  page.onFeedback();
+  assert.equal(modals.length, 1);
+  assert.match(modals[0].content, /「PDF 助手」/);
+  modals[0].success({ confirm: true });
+  assert.deepEqual(clipboard, [CONTACT_EMAIL]);
+});
+
+test("sharing uses 技能名｜一句中文用途 and the generated 5:4 cover", async (t) => {
+  const { page, events } = harness(t);
+  const skill = makeSkill({ name: "pdf" });
+  page.showSkill(skill, true);
+  await settle();
+
+  const share = page.onShareAppMessage({ from: "button" });
+  assert.equal(share.title, "pdf｜读取和处理 PDF 文件");
+  assert.equal(share.path, `/pages/detail/index?id=${encodeURIComponent(skill.id)}`);
+  assert.equal(share.imageUrl, "wxfile://detail-card.jpg");
+  const event = events.find((row) => row.event === "share");
+  assert.deepEqual(event?.meta, { action: "share", id: skill.id, slug: skill.slug, channel: "button", card: true });
+});
+
+test("when the cover is not ready yet the share sheet waits for it", async (t) => {
+  const { page } = harness(t);
+  page.showSkill(makeSkill({ name: "pdf" }), true);
+  page._cardPath = "";
+  page._cardKey = "";
+  const share = page.onShareAppMessage();
+  assert.equal(share.imageUrl, undefined);
+  const resolved = await share.promise;
+  assert.equal(resolved?.imageUrl, "wxfile://detail-card.jpg");
+  assert.equal(resolved?.title, share.title);
+  assert.equal(resolved?.path, share.path);
+});
+
+test("a cover that fails to render falls back to the default image", async (t) => {
+  const { page } = harness(t, { exportFails: true });
+  page.showSkill(makeSkill({ name: "pdf" }), true);
+  await settle();
+  const share = page.onShareAppMessage({ from: "menu" });
+  const resolved = await share.promise;
+  assert.equal(resolved?.imageUrl, undefined);
+  assert.match(resolved?.title ?? "", /^pdf｜/);
+  assert.equal(share.title, resolved?.title);
+});
+
+test("the timeline share reports the event too", (t) => {
+  const { page, events } = harness(t);
+  const skill = makeSkill({ name: "pdf" });
+  page.showSkill(skill, true);
+  const share = page.onShareTimeline();
+  assert.equal(share.title, "pdf｜读取和处理 PDF 文件");
+  assert.equal(share.query, `id=${encodeURIComponent(skill.id)}`);
+  assert.equal(events.find((row) => row.event === "share")?.meta.channel, "timeline");
+});
