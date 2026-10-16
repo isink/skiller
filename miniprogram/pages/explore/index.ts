@@ -1,5 +1,7 @@
 import { fetchCategories, fetchCategoryCounts, fetchSkills, PAGE_SIZE } from "../../services/api";
 import { readCache, writeCache } from "../../services/storage";
+import { trackPageView } from "../../services/analytics";
+import { APP_TITLE, enableShareMenu } from "../../services/share";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
@@ -33,6 +35,26 @@ Page({
     this.setData({ categories, counts, activeCategory: category, skills: (cached || []).map(present), loading: !cached });
     this.loadCategories();
     this.loadPage(true);
+    enableShareMenu();
+  },
+
+  onShow() {
+    wx.setNavigationBarTitle({ title: "AI 技能分类" });
+    trackPageView("pages/explore/index", this.data.activeCategory ? { category: this.data.activeCategory } : undefined);
+  },
+
+  sharePath(): string {
+    const category = this.data.activeCategory;
+    return category ? `/pages/explore/index?category=${encodeURIComponent(category)}` : "/pages/explore/index";
+  },
+
+  onShareAppMessage() {
+    return { title: `${APP_TITLE}：AI 技能分类`, path: this.sharePath() };
+  },
+
+  onShareTimeline() {
+    const category = this.data.activeCategory;
+    return { title: `${APP_TITLE}：AI 技能分类`, query: category ? `category=${encodeURIComponent(category)}` : "" };
   },
 
   async loadCategories() {

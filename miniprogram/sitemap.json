@@ -1,4 +1,4 @@
 {
-  "desc": "AISkill技能库页面可公开访问。",
+  "desc": "头山 AI 工具箱：AI 技能、Claude Skills、AI 工具、技能库与 AI 新词雷达，页面可公开访问。",
   "rules": [{ "action": "allow", "page": "*" }]
 }

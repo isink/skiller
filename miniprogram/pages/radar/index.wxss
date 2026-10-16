@@ -58,3 +58,8 @@
 .term-summary-pending { color: var(--color-text-3); }
 
 .loading-more, .no-more { padding: var(--space-3) 0; color: var(--color-text-3); font-size: var(--text-sm); text-align: center; }
+
+.recommend { margin-top: var(--space-3); }
+.explore-entry { display: flex; flex-direction: row; align-items: center; justify-content: center; height: var(--tap-min); margin: var(--space-3) 0 var(--space-2); border: 1rpx solid var(--color-border-strong); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); font-size: var(--text-base); font-weight: var(--weight-semibold); }
+.explore-entry:active { background: var(--color-surface-2); }
+.explore-arrow { width: 28rpx; height: 28rpx; margin-left: 4rpx; }

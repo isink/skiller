@@ -1,5 +1,7 @@
 import { fetchSkillsByIds } from "../../services/api";
 import { cacheSkill, getFavoriteIds, readCache } from "../../services/storage";
+import { trackPageView } from "../../services/analytics";
+import { APP_TITLE, enableShareMenu } from "../../services/share";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
@@ -33,8 +35,17 @@ Page({
 
   onLoad(query: { tab?: string }) {
     if (query.tab === "radar") this.setData({ tab: "radar" });
+    enableShareMenu();
+  },
+  onShareAppMessage() {
+    return { title: `${APP_TITLE}：AI 技能库与新词雷达`, path: "/pages/home/index" };
+  },
+  onShareTimeline() {
+    return { title: `${APP_TITLE}：AI 技能库与新词雷达` };
   },
   onShow() {
+    wx.setNavigationBarTitle({ title: "我的收藏" });
+    trackPageView("pages/favorites/index");
     this.setData({ radarFavorites: getRadarFavorites().map(presentTerm) });
     return this.loadFavorites();
   },
