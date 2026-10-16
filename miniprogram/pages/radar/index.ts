@@ -4,10 +4,31 @@ import { buildMonthDays, buildRecentDays, getLocalDateKey, isDateKey, shiftMonth
 import { getRadarFavoriteNames, toggleRadarFavorite } from "../../services/radar-favorites";
 import { trackPageView } from "../../services/analytics";
 import { APP_TITLE, enableShareMenu } from "../../services/share";
+import { fetchRecommendations } from "../../services/recommendations";
+import type { Recommendations } from "../../services/recommendations";
+import { readCache, writeCache } from "../../services/storage";
+import { categoryName } from "../../services/presentation";
+import { skillDescriptionZh } from "../../services/description-zh";
+import { skillMetadata } from "../../services/skill-meta";
+import { skillFreshness } from "../../services/freshness";
+import type { Skill } from "../../types/skill";
 
 const REFRESH_INTERVAL_MS = 60000;
 type RadarTermRow = TrendingTermDisplay & { isFavorite: boolean };
 const today = getLocalDateKey();
+type RecommendedSkill = Skill & {
+  displayDescription: string; displayCategory: string; displayStars: string; displayUpdated: string;
+  displayGrowth: string; displayAdded: string; displayRepoNote: string;
+};
+function presentSkill(skill: Skill): RecommendedSkill {
+  return {
+    ...skill,
+    displayDescription: skillDescriptionZh(skill),
+    displayCategory: categoryName(skill.category),
+    ...skillMetadata(skill),
+    ...skillFreshness(skill),
+  };
+}
 function withFavorites(terms: TrendingTermDisplay[]): RadarTermRow[] {
   const names = new Set(getRadarFavoriteNames());
   return terms.map((term) => ({ ...term, isFavorite: names.has(term.term) }));
@@ -41,6 +62,8 @@ Page({
     weekdays: ["一", "二", "三", "四", "五", "六", "日"],
     recentDays: buildRecentDays(today, ""),
     monthDays: buildMonthDays(today.slice(0, 7), "", today),
+    recommendTitle: "",
+    recommended: [] as RecommendedSkill[],
   },
   _visible: false,
   _refreshTimer: 0,
@@ -50,7 +73,26 @@ Page({
   _nextOffset: 0,
   _pendingSnapshot: null as TrendingSnapshot | null,
 
-  onLoad() { enableShareMenu(); },
+  onLoad() {
+    enableShareMenu();
+    this.loadRecommendations();
+  },
+
+  async loadRecommendations() {
+    const cached = readCache<Recommendations>("radar:recommend");
+    if (cached) this.setData({ recommendTitle: cached.title, recommended: cached.skills.map(presentSkill) });
+    try {
+      const fresh = await fetchRecommendations();
+      writeCache("radar:recommend", fresh);
+      this.setData({ recommendTitle: fresh.title, recommended: fresh.skills.map(presentSkill) });
+    } catch { /* The explore entry stays available without recommendations. */ }
+  },
+
+  openSkill(event: { currentTarget: { dataset: { id: string } } }) {
+    wx.navigateTo({ url: `/pages/detail/index?id=${encodeURIComponent(event.currentTarget.dataset.id)}` });
+  },
+
+  openExplore() { wx.navigateTo({ url: "/pages/explore/index" }); },
 
   onShareAppMessage() {
     return { title: `${APP_TITLE}：AI 新词雷达`, path: "/pages/radar/index" };

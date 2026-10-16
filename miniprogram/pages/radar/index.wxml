@@ -76,4 +76,19 @@
   </view>
   <view wx:if="{{loading && terms.length > 0}}" class="loading-more">加载中…</view>
   <view wx:if="{{!hasMore && terms.length > 0}}" class="no-more">{{mode === 'latest' ? (selectedDate ? '当天内容已显示完' : '没有更多了') : '仅展示24小时内核对的来源'}}</view>
+  <view wx:if="{{recommended.length > 0}}" class="recommend">
+    <text class="section-title">{{recommendTitle}}</text>
+    <view wx:for="{{recommended}}" wx:key="id" class="card skill-card" hover-class="card-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="openSkill">
+      <text class="skill-name">{{item.name}}</text>
+      <view wx:if="{{item.displayGrowth || item.displayAdded}}" class="fresh-row">
+        <text wx:if="{{item.displayGrowth}}" class="fresh-hot">{{item.displayGrowth}}</text>
+        <text wx:if="{{item.displayAdded}}" class="fresh-new">{{item.displayAdded}}</text>
+        <text wx:if="{{item.displayRepoNote}}" class="fresh-note">{{item.displayRepoNote}}</text>
+      </view>
+      <text class="skill-desc">{{item.displayDescription}}</text>
+      <view class="meta"><text class="meta-tag">{{item.displayCategory}}</text><text class="meta-author">{{item.author}}</text></view>
+      <view class="source-meta"><text>{{item.displayStars}}</text><text>{{item.displayUpdated}}</text></view>
+    </view>
+  </view>
+  <view class="explore-entry" bindtap="openExplore" aria-role="button" aria-label="去探索更多 AI 技能"><text>去探索更多技能</text><image class="explore-arrow" src="/assets/icons/chevron-right.png" mode="aspectFit" /></view>
 </view>
