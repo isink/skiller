@@ -48,6 +48,14 @@ npm run import:all            # both, in that order
 5. Sets `featured: true` and a baseline `rank: 80` for every official skill; `sources.json` can override.
 6. Applies `sources.json` overrides.
 
+## Discovery scripts
+
+| Script                              | What it does                                                                                              |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `import:discover`                   | Code search for every public `SKILL.md`; shares its per-file logic (`scripts/lib/github-discovered-skill.ts`) with the two scripts below. |
+| `import:mp-skills`                  | Finds WeChat mini program SKILL examples (`SKILL.md` + `mcp.json`) and files them under `mp-skill`. Dry-run unless `--apply`. |
+| `report:empty-search`                | Reads `search_empty` events and searches GitHub for each term. Report-only unless `--import`. |
+
 ## Curation
 
 Edit [`sources.json`](./sources.json) to:

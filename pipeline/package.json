@@ -8,6 +8,7 @@
     "import:antigravity": "tsx scripts/import/import-antigravity.ts",
     "import:anthropic": "tsx scripts/import/import-anthropic.ts",
     "import:discover": "tsx scripts/import/import-github-search.ts",
+    "import:mp-skills": "tsx scripts/import/import-mp-skills.ts",
     "import:all": "npm run import:antigravity && npm run import:anthropic && npm run import:discover",
     "apply:overrides": "tsx scripts/import/apply-overrides.ts",
     "upsert:trending": "tsx scripts/import/upsert-trending-terms.ts",

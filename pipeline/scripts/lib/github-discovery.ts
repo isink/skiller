@@ -10,7 +10,7 @@
 export const CODE_SEARCH_MIN_INTERVAL_MS = 6_500;
 export const REPO_SEARCH_MIN_INTERVAL_MS = 2_500;
 
-const DISCOVERY_TOPICS = [
+export const DISCOVERY_TOPICS = [
   "agent-skills",
   "agent-skill",
   "claude-skills",
