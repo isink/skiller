@@ -30,7 +30,7 @@ import { assertNoBatchFailures } from "../lib/batch-failures";
 import { assertCompleteGitHubSearch } from "../lib/github-search";
 import { boundedRetryDelayMs } from "../lib/rate-limit";
 import { parseOptionalPositiveInteger } from "../lib/env-number";
-import { checkedRepoStarsPatch, createGitHubRepoMetadataResolver } from "../lib/github-repo-metadata";
+import { checkedRepoStarsPatch, createGitHubRepoMetadataResolver, logRepoRename } from "../lib/github-repo-metadata";
 import {
   CODE_SEARCH_MIN_INTERVAL_MS,
   REPO_SEARCH_MIN_INTERVAL_MS,
@@ -38,6 +38,7 @@ import {
   recentRepoQueries,
   skillPathsFromTree,
 } from "../lib/github-discovery";
+import { db } from "./lib/supabase";
 import { importNewOnly, loadExistingSlugs, upsertSkillsPreservingCuration } from "./lib/upsert";
 
 // Repos already handled by dedicated importers — skip them.
@@ -220,7 +221,7 @@ async function discoverRecentItems(days: number, skipRepos: Set<string>): Promis
 
 const getRepoMetadata = createGitHubRepoMetadataResolver((fullName) => githubJson(
   `https://api.github.com/repos/${fullName.split("/").map(encodeURIComponent).join("/")}`,
-));
+), undefined, logRepoRename);
 
 /** Minimal YAML frontmatter parser (same approach as import-anthropic.ts) */
 function parseFrontmatter(md: string): {
@@ -343,12 +344,36 @@ async function main() {
 
     const fm = parseFrontmatter(md);
 
+    // Code search can return a redirected old name; key the skill by the canonical one.
+    let repoMetadata;
+    try {
+      repoMetadata = await getRepoMetadata(repo.full_name);
+    } catch (error) {
+      console.error(`\n  ✖ ${repo.full_name}: ${error instanceof Error ? error.message : String(error)}`);
+      failed++;
+      continue;
+    }
+
+    const [owner, repoName] = repoMetadata.fullName.split("/");
+
     // Derive slug from repo + path so each SKILL.md gets a unique row.
-    const slug = deriveSlug(repo.full_name, path);
+    const slug = deriveSlug(repoMetadata.fullName, path);
+    const storedSlug = deriveSlug(repo.full_name, path);
+    if (slug !== storedSlug && existingSlugs.has(storedSlug) && !existingSlugs.has(slug)) {
+      const { error } = await db.from("skills").update({ slug }).eq("slug", storedSlug);
+      if (error) {
+        console.error(`\n  ✖ rename ${storedSlug}: ${error.message}`);
+        failed++;
+        continue;
+      }
+      console.warn(`\n  ↪ renamed stored skill ${storedSlug} → ${slug}`);
+      existingSlugs.delete(storedSlug);
+      existingSlugs.add(slug);
+    }
 
     // Name: frontmatter > repo name cleaned up
     const rawName = typeof fm.name === "string" ? fm.name : "";
-    const name = rawName || idToDisplayName(repo.full_name.split("/")[1]);
+    const name = rawName || idToDisplayName(repoName);
 
     // Description: frontmatter > first non-heading paragraph of body
     let description = typeof fm.description === "string" ? fm.description : "";
@@ -370,23 +395,14 @@ async function main() {
     tags.push("community");
     const uniqueTags = Array.from(new Set(tags)).slice(0, 8);
 
-    let repoMetadata;
-    try {
-      repoMetadata = await getRepoMetadata(repo.full_name);
-    } catch (error) {
-      console.error(`\n  ✖ ${repo.full_name}: ${error instanceof Error ? error.message : String(error)}`);
-      failed++;
-      continue;
-    }
-
     const row = {
       slug,
       name,
       description,
       category,
       tags: uniqueTags,
-      author: repo.full_name.split("/")[0],
-      github_url: `${repo.html_url}/blob/${repoMetadata.defaultBranch}/${path}`,
+      author: owner,
+      github_url: `https://github.com/${repoMetadata.fullName}/blob/${repoMetadata.defaultBranch}/${path}`,
       skill_md_content: md,
       ...checkedRepoStarsPatch(repoMetadata),
       // Seed values for new rows only; existing rows keep their curation.

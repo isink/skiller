@@ -93,3 +93,29 @@ test("a full import updates verified stars on existing skills while preserving c
   }]);
   assert.deepEqual(plan.insert, []);
 });
+
+test("a renamed repository resolves to its canonical name once under both names", async () => {
+  const requests: string[] = [];
+  const renames: string[][] = [];
+  const resolve = createGitHubRepoMetadataResolver(async (fullName) => {
+    requests.push(fullName);
+    return { full_name: "affaan-m/ECC", default_branch: "main", stargazers_count: 7 };
+  }, () => new Date(checkedAt), (from, to) => renames.push([from, to]));
+
+  const old = await resolve("affaan-m/everything-claude-code");
+  assert.equal(old.fullName, "affaan-m/ECC");
+  assert.equal(await resolve("affaan-m/everything-claude-code"), old);
+  assert.equal(await resolve("affaan-m/ecc"), old);
+  assert.deepEqual(requests, ["affaan-m/everything-claude-code"]);
+  assert.deepEqual(renames, [["affaan-m/everything-claude-code", "affaan-m/ECC"]]);
+});
+
+test("a case-only difference is not a rename", async () => {
+  const renames: string[][] = [];
+  const resolve = createGitHubRepoMetadataResolver(async () => ({
+    full_name: "Owner/Repo", default_branch: "main", stargazers_count: 1,
+  }), () => new Date(checkedAt), (from, to) => renames.push([from, to]));
+
+  assert.equal((await resolve("owner/repo")).fullName, "Owner/Repo");
+  assert.deepEqual(renames, []);
+});

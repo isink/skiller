@@ -58,6 +58,31 @@ function repository(url: string): { owner: string; repo: string } {
   return { owner: parts[0], repo: parts[1].replace(/\.git$/, "") };
 }
 
+const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+
+/** GitHub redirects a renamed repository; store its skills and snapshots under the canonical key. */
+async function moveToCanonicalRepo(oldKey: string, fullName: string): Promise<void> {
+  console.warn(`${oldKey} was renamed to ${fullName}; refreshing under ${fullName}`);
+  const rows = await database(
+    `skills?repo_key=eq.${encodeURIComponent(oldKey)}&select=id,slug,github_url`, "GET", undefined,
+  ) as { id: string; slug: string; github_url: string }[];
+  const oldPrefix = `${slugify(oldKey)}-`;
+  for (const row of rows) {
+    const renamed = row.slug.startsWith(oldPrefix)
+      ? `${slugify(fullName)}-${row.slug.slice(oldPrefix.length)}`.slice(0, 80)
+      : row.slug;
+    if (renamed !== row.slug
+      && (await database(`skills?slug=eq.${encodeURIComponent(renamed)}&select=id`, "GET", undefined) as unknown[]).length) {
+      console.warn(`${row.slug}: ${renamed} already exists, left under ${oldKey}`);
+      continue;
+    }
+    await database(`skills?id=eq.${encodeURIComponent(row.id)}`, "PATCH", {
+      slug: renamed,
+      github_url: row.github_url.replace(/^(https:\/\/github\.com\/)[^/?#]+\/[^/?#]+/i, (_, host) => host + fullName),
+    });
+  }
+}
+
 function sourceFrom(url: string, defaultBranch: string): Source | null {
   try {
     const repo = repository(url);
@@ -153,15 +178,20 @@ async function run(callerToken: string): Promise<Record<string, number | boolean
           missingRepos++;
           continue;
         }
-        const body = result.body as { default_branch?: unknown; stargazers_count?: unknown; pushed_at?: unknown };
+        const body = result.body as { full_name?: unknown; default_branch?: unknown; stargazers_count?: unknown; pushed_at?: unknown };
         if (typeof body?.default_branch !== "string" || !body.default_branch
           || !Number.isInteger(body.stargazers_count) || (body.stargazers_count as number) < 0
           || (body.pushed_at !== null && (typeof body.pushed_at !== "string"
             || !Number.isFinite(Date.parse(body.pushed_at))))) {
           throw new Error(`Invalid GitHub repository metadata for ${row.repo_key}`);
         }
+        const fullName = typeof body.full_name === "string" && /^[^/]+\/[^/]+$/.test(body.full_name)
+          ? body.full_name
+          : row.repo_key;
+        const repoKey = fullName.toLowerCase();
+        if (repoKey !== row.repo_key) await moveToCanonicalRepo(row.repo_key, fullName);
         await rpc("apply_skill_repo_metadata", {
-          p_repo_key: row.repo_key, p_found: true, p_stars: body.stargazers_count,
+          p_repo_key: repoKey, p_found: true, p_stars: body.stargazers_count,
           p_default_branch: body.default_branch, p_pushed_at: body.pushed_at,
         });
         checkedRepos++;
