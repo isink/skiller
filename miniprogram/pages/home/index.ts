@@ -1,5 +1,7 @@
 import { fetchCategories, fetchCategoryCounts, fetchFeatured, fetchHotSkills, fetchLatestSkills, searchSkills } from "../../services/api";
 import { readCache, writeCache } from "../../services/storage";
+import { trackPageView, trackSearch } from "../../services/analytics";
+import { APP_TITLE, enableShareMenu } from "../../services/share";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
@@ -56,6 +58,20 @@ Page({
       });
     }
     this.loadHome();
+    enableShareMenu();
+  },
+
+  onShow() {
+    wx.setNavigationBarTitle({ title: APP_TITLE });
+    trackPageView("pages/home/index");
+  },
+
+  onShareAppMessage() {
+    return { title: `${APP_TITLE}：AI 技能与 Claude Skills 技能库`, path: "/pages/home/index" };
+  },
+
+  onShareTimeline() {
+    return { title: `${APP_TITLE}：AI 技能与 Claude Skills 技能库` };
   },
 
   onUnload() { if (searchTimer !== undefined) clearTimeout(searchTimer); },
@@ -106,6 +122,7 @@ Page({
         const rows = await searchSkills(query);
         if (sequence !== searchSequence) return;
         this.setData({ results: rows.map(present), searching: false });
+        trackSearch("pages/home/index", query, rows.length);
       } catch {
         if (sequence !== searchSequence) return;
         this.setData({ results: [], searching: false, error: "搜索失败，请稍后重试。" });

@@ -13,6 +13,7 @@ type FavoritePage = {
   setData(patch: Partial<FavoritePage["data"]>): void;
 };
 type PendingRequest = {
+  url?: string;
   success(response: { statusCode: number; data: Skill[] }): void;
   fail(error: { errMsg: string }): void;
 };
@@ -48,7 +49,11 @@ function harness(t: TestContext, ids: string[], cached: Skill[] = []) {
     getStorageSync: (key: string) => storage.get(key),
     setStorageSync: (key: string, value: unknown) => storage.set(key, value),
     showToast() {},
-    request: (options: PendingRequest) => requests.push(options),
+    setNavigationBarTitle() {},
+    request: (options: PendingRequest) => {
+      if (options.url?.endsWith("/rest/v1/mp_events")) { options.success({ statusCode: 201, data: [] }); return; }
+      requests.push(options);
+    },
   };
   t.after(() => { globals.wx = originalWx; });
   const page: FavoritePage = {

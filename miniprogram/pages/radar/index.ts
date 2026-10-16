@@ -2,6 +2,8 @@ import { fetchTrendingSnapshot, TRENDING_PAGE_SIZE } from "../../services/trendi
 import type { TrendingMode, TrendingSnapshot, TrendingTermDisplay } from "../../types/trending-term";
 import { buildMonthDays, buildRecentDays, getLocalDateKey, isDateKey, shiftMonth } from "../../services/radar-calendar";
 import { getRadarFavoriteNames, toggleRadarFavorite } from "../../services/radar-favorites";
+import { trackPageView } from "../../services/analytics";
+import { APP_TITLE, enableShareMenu } from "../../services/share";
 
 const REFRESH_INTERVAL_MS = 60000;
 type RadarTermRow = TrendingTermDisplay & { isFavorite: boolean };
@@ -48,7 +50,19 @@ Page({
   _nextOffset: 0,
   _pendingSnapshot: null as TrendingSnapshot | null,
 
+  onLoad() { enableShareMenu(); },
+
+  onShareAppMessage() {
+    return { title: `${APP_TITLE}：AI 新词雷达`, path: "/pages/radar/index" };
+  },
+
+  onShareTimeline() {
+    return { title: `${APP_TITLE}：AI 新词雷达` };
+  },
+
   onShow() {
+    wx.setNavigationBarTitle({ title: "AI 新词雷达" });
+    trackPageView("pages/radar/index");
     this._visible = true;
     this.syncFavorites();
     this.loadTerms(this.data.terms.length > 0);

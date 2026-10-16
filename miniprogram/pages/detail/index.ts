@@ -1,5 +1,7 @@
 import { fetchSkill } from "../../services/api";
 import { cacheSkill, cachedSkill, getFavoriteIds, toggleFavorite } from "../../services/storage";
+import { trackPageView } from "../../services/analytics";
+import { APP_TITLE, enableShareMenu } from "../../services/share";
 import { parseMarkdown } from "../../services/markdown";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
@@ -8,6 +10,7 @@ import { skillInstallCommand } from "../../services/skill-install";
 import type { Skill, SkillBlock } from "../../types/skill";
 
 Page({
+  _id: "",
   data: {
     skill: null as Skill | null,
     displayDescription: "",
@@ -23,6 +26,8 @@ Page({
 
   onLoad(options: { id?: string }) {
     const id = options.id || "";
+    this._id = id;
+    enableShareMenu();
     if (!id) { this.setData({ loading: false, error: "没有找到这个技能。" }); return; }
     const cached = cachedSkill(id);
     if (cached) this.showSkill(cached, false);
@@ -36,7 +41,30 @@ Page({
     });
   },
 
+  onShow() {
+    trackPageView("pages/detail/index", this._id ? { id: this._id } : undefined);
+  },
+
+  onShareAppMessage() {
+    const skill = this.data.skill as Skill | null;
+    const id = skill?.id || this._id;
+    return {
+      title: skill ? `${skill.name} - ${APP_TITLE}` : APP_TITLE,
+      path: id ? `/pages/detail/index?id=${encodeURIComponent(id)}` : "/pages/home/index",
+    };
+  },
+
+  onShareTimeline() {
+    const skill = this.data.skill as Skill | null;
+    const id = skill?.id || this._id;
+    return {
+      title: skill ? `${skill.name} - ${APP_TITLE}` : APP_TITLE,
+      query: id ? `id=${encodeURIComponent(id)}` : "",
+    };
+  },
+
   showSkill(skill: Skill, clearError: boolean) {
+    wx.setNavigationBarTitle({ title: skill.name });
     this.setData({
       skill,
       displayDescription: skillDescriptionZh(skill),
