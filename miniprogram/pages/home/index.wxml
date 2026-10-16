@@ -16,7 +16,21 @@
 
   <block wx:if="{{query}}">
     <view class="section-title">搜索结果 <text class="count">{{results.length}}</text></view>
-    <view wx:if="{{!searching && results.length === 0}}" class="empty"><text class="empty-title">没有匹配的技能</text><text class="empty-desc">试试其他关键词</text></view>
+    <block wx:if="{{!searching && !error && results.length === 0}}">
+      <view class="empty empty-search">
+        <text class="empty-title">已记录，我们会尽快收录</text>
+        <text class="empty-desc">暂时没有找到「{{query}}」相关的技能，你的搜索会帮助我们决定下一批收录什么。</text>
+      </view>
+      <block wx:if="{{recommended.length > 0}}">
+        <view class="section-title">{{recommendTitle}}</view>
+        <view wx:for="{{recommended}}" wx:key="id" class="card skill-card" hover-class="card-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="openSkill">
+          <text class="skill-name">{{item.name}}</text>
+          <text class="skill-desc">{{item.displayDescription}}</text>
+          <view class="meta"><text class="meta-tag">{{item.displayCategory}}</text><text class="meta-author">{{item.author}}</text></view>
+          <view class="source-meta"><text>{{item.displayStars}}</text><text>{{item.displayUpdated}}</text></view>
+        </view>
+      </block>
+    </block>
     <view wx:for="{{results}}" wx:key="id" class="card skill-card" hover-class="card-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="openSkill">
       <text class="skill-name">{{item.name}}</text>
       <view wx:if="{{item.displayGrowth || item.displayAdded}}" class="fresh-row">

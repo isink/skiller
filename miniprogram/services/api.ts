@@ -70,7 +70,7 @@ export async function fetchLatestSkills(limit = 10): Promise<Skill[]> {
   return limitPerRepo(rows, 2, limit);
 }
 
-const CATEGORY_ORDER = ["official", "ai", "code", "data", "devops", "security", "design", "docs", "office", "research", "misc"];
+const CATEGORY_ORDER = ["official", "mp-skill", "ai", "code", "data", "devops", "security", "design", "docs", "office", "research", "misc"];
 
 export async function fetchCategories(): Promise<Category[]> {
   const rows = await request<Category[]>("/rest/v1/categories", { select: "id,slug,name,icon" });

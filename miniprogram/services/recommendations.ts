@@ -17,3 +17,9 @@ export async function fetchRecommendations(limit = RECOMMEND_LIMIT): Promise<Rec
   } catch { /* Fall through to featured skills. */ }
   return { title: "精选技能", skills: (await fetchFeatured(limit)).slice(0, limit) };
 }
+
+/** Shown under "已记录，我们会尽快收录": hot skills when there are enough, otherwise featured ones. */
+export function pickEmptySearchRecommendations<T>(hot: T[], featured: T[], limit = RECOMMEND_LIMIT): { recommendTitle: string; recommended: T[] } {
+  if (hot.length >= MIN_HOT) return { recommendTitle: "本周热门，先看看这些", recommended: hot.slice(0, limit) };
+  return { recommendTitle: "精选技能，先看看这些", recommended: featured.slice(0, limit) };
+}
