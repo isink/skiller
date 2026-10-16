@@ -10,6 +10,7 @@
     "import:discover": "tsx scripts/import/import-github-search.ts",
     "import:mp-skills": "tsx scripts/import/import-mp-skills.ts",
     "import:all": "npm run import:antigravity && npm run import:anthropic && npm run import:discover",
+    "report:empty-search": "tsx scripts/empty-search-report.ts",
     "apply:overrides": "tsx scripts/import/apply-overrides.ts",
     "upsert:trending": "tsx scripts/import/upsert-trending-terms.ts",
     "enrich:skills": "tsx scripts/enrich/enrich-skills.ts",
