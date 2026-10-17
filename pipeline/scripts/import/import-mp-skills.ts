@@ -31,6 +31,7 @@ import {
   MP_SKILL_CODE_QUERY,
   MP_SKILL_REPO_QUERIES,
   MP_SKILL_SEED_REPOS,
+  isExcludedRepo,
   isSeedRepo,
   mpSkillPathsFromTree,
   mpSkillTags,
@@ -56,7 +57,10 @@ async function loadRepo(fullName: string): Promise<Repo | undefined> {
 
 async function findRepos(args: ReturnType<typeof parseMpImportArgs>): Promise<Map<string, Repo>> {
   const repos = new Map<string, Repo>();
-  const add = (repo: Repo) => { if (!repos.has(repo.full_name.toLowerCase())) repos.set(repo.full_name.toLowerCase(), repo); };
+  const add = (repo: Repo) => {
+    if (isExcludedRepo(repo.full_name)) return;
+    if (!repos.has(repo.full_name.toLowerCase())) repos.set(repo.full_name.toLowerCase(), repo);
+  };
 
   for (const seed of MP_SKILL_SEED_REPOS) {
     const repo = await loadRepo(seed);

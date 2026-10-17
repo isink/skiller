@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   MP_EXAMPLE_TAG,
+  MP_SKILL_EXCLUDED_REPOS,
+  MP_SKILL_SEED_REPOS,
+  isExcludedRepo,
   isSeedRepo,
   mpSkillPathsFromTree,
   mpSkillTags,
@@ -44,6 +47,17 @@ test("only known repositories contribute SKILL.md files without an mcp.json", ()
   ]);
   assert.equal(isSeedRepo("tencentcloudbase/awesome-miniprogram-skills"), true);
   assert.equal(isSeedRepo("someone/else"), false);
+});
+
+test("excluded repositories are never imported, even with mcp.json examples", () => {
+  const paths = { examples: ["skills/drink-skill/SKILL.md"], others: ["b/SKILL.md"] };
+  assert.equal(isExcludedRepo("wechat-miniprogram/ai-mode-demo"), true);
+  assert.equal(isExcludedRepo("WeChat-MiniProgram/AI-Mode-Demo"), true);
+  assert.equal(isExcludedRepo("wechat-miniprogram/miniprogram-demo"), false);
+  assert.deepEqual(selectMpSkillPaths("wechat-miniprogram/ai-mode-demo", paths), []);
+  assert.deepEqual(selectMpSkillPaths("WeChat-Miniprogram/AI-Mode-Demo", paths), []);
+  assert.deepEqual(selectMpSkillPaths("wechat-miniprogram/miniprogram-demo", paths), [{ path: "skills/drink-skill/SKILL.md", example: true }]);
+  for (const excluded of MP_SKILL_EXCLUDED_REPOS) assert.equal(MP_SKILL_SEED_REPOS.some((seed) => seed.toLowerCase() === excluded.toLowerCase()), false);
 });
 
 test("examples are tagged so the app can show them as references", () => {

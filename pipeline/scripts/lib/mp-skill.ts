@@ -17,9 +17,18 @@ export const MP_SKILL_TAGS = ["wechat", "miniprogram"] as const;
 
 /** Known repositories that belong to the topic even when they have no mcp.json (for example official helper skills). */
 export const MP_SKILL_SEED_REPOS = [
-  "wechat-miniprogram/ai-mode-demo",
   "wechat-miniprogram/ai-mode-skills",
   "TencentCloudBase/awesome-miniprogram-skills",
+] as const;
+
+/**
+ * Repositories that must never be imported, matched case-insensitively. They are
+ * dropped even when repository search or code search finds them again.
+ */
+export const MP_SKILL_EXCLUDED_REPOS = [
+  // skills/drink-skill is an outdated duplicate of drink-skill in
+  // wechat-miniprogram/miniprogram-demo and was deleted from the database.
+  "wechat-miniprogram/ai-mode-demo",
 ] as const;
 
 export const MP_SKILL_REPO_QUERIES = [
@@ -76,11 +85,17 @@ export function isSeedRepo(fullName: string): boolean {
   return MP_SKILL_SEED_REPOS.some((seed) => seed.toLowerCase() === key);
 }
 
+export function isExcludedRepo(fullName: string): boolean {
+  const key = fullName.toLowerCase();
+  return MP_SKILL_EXCLUDED_REPOS.some((excluded) => excluded.toLowerCase() === key);
+}
+
 /** Which SKILL.md files of a repository to import, and which tags they get. */
 export function selectMpSkillPaths(
   fullName: string,
   paths: MpSkillPaths,
 ): Array<{ path: string; example: boolean }> {
+  if (isExcludedRepo(fullName)) return [];
   const selected = paths.examples.map((path) => ({ path, example: true }));
   if (isSeedRepo(fullName)) selected.push(...paths.others.map((path) => ({ path, example: false })));
   return selected;
