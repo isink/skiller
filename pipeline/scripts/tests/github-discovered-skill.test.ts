@@ -50,6 +50,24 @@ test("name and description fall back to the repository and first paragraph", () 
   assert.equal(row.description, "This paragraph is long enough to count as the summary.");
 });
 
+test("without frontmatter name, each SKILL.md in one repo is named after its own folder", () => {
+  const repo = { ...metadata, fullName: "acme/miniprogram-demo" };
+  const body = "# Title\n\nThis paragraph is long enough to count as the summary.";
+  const names = ["skills/drink-skill/SKILL.md", "skills/agent-auth-skill/SKILL.md", "bill-skill/SKILL.md"]
+    .map((path) => buildDiscoveredSkillRow(body, path, repo).name);
+  assert.deepEqual(names, ["drink-skill", "agent-auth-skill", "bill-skill"]);
+});
+
+test("a frontmatter name wins over the folder name", () => {
+  const row = buildDiscoveredSkillRow(md, "skills/drink-skill/SKILL.md", { ...metadata, fullName: "acme/ai-mode-demo" });
+  assert.equal(row.name, "PDF Reader");
+});
+
+test("a SKILL.md at the repository root without frontmatter name uses the repository name", () => {
+  const row = buildDiscoveredSkillRow("# Title\n\nNo frontmatter here, just a body.", "SKILL.md", { ...metadata, fullName: "acme/ai-mode-demo" });
+  assert.equal(row.name, "Ai Mode Demo");
+});
+
 test("a forced category and caller tags win and survive the tag cap", () => {
   const tags = "[a, b, c, d, e, f, g, h, i]";
   const row = buildDiscoveredSkillRow(`---\nname: x\ntags: ${tags}\n---\nbody body body body`, "SKILL.md", metadata, { category: "mp-skill", extraTags: ["wechat", "mp-example"] });

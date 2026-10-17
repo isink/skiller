@@ -65,6 +65,12 @@ export type RowOptions = {
   extraTags?: readonly string[];
 };
 
+/** Parent folder of SKILL.md ("skills/drink-skill/SKILL.md" → "drink-skill"); empty when the file sits at the repo root. */
+function skillDirName(path: string): string {
+  const segments = path.split("/").filter(Boolean);
+  return segments.length >= 2 ? segments[segments.length - 2] : "";
+}
+
 export function buildDiscoveredSkillRow(
   md: string,
   path: string,
@@ -74,9 +80,9 @@ export function buildDiscoveredSkillRow(
   const fm = parseFrontmatter(md);
   const [owner, repoName] = repo.fullName.split("/");
 
-  // Name: frontmatter > repo name cleaned up
+  // Name: frontmatter > folder holding SKILL.md (verbatim) > repo name cleaned up
   const rawName = typeof fm.name === "string" ? fm.name : "";
-  const name = rawName || idToDisplayName(repoName);
+  const name = rawName || skillDirName(path) || idToDisplayName(repoName);
 
   // Description: frontmatter > first non-heading paragraph of body
   let description = typeof fm.description === "string" ? fm.description : "";
