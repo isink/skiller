@@ -24,22 +24,26 @@
  */
 
 import { env } from "./lib/env";
-import { idToDisplayName, toSlug } from "./lib/slugify";
-import { mapCategory } from "./lib/category-map";
 import { assertNoBatchFailures } from "../lib/batch-failures";
 import { assertCompleteGitHubSearch } from "../lib/github-search";
 import { boundedRetryDelayMs } from "../lib/rate-limit";
 import { parseOptionalPositiveInteger } from "../lib/env-number";
-import { checkedRepoStarsPatch, createGitHubRepoMetadataResolver, logRepoRename } from "../lib/github-repo-metadata";
 import {
   CODE_SEARCH_MIN_INTERVAL_MS,
   REPO_SEARCH_MIN_INTERVAL_MS,
-  contentsApiUrl,
   recentRepoQueries,
-  skillPathsFromTree,
 } from "../lib/github-discovery";
-import { db } from "./lib/supabase";
-import { importNewOnly, loadExistingSlugs, upsertSkillsPreservingCuration } from "./lib/upsert";
+import {
+  discoverRepoSkillItems,
+  githubHeaders,
+  githubJson as githubJsonRequest,
+  sleep,
+  type GitHubSkillItem,
+} from "../lib/github-api";
+import { deriveSlug, importDiscoveredSkill } from "../lib/github-discovered-skill";
+import { MP_SKILL_CATEGORY } from "../lib/mp-skill";
+import { createDiscoveredImportDeps } from "./lib/discovered-deps";
+import { importNewOnly, loadPlacements, loadExistingSlugs } from "./lib/upsert";
 
 // Repos already handled by dedicated importers — skip them.
 const SKIP_REPOS = new Set([
@@ -57,19 +61,7 @@ const RECENT_DAYS = parseOptionalPositiveInteger("DISCOVER_RECENT_DAYS", process
 const MAX_RECENT_REPOS = parseOptionalPositiveInteger("DISCOVER_MAX_REPOS", process.env.DISCOVER_MAX_REPOS) ?? 150;
 const REPO_SEARCH_PAGES = 3;
 
-type SearchItem = {
-  name: string;
-  path: string;
-  repository: {
-    full_name: string;
-    html_url: string;
-    description: string | null;
-    // Code-search repository objects can omit stars; the repository API supplies them.
-    stargazers_count?: number;
-    default_branch?: string;
-  };
-  url: string; // contents API URL
-};
+type SearchItem = GitHubSkillItem;
 
 type SearchResponse = {
   total_count: number;
@@ -77,19 +69,7 @@ type SearchResponse = {
   items: SearchItem[];
 };
 
-function authHeaders(): Record<string, string> {
-  const h: Record<string, string> = {
-    Accept: "application/vnd.github+json",
-    "X-GitHub-Api-Version": "2022-11-28",
-    "User-Agent": "skiller-importer",
-  };
-  if (env.githubToken) h.Authorization = `Bearer ${env.githubToken}`;
-  return h;
-}
-
-async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+const authHeaders = () => githubHeaders(env.githubToken);
 
 /** Fetch one page of code search results for filename:SKILL.md */
 async function searchPage(page: number, attempt = 0): Promise<SearchResponse> {
@@ -128,22 +108,6 @@ async function searchPage(page: number, attempt = 0): Promise<SearchResponse> {
   }
 }
 
-/** Fetch raw SKILL.md content via the contents API URL from search results */
-async function fetchSkillMdFromUrl(contentsUrl: string): Promise<string | undefined> {
-  const res = await fetch(contentsUrl, { headers: authHeaders() });
-  if (res.status === 404) return undefined;
-  if (!res.ok) {
-    throw new Error(`Contents API ${res.status} ${res.statusText}: ${contentsUrl}`);
-  }
-  const data = (await res.json()) as { content?: string; encoding?: string };
-  if (!data.content || data.encoding !== "base64") {
-    throw new Error(`Contents API returned no base64 content: ${contentsUrl}`);
-  }
-  // Node's atob doesn't handle multi-line base64; strip newlines first.
-  const decoded = Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
-  return decoded.replace(/\u0000/g, "");
-}
-
 type RepoSearchItem = {
   full_name: string;
   html_url: string;
@@ -153,21 +117,7 @@ type RepoSearchItem = {
   archived?: boolean;
 };
 
-async function githubJson<T>(url: string): Promise<T | undefined> {
-  for (let attempt = 0; ; attempt++) {
-    const res = await fetch(url, { headers: authHeaders(), signal: AbortSignal.timeout(30000) });
-    if (res.status === 404 || res.status === 409) return undefined;
-    if (res.status === 403 || res.status === 429) {
-      const delayMs = boundedRetryDelayMs(attempt, Number(res.headers.get("retry-after") ?? 60) * 1000);
-      if (delayMs === undefined) throw new Error(`GitHub ${res.status} after ${attempt + 1} attempts: ${url}`);
-      console.warn(`  ⚠ Rate limited — waiting ${Math.ceil(delayMs / 1000)}s`);
-      await sleep(delayMs);
-      continue;
-    }
-    if (!res.ok) throw new Error(`GitHub ${res.status} ${res.statusText}: ${url}`);
-    return (await res.json()) as T;
-  }
-}
+const githubJson = <T>(url: string) => githubJsonRequest<T>(url, env.githubToken);
 
 /** Skills in repositories pushed recently, found through topic search + git trees. */
 async function discoverRecentItems(days: number, skipRepos: Set<string>): Promise<SearchItem[]> {
@@ -195,69 +145,9 @@ async function discoverRecentItems(days: number, skipRepos: Set<string>): Promis
 
   const items: SearchItem[] = [];
   for (const repo of selected) {
-    const tree = await githubJson<{ tree?: Array<{ path?: unknown; type?: unknown }>; truncated?: boolean }>(
-      `https://api.github.com/repos/${repo.full_name.split("/").map(encodeURIComponent).join("/")}` +
-        `/git/trees/${encodeURIComponent(repo.default_branch)}?recursive=1`,
-    );
-    if (!tree?.tree) continue;
-    if (tree.truncated) console.warn(`  ⚠ Tree truncated for ${repo.full_name}; some skills may be missed`);
-    for (const path of skillPathsFromTree(tree.tree)) {
-      items.push({
-        name: path.split("/").pop() ?? "SKILL.md",
-        path,
-        repository: {
-          full_name: repo.full_name,
-          html_url: repo.html_url,
-          description: repo.description,
-          stargazers_count: repo.stargazers_count,
-          default_branch: repo.default_branch,
-        },
-        url: contentsApiUrl(repo.full_name, path, repo.default_branch),
-      });
-    }
+    items.push(...await discoverRepoSkillItems(repo, env.githubToken));
   }
   return items;
-}
-
-const getRepoMetadata = createGitHubRepoMetadataResolver((fullName) => githubJson(
-  `https://api.github.com/repos/${fullName.split("/").map(encodeURIComponent).join("/")}`,
-), undefined, logRepoRename);
-
-/** Minimal YAML frontmatter parser (same approach as import-anthropic.ts) */
-function parseFrontmatter(md: string): {
-  name?: string;
-  description?: string;
-  tags?: string[];
-  category?: string;
-} {
-  const match = md.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) return {};
-  const fm: Record<string, string | string[]> = {};
-  for (const line of match[1].split(/\r?\n/)) {
-    const kv = line.match(/^([A-Za-z0-9_-]+)\s*:\s*(.*)$/);
-    if (!kv) continue;
-    let [, key, val] = kv;
-    val = val.trim().replace(/^["']|["']$/g, "");
-    const arr = val.match(/^\[(.*)\]$/);
-    if (arr) {
-      fm[key] = arr[1]
-        .split(",")
-        .map((s) => s.trim().replace(/^["']|["']$/g, ""))
-        .filter(Boolean);
-    } else {
-      fm[key] = val;
-    }
-  }
-  return fm as { name?: string; description?: string; tags?: string[]; category?: string };
-}
-
-/** Derive a stable slug from repo + file path */
-function deriveSlug(repoFullName: string, filePath: string): string {
-  // e.g. "owner/my-skill-repo" + "skills/foo/SKILL.md" → "owner--foo"
-  const dir = filePath.replace(/\/?SKILL\.md$/i, "").replace(/\//g, "-");
-  const repoSlug = repoFullName.replace("/", "--");
-  const combined = dir ? `${repoSlug}--${dir}` : repoSlug;
-  return toSlug(combined).slice(0, 80);
 }
 
 async function main() {
@@ -320,106 +210,19 @@ async function main() {
   let skipped = 0;
   let failed = 0;
 
+  // Skills filed under the mini program topic keep their category and tags on re-import.
+  const placements = await loadPlacements([MP_SKILL_CATEGORY]);
+  const deps = createDiscoveredImportDeps(existingSlugs, placements);
+
   for (let i = 0; i < filtered.length; i++) {
     const item = filtered[i];
-    const { repository: repo, path, url } = item;
-
     process.stdout.write(
-      `  ↳ [${i + 1}/${filtered.length}] ${repo.full_name}/${path}\r`
+      `  ↳ [${i + 1}/${filtered.length}] ${item.repository.full_name}/${item.path}\r`
     );
-
-    let md: string | undefined;
-    try {
-      md = await fetchSkillMdFromUrl(url);
-    } catch (error) {
-      // Keep importing the remaining files; the final assertion still fails the run.
-      console.error(`\n  ✖ ${repo.full_name}/${path}: ${error instanceof Error ? error.message : String(error)}`);
-      failed++;
-      continue;
-    }
-    if (!md || md.trim().length < 20) {
-      skipped++;
-      continue;
-    }
-
-    const fm = parseFrontmatter(md);
-
-    // Code search can return a redirected old name; key the skill by the canonical one.
-    let repoMetadata;
-    try {
-      repoMetadata = await getRepoMetadata(repo.full_name);
-    } catch (error) {
-      console.error(`\n  ✖ ${repo.full_name}: ${error instanceof Error ? error.message : String(error)}`);
-      failed++;
-      continue;
-    }
-
-    const [owner, repoName] = repoMetadata.fullName.split("/");
-
-    // Derive slug from repo + path so each SKILL.md gets a unique row.
-    const slug = deriveSlug(repoMetadata.fullName, path);
-    const storedSlug = deriveSlug(repo.full_name, path);
-    if (slug !== storedSlug && existingSlugs.has(storedSlug) && !existingSlugs.has(slug)) {
-      const { error } = await db.from("skills").update({ slug }).eq("slug", storedSlug);
-      if (error) {
-        console.error(`\n  ✖ rename ${storedSlug}: ${error.message}`);
-        failed++;
-        continue;
-      }
-      console.warn(`\n  ↪ renamed stored skill ${storedSlug} → ${slug}`);
-      existingSlugs.delete(storedSlug);
-      existingSlugs.add(slug);
-    }
-
-    // Name: frontmatter > repo name cleaned up
-    const rawName = typeof fm.name === "string" ? fm.name : "";
-    const name = rawName || idToDisplayName(repoName);
-
-    // Description: frontmatter > first non-heading paragraph of body
-    let description = typeof fm.description === "string" ? fm.description : "";
-    if (!description) {
-      const body = md.replace(/^---[\s\S]*?---\r?\n?/, "");
-      description = body
-        .split(/\r?\n\r?\n/)
-        .map((p) => p.replace(/^#+\s*/, "").trim())
-        .find((p) => p.length > 20) ?? "";
-    }
-    description = description.slice(0, 1000);
-
-    const rawCategory = typeof fm.category === "string" ? fm.category : null;
-    const category = mapCategory(rawCategory ?? repo.full_name);
-
-    const tags: string[] = Array.isArray(fm.tags)
-      ? fm.tags.filter((t): t is string => typeof t === "string")
-      : [];
-    tags.push("community");
-    const uniqueTags = Array.from(new Set(tags)).slice(0, 8);
-
-    const row = {
-      slug,
-      name,
-      description,
-      category,
-      tags: uniqueTags,
-      author: owner,
-      github_url: `https://github.com/${repoMetadata.fullName}/blob/${repoMetadata.defaultBranch}/${path}`,
-      skill_md_content: md,
-      ...checkedRepoStarsPatch(repoMetadata),
-      // Seed values for new rows only; existing rows keep their curation.
-      rank: 0,
-      score: 0,
-      featured: false,
-    };
-
-    try {
-      await upsertSkillsPreservingCuration([row], existingSlugs);
-    } catch (error) {
-      console.error(`\n  ✖ ${slug}: ${error instanceof Error ? error.message : String(error)}`);
-      failed++;
-      continue;
-    }
-
-    imported++;
+    const outcome = await importDiscoveredSkill(item, deps);
+    if (outcome === "imported") imported++;
+    else if (outcome === "skipped") skipped++;
+    else failed++;
   }
 
   process.stdout.write("\n");

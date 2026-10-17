@@ -18,6 +18,18 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 - 新词直接在列表中展示完整名称、简介和收藏按钮，不再打开详情弹层或展示收录评分；项目榜与模型榜保留各自的热度指标。发现日期用于“最新发现”的分组及日历筛选。
 - “新词收藏”入口和“已收藏 → 新词”读取同一份本机快照。存储键 `skiller.miniprogram.radar-favorites.v1` 与技能收藏分开，最多 500 条，可离线阅读收藏时的简介；不提供跨设备同步。
 
+## 详情页：安装、分享与反馈
+
+- **一键复制安装命令**：`services/skill-install.ts` 的 `skillInstallPlan` 按仓库信息生成命令，优先 `npx skills add <仓库> --skill <名称>`；根目录技能再给出 `git clone … ~/.claude/skills/<名称>`；官方 `anthropics/skills` 另给 `/plugin marketplace add`。推断不了命令时复制 GitHub 链接。详情页同时给出 3 步安装说明、原链接（可复制）和 SKILL.md frontmatter 里的许可证（没有就不显示）。
+- **作者申请下架 / 反馈**：详情页底部「联系」弹窗提示发邮件到隐私政策公布的联系邮箱，可一键复制。
+- **分享卡片**：`onShareAppMessage` 标题为「技能名｜一句中文用途」；`services/share-card.ts` 在页面隐藏的 `canvas type="2d"` 上画 5:4 封面（技能名、用途、Star、头山 AI 工具箱），导出失败或超时就用默认截图。页面内「推荐给同事」按钮使用 `open-type="share"`。
+- **事件**：复制安装命令/链接记为 `copy_install`，分享记为 `share`，`meta.action` 写明动作。这两个事件名需要先执行 `pipeline/supabase/migrations/025_mp_events_install_share.sql`，之前上报会被忽略。
+
+## 搜索无结果与「微信小程序 SKILL」专题
+
+- 首页搜索无结果时显示「已记录，我们会尽快收录」，并推荐本周热门（不足 3 条则用精选）。`search_empty` 事件由 `pipeline/scripts/empty-search-report.ts` 汇总补录。
+- 发现页顶部有「微信小程序 SKILL 专题」入口，进入后筛选分类 `mp-skill` 并显示官方文档链接。分类需要先执行 `026_mp_skill_category.sql`；专题范例用 `npm run import:mp-skills` 收录，未执行前入口仍显示、列表为空。
+
 ## 在微信开发者工具中试用
 
 1. 打开本目录。`project.config.json` 已填写正式小程序 AppID。

@@ -6,6 +6,7 @@ import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
 import { skillFreshness } from "../../services/freshness";
+import { pickEmptySearchRecommendations } from "../../services/recommendations";
 import type { Category, Skill } from "../../types/skill";
 
 type HomeSkill = Skill & {
@@ -29,6 +30,8 @@ function present(skill: Skill): HomeSkill {
 
 Page({
   data: {
+    recommended: [] as HomeSkill[],
+    recommendTitle: "",
     hot: [] as HomeSkill[],
     featured: [] as HomeSkill[],
     latest: [] as HomeSkill[],
@@ -48,9 +51,12 @@ Page({
     const categories = readCache<Category[]>("categories");
     const counts = readCache<Record<string, number>>("category-counts");
     if (hot || featured || latest || categories || counts) {
+      const shownHot = (hot || []).map(present);
+      const shownFeatured = (featured || []).slice(0, FEATURED_LIMIT).map(present);
       this.setData({
-        hot: (hot || []).map(present),
-        featured: (featured || []).slice(0, FEATURED_LIMIT).map(present),
+        ...pickEmptySearchRecommendations(shownHot, shownFeatured),
+        hot: shownHot,
+        featured: shownFeatured,
         latest: (latest || []).map(present),
         categories: categories || [],
         counts: counts || {},
@@ -99,8 +105,11 @@ Page({
     // The hot section is optional and hidden below three rows, so its failure alone is not surfaced.
     const complete = freshFeatured !== null && freshLatest !== null && freshCategories !== null && freshCounts !== null;
     const hasCache = Boolean(readCache<Skill[]>("home:featured") || readCache<Skill[]>("home:latest"));
+    const shownHot = hot.map(present);
+    const shownFeatured = featured.slice(0, FEATURED_LIMIT).map(present);
     this.setData({
-      hot: hot.map(present), featured: featured.slice(0, FEATURED_LIMIT).map(present), latest: latest.map(present), categories, counts,
+      ...pickEmptySearchRecommendations(shownHot, shownFeatured),
+      hot: shownHot, featured: shownFeatured, latest: latest.map(present), categories, counts,
       loading: false,
       error: complete ? "" : hasCache ? "部分内容未能更新，显示已缓存内容。" : "部分内容加载失败，请下拉重试。",
     });

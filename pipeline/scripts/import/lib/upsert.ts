@@ -1,6 +1,7 @@
 import { db } from "./supabase";
 import { collectExistingSlugs, type SlugRow } from "../../lib/existing-slugs";
 import { planCuratedUpsert, parseFlag } from "../../lib/curation";
+import type { SkillPlacement } from "../../lib/github-discovered-skill";
 
 /** IMPORT_NEW_ONLY=1 makes an importer insert unseen skills and touch nothing else. */
 export const importNewOnly = parseFlag("IMPORT_NEW_ONLY", process.env.IMPORT_NEW_ONLY);
@@ -13,6 +14,24 @@ export async function loadExistingSlugs(): Promise<Set<string>> {
     if (error) throw new Error(`load existing slugs: ${error.message}`);
     return (data ?? []) as SlugRow[];
   });
+}
+
+/** slug → category and tags for every skill filed under one of `categories`, so re-imports can keep them. */
+export async function loadPlacements(categories: readonly string[]): Promise<Map<string, SkillPlacement>> {
+  const placements = new Map<string, SkillPlacement>();
+  const size = 1000;
+  for (let from = 0; ; from += size) {
+    const { data, error } = await db
+      .from("skills")
+      .select("slug, category, tags")
+      .in("category", [...categories])
+      .order("slug")
+      .range(from, from + size - 1);
+    if (error) throw new Error(`load placements: ${error.message}`);
+    const rows = (data ?? []) as Array<{ slug: string; category: string; tags: string[] | null }>;
+    for (const row of rows) placements.set(row.slug, { category: row.category, tags: row.tags ?? [] });
+    if (rows.length < size) return placements;
+  }
 }
 
 export type UpsertSummary = { inserted: number; updated: number };

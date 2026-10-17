@@ -1,6 +1,8 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 
-export type MpEventName = "page_view" | "search" | "search_empty" | "js_error" | "perf";
+/** Must match the check constraint on public.mp_events (migrations 024 and 025). */
+export const MP_EVENT_NAMES = ["page_view", "search", "search_empty", "js_error", "perf", "copy_install", "share"] as const;
+export type MpEventName = typeof MP_EVENT_NAMES[number];
 
 export interface MpEventFields {
   page?: string;
@@ -20,6 +22,8 @@ const THROTTLE_MS: Record<MpEventName, number> = {
   search_empty: 2000,
   js_error: 10000,
   perf: 3000,
+  copy_install: 1500,
+  share: 1500,
 };
 const MAX_THROTTLE_KEYS = 200;
 
@@ -54,7 +58,7 @@ export function isEmptySearch(query: string, resultCount: number): boolean {
 }
 
 function shouldSend(event: MpEventName, fields: MpEventFields): boolean {
-  const key = `${event}|${fields.page ?? ""}|${fields.query ?? ""}|${fields.error ?? ""}`;
+  const key = `${event}|${fields.page ?? ""}|${fields.query ?? ""}|${fields.error ?? ""}|${String(fields.meta?.id ?? "")}|${String(fields.meta?.target ?? "")}|${String(fields.meta?.channel ?? "")}`;
   const now = Date.now();
   const last = lastSentAt.get(key);
   if (last !== undefined && now - last < THROTTLE_MS[event]) return false;
@@ -99,6 +103,25 @@ export function trackEvent(event: MpEventName, fields: MpEventFields = {}): Prom
 
 export function trackPageView(page: string, meta?: Record<string, unknown>): Promise<void> {
   return trackEvent("page_view", { page, meta });
+}
+
+export type InstallCopyTarget = "primary" | "alternative" | "source_link";
+
+/** Needs migration 025: earlier databases reject the new event names and the report is dropped. */
+export function trackCopyInstall(skill: { id: string; slug: string }, kind: string, target: InstallCopyTarget): Promise<void> {
+  return trackEvent("copy_install", {
+    page: "pages/detail/index",
+    meta: { action: "copy_install", id: skill.id, slug: skill.slug, kind, target },
+  });
+}
+
+export type ShareChannel = "button" | "menu" | "timeline";
+
+export function trackShare(skill: { id: string; slug: string }, channel: ShareChannel, withCard: boolean): Promise<void> {
+  return trackEvent("share", {
+    page: "pages/detail/index",
+    meta: { action: "share", id: skill.id, slug: skill.slug, channel, card: withCard },
+  });
 }
 
 /** Reports `search`, plus `search_empty` when a non-blank query found nothing. */
