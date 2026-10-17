@@ -75,7 +75,7 @@ struct NewSkillsView: View {
                 ) { category = nil }
                 ForEach(availableCategories) { c in
                     CategoryChip(
-                        label: CategoryMeta.displayName(c.slug),
+                        label: CategoryMeta.displayName(c.slug, serverName: c.name),
                         icon: CategoryMeta.sfSymbol(c.slug),
                         count: batchCategoryCounts[c.slug],
                         active: category == c.slug

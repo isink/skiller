@@ -2,13 +2,14 @@ import Foundation
 
 enum CategoryMeta {
     static let order = [
-        "official", "ai", "code", "data", "devops", "security",
+        "official", "mp-skill", "ai", "code", "data", "devops", "security",
         "design", "docs", "office", "research", "misc",
     ]
 
-    static func displayName(_ slug: String) -> String {
+    static func displayName(_ slug: String, serverName: String? = nil) -> String {
         switch slug {
         case "official":  return String(localized: "Official")
+        case "mp-skill":  return "微信小程序 SKILL"
         case "ai":        return "AI"
         case "code":      return String(localized: "Coding")
         case "data":      return String(localized: "Data")
@@ -19,13 +20,18 @@ enum CategoryMeta {
         case "office":    return String(localized: "Office")
         case "research":  return String(localized: "Research")
         case "misc":      return String(localized: "Other")
-        default:          return slug
+        default:
+            if let name = serverName?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+                return name
+            }
+            return slug
         }
     }
 
     static func sfSymbol(_ slug: String) -> String {
         switch slug {
         case "official":  return "checkmark.seal.fill"
+        case "mp-skill":  return "sparkles"
         case "ai":        return "sparkles"
         case "code":      return "chevron.left.forwardslash.chevron.right"
         case "data":      return "chart.bar.fill"
