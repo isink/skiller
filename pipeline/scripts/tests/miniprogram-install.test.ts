@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { feedbackNotice } from "../../../miniprogram/services/feedback";
 import { CONTACT_EMAIL } from "../../../miniprogram/services/config";
-import { skillInstallCommand, skillInstallPlan, skillLicense, skillSourceUrl } from "../../../miniprogram/services/skill-install";
+import { isLinkOnlySkill, skillInstallCommand, skillInstallPlan, skillLicense, skillSourceUrl } from "../../../miniprogram/services/skill-install";
 
 const md = (frontmatter: string) => `---\n${frontmatter}\n---\n# Body`;
 
@@ -113,4 +113,13 @@ test("the takedown notice names the skill and points to the published contact", 
   assert.match(notice.content, /「PDF 助手」和来源链接/);
   assert.match(notice.content, new RegExp(CONTACT_EMAIL.replace(".", "\\.")));
   assert.doesNotMatch(feedbackNotice({ name: "x", github_url: "" }).content, /来源链接/);
+});
+
+test("a list row is link-only for mini program examples and sources no command can be built from", () => {
+  assert.equal(isLinkOnlySkill({ category: "mp-skill", tags: ["mp-example"], github_url: "https://github.com/acme/demo", skill_md_content: null }), true);
+  assert.equal(isLinkOnlySkill({ github_url: "https://github.com/acme/tools/pulls", skill_md_content: null }), true);
+  // A normal GitHub skill may still get an npx command once SKILL.md is known.
+  assert.equal(isLinkOnlySkill({ github_url: "https://github.com/acme/tools/tree/main/skills/pdf", skill_md_content: null }), false);
+  assert.equal(isLinkOnlySkill({ github_url: "https://github.com/acme/tools", skill_md_content: null }), false);
+  assert.equal(isLinkOnlySkill({ github_url: "https://example.com/x", skill_md_content: null }), false);
 });

@@ -10,7 +10,7 @@ type LandingPage = {
   setData(patch: Record<string, unknown>, callback?: () => void): void;
   onLoad(options: Record<string, string>): void;
   onShow(): void;
-  loadHotTool(): Promise<void>;
+  loadHotTool(sharedId?: string): Promise<void>;
   onCopyHotInstall(): Promise<void>;
   openHotTool(): void;
   onShareAppMessage(): Share;
@@ -52,6 +52,7 @@ function harness(t: TestContext, options: HarnessOptions = {}) {
   const navigations: string[] = [];
   const clipboard: string[] = [];
   const toasts: Array<{ title: string; duration?: number }> = [];
+  const calls: string[] = [];
   const requests: Array<{ url: string; data: { event: string; page?: string; meta?: Record<string, any> } }> = [];
   const events = () => requests.filter((request) => request.url.endsWith("/rest/v1/mp_events")).map((request) => request.data);
   globals.wx = {
@@ -62,7 +63,9 @@ function harness(t: TestContext, options: HarnessOptions = {}) {
     redirectTo: ({ url }: { url: string }) => { redirects.push(url); },
     navigateTo: ({ url }: { url: string }) => { navigations.push(url); },
     setClipboardData: ({ data, success }: { data: string; success(): void }) => { clipboard.push(data); success(); },
-    showToast: (toast: { title: string; duration?: number }) => { toasts.push(toast); },
+    showToast: (toast: { title: string; duration?: number }) => { calls.push(`toast:${toast.title}`); toasts.push(toast); },
+    showLoading: ({ title }: { title: string }) => { calls.push(`loading:${title}`); },
+    hideLoading: () => { calls.push("hideLoading"); },
     request(request: { url: string; data: { event: string }; success(r: { statusCode: number; data?: unknown }): void; fail(e: { errMsg: string }): void }) {
       requests.push(request);
       const { pathname, searchParams } = new URL(request.url);
@@ -99,7 +102,8 @@ function harness(t: TestContext, options: HarnessOptions = {}) {
     data: JSON.parse(JSON.stringify(definition.data)),
     setData(patch, callback) { Object.assign(this.data, patch); callback?.(); },
   };
-  return { storage, redirects, navigations, clipboard, toasts, requests, events, page };
+  const detailFetches = () => requests.filter((request) => new URL(request.url).searchParams.has("id")).length;
+  return { storage, redirects, navigations, clipboard, toasts, calls, requests, events, detailFetches, page };
 }
 
 const settle = () => new Promise((resolve) => setImmediate(resolve));
@@ -182,28 +186,63 @@ test("a returning visitor redirected to home does not load the hot tool", (t) =>
   assert.equal(requests.length, 0);
 });
 
-test("copying from the card copies the install command, nudges sharing and reports copy_install", async (t) => {
+test("the full skill is only fetched when the user taps copy, behind a loading indicator", async (t) => {
   const hot = hotSkills();
-  const { page, clipboard, toasts, events } = harness(t, { hot, full: hot[0] });
+  const { page, clipboard, toasts, calls, events, detailFetches } = harness(t, { hot, full: hot[0] });
   page.onLoad({});
   await settle();
+  assert.equal(detailFetches(), 0);
+  assert.equal(page.data.hotCopyLabel, "一键复制安装命令");
+
   await page.onCopyHotInstall();
   await settle();
 
+  assert.equal(detailFetches(), 1);
   assert.deepEqual(clipboard, ["npx skills add https://github.com/acme/tools/tree/main/skills/pdf --skill pdf-reader"]);
   assert.equal(toasts.at(-1)?.title, "安装命令已复制，分享给朋友一起用");
+  assert.deepEqual(calls.slice(0, 3), ["loading:正在获取安装命令", "hideLoading", "toast:安装命令已复制，分享给朋友一起用"]);
   const event = events().find((row) => row.event === "copy_install");
   assert.equal(event?.page, "pages/landing/index");
   assert.deepEqual(event?.meta, { action: "copy_install", id: hot[0].id, slug: hot[0].slug, kind: "npx", target: "primary" });
+
+  await page.onCopyHotInstall();
+  assert.equal(detailFetches(), 1);
 });
 
-test("when the full skill cannot be loaded the button opens the detail page instead", async (t) => {
+test("a second tap while the command is loading is ignored", async (t) => {
   const hot = hotSkills();
-  const { page, clipboard, navigations } = harness(t, { hot, full: "error" });
+  const { page, clipboard, detailFetches } = harness(t, { hot, full: hot[0] });
   page.onLoad({});
   await settle();
+  await Promise.all([page.onCopyHotInstall(), page.onCopyHotInstall()]);
+  assert.equal(detailFetches(), 1);
+  assert.equal(clipboard.length, 1);
+});
+
+test("when the full skill cannot be loaded a toast explains it, then the detail page opens", async (t) => {
+  const hot = hotSkills();
+  const { page, clipboard, navigations, calls } = harness(t, { hot, full: "error" });
+  page.onLoad({});
+  await settle();
+  t.mock.timers.enable({ apis: ["setTimeout"] });
   await page.onCopyHotInstall();
+
   assert.deepEqual(clipboard, []);
+  assert.deepEqual(calls, ["loading:正在获取安装命令", "hideLoading", "toast:网络不佳，带你去详情页复制"]);
+  assert.deepEqual(navigations, []);
+  t.mock.timers.tick(1200);
+  assert.deepEqual(navigations, [`/pages/detail/index?id=${hot[0].id}`]);
+});
+
+test("a skill with no usable source also goes through toast then detail page", async (t) => {
+  const hot = [makeSkill({ github_url: "https://example.com/not-github", skill_md_content: null }), makeSkill(), makeSkill()];
+  const { page, navigations, calls } = harness(t, { hot, full: hot[0] });
+  page.onLoad({});
+  await settle();
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  await page.onCopyHotInstall();
+  assert.equal(calls.at(-1), "toast:暂无安装命令，带你去详情页看看");
+  t.mock.timers.tick(1200);
   assert.deepEqual(navigations, [`/pages/detail/index?id=${hot[0].id}`]);
 });
 
@@ -216,13 +255,20 @@ test("tapping the card opens the skill detail page", async (t) => {
   assert.deepEqual(navigations, [`/pages/detail/index?id=${hot[0].id}`]);
 });
 
-test("a skill that only has a GitHub link relabels the button", async (t) => {
-  const hot = hotSkills();
-  const full = { ...hot[0], skill_md_content: "no frontmatter", github_url: "https://github.com/acme/tools/blob/main/skills/pdf/SKILL.md" };
-  const { page } = harness(t, { hot, full });
+test("a skill the list already proves is link-only copies the link with no loading or fetch", async (t) => {
+  const example = makeSkill({ category: "mp-skill", tags: ["mp-example"], skill_md_content: null, github_url: "https://github.com/acme/mp-demo" });
+  const hot = [example, makeSkill(), makeSkill()];
+  const { page, clipboard, calls, detailFetches } = harness(t, { hot });
   page.onLoad({});
   await settle();
   assert.equal(page.data.hotCopyLabel, "一键复制 GitHub 链接");
+
+  await page.onCopyHotInstall();
+  await settle();
+  assert.deepEqual(clipboard, ["https://github.com/acme/mp-demo"]);
+  assert.equal(detailFetches(), 0);
+  assert.ok(!calls.some((call) => call.startsWith("loading") || call === "hideLoading"));
+  assert.equal(calls.at(-1), "toast:GitHub 链接已复制，分享给朋友一起看");
 });
 
 test("the landing share uses 工具名｜一句卖点, the detail path, the cover and reports share", async (t) => {
@@ -241,6 +287,7 @@ test("the landing share uses 工具名｜一句卖点, the detail path, the cove
 
   const timeline = page.onShareTimeline();
   assert.equal(timeline.title, "pdf｜读取和处理 PDF 文件");
+  assert.equal(timeline.query, `id=${hot[0].id}`);
   assert.equal(events().filter((row) => row.event === "share").pop()?.meta?.channel, "timeline");
 });
 
@@ -265,4 +312,20 @@ test("before the hot tool loads the landing page shares itself", async (t) => {
   const shares = events().filter((row) => row.event === "share");
   assert.equal(shares[0].meta?.id, undefined);
   assert.equal(shares[0].meta?.channel, "menu");
+});
+
+test("a landing page opened from a shared tool shows that tool instead of today's pick", async (t) => {
+  const hot = hotSkills();
+  const shared = makeSkill({ name: "docx" });
+  const { page } = harness(t, { hot, full: shared });
+  page.onLoad({ id: shared.id });
+  await settle();
+  assert.equal(page.data.hotTool?.id, shared.id);
+  assert.equal(page.data.hotLabel, "好友推荐的工具");
+
+  const { page: fallback } = harness(t, { hot, full: "error" });
+  fallback.onLoad({ id: shared.id });
+  await settle();
+  assert.equal(fallback.data.hotTool?.id, hot[0].id);
+  assert.equal(fallback.data.hotLabel, "今日热门工具");
 });

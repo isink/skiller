@@ -4,7 +4,7 @@ import { currentEntryScene, markLandingSeen, shouldSkipLanding } from "../../ser
 import { fetchHotTool } from "../../services/recommendations";
 import { APP_TITLE, enableShareMenu, shortPurpose, skillShareTitle } from "../../services/share";
 import { renderShareCard } from "../../services/share-card";
-import { copyInstall, skillInstallPlan } from "../../services/skill-install";
+import { copyInstall, isLinkOnlySkill, skillInstallPlan } from "../../services/skill-install";
 import { cacheSkill, cachedSkill, readCache, writeCache } from "../../services/storage";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
@@ -16,12 +16,21 @@ const PAGE = "pages/landing/index";
 const SHARE_CANVAS = "#share-canvas";
 const HOT_CACHE = "landing:hot-tool";
 const COPY_LABEL = "一键复制安装命令";
+const LINK_LABEL = "一键复制 GitHub 链接";
+// Lets the failure toast be read before the detail page replaces it.
+const TOAST_BEFORE_NAVIGATE_MS = 1200;
 
 type HotPick = { skill: Skill; hot: boolean };
+
+function hotLabel(hot: boolean): string {
+  return hot ? "今日热门工具" : "今日推荐工具";
+}
 
 Page({
   _redirected: false,
   _hot: null as Skill | null,
+  _linkOnly: false,
+  _copying: false,
   _planId: "",
   _planPromise: null as Promise<InstallPlan | null> | null,
   _cardKey: "",
@@ -42,7 +51,7 @@ Page({
     }
     markLandingSeen();
     enableShareMenu();
-    this.loadHotTool();
+    this.loadHotTool(options.id);
   },
 
   onShow() {
@@ -50,39 +59,48 @@ Page({
     trackPageView(PAGE);
   },
 
-  async loadHotTool() {
+  /** A shared link names a tool; show that one instead of today's pick. */
+  async loadHotTool(sharedId?: string) {
+    if (sharedId) {
+      try {
+        const shared = await fetchSkill(sharedId);
+        if (shared) {
+          cacheSkill(shared);
+          this.showHotTool(shared, "好友推荐的工具", "");
+          return;
+        }
+      } catch { /* Fall back to today's pick. */ }
+    }
     const cached = readCache<HotPick>(HOT_CACHE);
-    if (cached?.skill?.id) this.showHotTool(cached.skill, cached.hot);
+    if (cached?.skill?.id) this.showHotTool(cached.skill, hotLabel(cached.hot), cached.hot ? growthLabel(cached.skill) : "");
     try {
       const pick = await fetchHotTool();
       if (pick) {
         writeCache(HOT_CACHE, pick);
-        this.showHotTool(pick.skill, pick.hot);
+        this.showHotTool(pick.skill, hotLabel(pick.hot), pick.hot ? growthLabel(pick.skill) : "");
         return;
       }
     } catch { /* The card is optional; the tool grid below stays usable. */ }
     if (!cached?.skill?.id) this.setData({ hotLoading: false });
   },
 
-  showHotTool(skill: Skill, hot: boolean) {
-    const description = skillDescriptionZh(skill);
+  showHotTool(skill: Skill, label: string, growth: string) {
     this._hot = skill;
+    this._linkOnly = isLinkOnlySkill(skill);
     this.setData({
       hotLoading: false,
-      hotLabel: hot ? "今日热门工具" : "今日推荐工具",
+      hotLabel: label,
       hotTool: {
         id: skill.id,
         name: skill.name,
-        purpose: shortPurpose(description, 40),
-        growth: hot ? growthLabel(skill) : "",
+        purpose: shortPurpose(skillDescriptionZh(skill), 40),
+        growth,
       },
-    }, () => {
-      this.ensurePlan();
-      this.ensureShareCard();
-    });
+      hotCopyLabel: this._linkOnly ? LINK_LABEL : COPY_LABEL,
+    }, () => { this.ensureShareCard(); });
   },
 
-  /** The list row has no SKILL.md, so the install command needs the full skill (cached after the first fetch). */
+  /** The list row has no SKILL.md, so the install command needs the full skill; fetched only when the user asks to copy. */
   ensurePlan(): Promise<InstallPlan | null> {
     const skill = this._hot;
     if (!skill) return Promise.resolve(null);
@@ -93,9 +111,7 @@ Page({
       ? Promise.resolve(cached)
       : fetchSkill(skill.id).then((fetched) => { if (fetched) cacheSkill(fetched); return fetched; });
     const promise = full.then((loaded) => (loaded ? skillInstallPlan(loaded) : null)).catch(() => null).then((plan) => {
-      if (this._planId !== skill.id) return plan;
-      if (!plan) { this._planPromise = null; return null; }
-      this.setData({ hotCopyLabel: plan.installKind === "link" ? "一键复制 GitHub 链接" : plan.installKind === "none" ? "" : COPY_LABEL });
+      if (!plan && this._planId === skill.id) this._planPromise = null;
       return plan;
     });
     this._planPromise = promise;
@@ -104,10 +120,30 @@ Page({
 
   async onCopyHotInstall() {
     const skill = this._hot;
-    if (!skill) return;
-    const plan = await this.ensurePlan();
-    if (!plan || !plan.installCommand) { this.openHotTool(); return; }
-    copyInstall(skill, plan.installCommand, plan.installKind, "primary", PAGE);
+    if (!skill || this._copying) return;
+    this._copying = true;
+    try {
+      let plan: InstallPlan | null;
+      if (this._linkOnly) {
+        plan = skillInstallPlan(skill);
+      } else {
+        wx.showLoading({ title: "正在获取安装命令", mask: true });
+        try { plan = await this.ensurePlan(); }
+        finally { wx.hideLoading(); }
+      }
+      if (!plan || !plan.installCommand) {
+        this.openHotToolAfterNotice(plan ? "暂无安装命令，带你去详情页看看" : "网络不佳，带你去详情页复制");
+        return;
+      }
+      await copyInstall(skill, plan.installCommand, plan.installKind, "primary", PAGE);
+    } finally {
+      this._copying = false;
+    }
+  },
+
+  openHotToolAfterNotice(title: string) {
+    wx.showToast({ title, icon: "none", duration: TOAST_BEFORE_NAVIGATE_MS });
+    setTimeout(() => this.openHotTool(), TOAST_BEFORE_NAVIGATE_MS);
   },
 
   openHotTool() {
@@ -139,8 +175,9 @@ Page({
   },
 
   onShareTimeline() {
-    trackShare(this._hot, "timeline", false, PAGE);
-    return { title: this.shareTitle(), query: "" };
+    const skill = this._hot;
+    trackShare(skill, "timeline", false, PAGE);
+    return { title: this.shareTitle(), query: skill ? `id=${encodeURIComponent(skill.id)}` : "" };
   },
 
   cardKey(): string {

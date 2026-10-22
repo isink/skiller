@@ -14,7 +14,7 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 
 ## 欢迎页（landing）：今日热门工具卡片
 
-欢迎页最上方是「今日热门工具」卡片：`fetchHotTool`（`services/recommendations.ts`）复用新词雷达推荐的数据源与排序——本周热门（`get_hot_skills`，不足 3 条时）退回精选技能，取第一条；退回精选时标签改为「今日推荐工具」。卡片显示名称、一句中文用途和「一键复制安装命令」按钮，点卡片进入详情页。列表行不含 SKILL.md，所以页面会预取该技能完整内容（命中详情页缓存则不再请求）来生成安装命令；取不到时点按钮直接打开详情页。卡片加载前显示骨架，加载失败则整张隐藏，下面的工具入口不受影响。复制逻辑 `copyInstall`（`services/skill-install.ts`）与详情页共用，同样上报 `copy_install`（`page` 为 `pages/landing/index`）。
+欢迎页最上方是「今日热门工具」卡片：`fetchHotTool`（`services/recommendations.ts`）复用新词雷达推荐的数据源与排序——本周热门（`get_hot_skills`，不足 3 条时）退回精选技能，取第一条；退回精选时标签改为「今日推荐工具」。卡片显示名称、一句中文用途和「一键复制安装命令」按钮，点卡片进入详情页。列表行不含 SKILL.md，所以页面不预取详情，用户点按钮时才取完整内容（命中详情页缓存则不再请求）生成安装命令，期间显示 `wx.showLoading`；失败时先 toast 提示再跳转详情页。列表数据已能判断只有 GitHub 链接的技能（小程序范例等，`isLinkOnlySkill`）按钮直接显示「一键复制 GitHub 链接」并立即复制，不请求。通过好友/朋友圈分享链接（带 `id`）进入欢迎页时，卡片显示被分享的工具，标签为「好友推荐的工具」。卡片加载前显示骨架，加载失败则整张隐藏，下面的工具入口不受影响。复制逻辑 `copyInstall`（`services/skill-install.ts`）与详情页共用，同样上报 `copy_install`（`page` 为 `pages/landing/index`）。
 
 ## 新词雷达：日期与收藏
 
@@ -46,6 +46,11 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 
 1. 到微信公众平台 → 开发管理 → 开发设置 → 服务器域名，把 `https://gphynosbfjcyexhkgctf.supabase.co` 加入 **request 合法域名**。如使用 Supabase 图片，再按实际请求配置 downloadFile 合法域名。
 2. 保持 `urlCheck: true`，上传体验版，在真机上检查首次加载、搜索、分类分页、详情和弱网缓存。以微信后台是否接受该域名及真机请求结果为准。
+
+## 网络超时与埋点失败
+
+- 所有 `wx.request`（`api.ts`、`trending-terms.ts`、`analytics.ts`）统一使用 `services/config.ts` 的 `REQUEST_TIMEOUT_MS`（10 秒），与 `app.json` 的 `networkTimeout.request` 保持一致。
+- 埋点发送失败（网络错误或非 2xx，如未执行迁移 025）不再静默：错误信息写入本机存储 `skiller.miniprogram.analytics-failures.v1`（最多 5 条）并用 `wx.getRealtimeLogManager().warn` 记录；下一次有埋点发送成功时，合并为一条 `js_error`（`page=analytics`，`meta.action=analytics_send_failures`）补报并清空。不需要新迁移。
 
 ## 已知边界
 

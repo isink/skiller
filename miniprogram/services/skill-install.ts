@@ -230,6 +230,17 @@ export function skillInstallPlan(skill: Pick<Skill, "github_url" | "skill_md_con
   };
 }
 
+/**
+ * True when a list row (which has no SKILL.md) already proves the only thing
+ * to copy is the GitHub link: mini program examples, or a source the CLI and
+ * git clone commands cannot be built from whatever the SKILL.md says.
+ */
+export function isLinkOnlySkill(skill: Pick<Skill, "github_url" | "skill_md_content"> & { category?: string; tags?: string[] }): boolean {
+  if (skillInstallPlan({ ...skill, skill_md_content: null }).installKind !== "link") return false;
+  const mpExample = skill.category === "mp-skill" && Boolean(skill.tags?.includes("mp-example"));
+  return mpExample || githubInstallSource(skill.github_url || "") === null;
+}
+
 const NUDGE_TOAST_MS = 2200;
 
 export function copyText(data: string, toast: string, duration?: number): Promise<boolean> {
