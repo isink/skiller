@@ -108,19 +108,22 @@ export function trackPageView(page: string, meta?: Record<string, unknown>): Pro
 export type InstallCopyTarget = "primary" | "alternative" | "source_link";
 
 /** Needs migration 025: earlier databases reject the new event names and the report is dropped. */
-export function trackCopyInstall(skill: { id: string; slug: string }, kind: string, target: InstallCopyTarget): Promise<void> {
+export function trackCopyInstall(skill: { id: string; slug: string }, kind: string, target: InstallCopyTarget, page = "pages/detail/index"): Promise<void> {
   return trackEvent("copy_install", {
-    page: "pages/detail/index",
+    page,
     meta: { action: "copy_install", id: skill.id, slug: skill.slug, kind, target },
   });
 }
 
 export type ShareChannel = "button" | "menu" | "timeline";
 
-export function trackShare(skill: { id: string; slug: string }, channel: ShareChannel, withCard: boolean): Promise<void> {
+/** `skill` is null when a page shares itself rather than one skill (home, landing without a hot tool). */
+export function trackShare(skill: { id: string; slug: string } | null, channel: ShareChannel, withCard: boolean, page = "pages/detail/index"): Promise<void> {
   return trackEvent("share", {
-    page: "pages/detail/index",
-    meta: { action: "share", id: skill.id, slug: skill.slug, channel, card: withCard },
+    page,
+    meta: skill
+      ? { action: "share", id: skill.id, slug: skill.slug, channel, card: withCard }
+      : { action: "share", channel, card: withCard },
   });
 }
 

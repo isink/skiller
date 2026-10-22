@@ -1,8 +1,38 @@
-import { trackPageView } from "../../services/analytics";
+import { fetchSkill } from "../../services/api";
+import { trackPageView, trackShare } from "../../services/analytics";
 import { currentEntryScene, markLandingSeen, shouldSkipLanding } from "../../services/landing";
+import { fetchHotTool } from "../../services/recommendations";
+import { APP_TITLE, enableShareMenu, shortPurpose, skillShareTitle } from "../../services/share";
+import { renderShareCard } from "../../services/share-card";
+import { copyInstall, skillInstallPlan } from "../../services/skill-install";
+import { cacheSkill, cachedSkill, readCache, writeCache } from "../../services/storage";
+import { categoryName } from "../../services/presentation";
+import { skillDescriptionZh } from "../../services/description-zh";
+import { growthLabel } from "../../services/freshness";
+import type { InstallPlan } from "../../services/skill-install";
+import type { Skill } from "../../types/skill";
+
+const PAGE = "pages/landing/index";
+const SHARE_CANVAS = "#share-canvas";
+const HOT_CACHE = "landing:hot-tool";
+const COPY_LABEL = "一键复制安装命令";
+
+type HotPick = { skill: Skill; hot: boolean };
 
 Page({
   _redirected: false,
+  _hot: null as Skill | null,
+  _planId: "",
+  _planPromise: null as Promise<InstallPlan | null> | null,
+  _cardKey: "",
+  _cardPath: "",
+  _cardPromise: null as Promise<string | null> | null,
+  data: {
+    hotLoading: true,
+    hotLabel: "今日热门工具",
+    hotTool: null as { id: string; name: string; purpose: string; growth: string } | null,
+    hotCopyLabel: COPY_LABEL,
+  },
 
   onLoad(options: Record<string, string>) {
     if (shouldSkipLanding(options, currentEntryScene())) {
@@ -11,11 +41,134 @@ Page({
       return;
     }
     markLandingSeen();
+    enableShareMenu();
+    this.loadHotTool();
   },
 
   onShow() {
     if (this._redirected) return;
-    trackPageView("pages/landing/index");
+    trackPageView(PAGE);
+  },
+
+  async loadHotTool() {
+    const cached = readCache<HotPick>(HOT_CACHE);
+    if (cached?.skill?.id) this.showHotTool(cached.skill, cached.hot);
+    try {
+      const pick = await fetchHotTool();
+      if (pick) {
+        writeCache(HOT_CACHE, pick);
+        this.showHotTool(pick.skill, pick.hot);
+        return;
+      }
+    } catch { /* The card is optional; the tool grid below stays usable. */ }
+    if (!cached?.skill?.id) this.setData({ hotLoading: false });
+  },
+
+  showHotTool(skill: Skill, hot: boolean) {
+    const description = skillDescriptionZh(skill);
+    this._hot = skill;
+    this.setData({
+      hotLoading: false,
+      hotLabel: hot ? "今日热门工具" : "今日推荐工具",
+      hotTool: {
+        id: skill.id,
+        name: skill.name,
+        purpose: shortPurpose(description, 40),
+        growth: hot ? growthLabel(skill) : "",
+      },
+    }, () => {
+      this.ensurePlan();
+      this.ensureShareCard();
+    });
+  },
+
+  /** The list row has no SKILL.md, so the install command needs the full skill (cached after the first fetch). */
+  ensurePlan(): Promise<InstallPlan | null> {
+    const skill = this._hot;
+    if (!skill) return Promise.resolve(null);
+    if (this._planPromise && this._planId === skill.id) return this._planPromise;
+    this._planId = skill.id;
+    const cached = cachedSkill(skill.id);
+    const full = cached?.skill_md_content
+      ? Promise.resolve(cached)
+      : fetchSkill(skill.id).then((fetched) => { if (fetched) cacheSkill(fetched); return fetched; });
+    const promise = full.then((loaded) => (loaded ? skillInstallPlan(loaded) : null)).catch(() => null).then((plan) => {
+      if (this._planId !== skill.id) return plan;
+      if (!plan) { this._planPromise = null; return null; }
+      this.setData({ hotCopyLabel: plan.installKind === "link" ? "一键复制 GitHub 链接" : plan.installKind === "none" ? "" : COPY_LABEL });
+      return plan;
+    });
+    this._planPromise = promise;
+    return promise;
+  },
+
+  async onCopyHotInstall() {
+    const skill = this._hot;
+    if (!skill) return;
+    const plan = await this.ensurePlan();
+    if (!plan || !plan.installCommand) { this.openHotTool(); return; }
+    copyInstall(skill, plan.installCommand, plan.installKind, "primary", PAGE);
+  },
+
+  openHotTool() {
+    const skill = this._hot;
+    if (skill) wx.navigateTo({ url: `/pages/detail/index?id=${encodeURIComponent(skill.id)}` });
+  },
+
+  shareTitle(): string {
+    const skill = this._hot;
+    return skill ? skillShareTitle(skill.name, skillDescriptionZh(skill)) : `${APP_TITLE}：探索 AI 技能与趋势`;
+  },
+
+  sharePath(): string {
+    const skill = this._hot;
+    return skill ? `/pages/detail/index?id=${encodeURIComponent(skill.id)}` : "/pages/landing/index";
+  },
+
+  onShareAppMessage() {
+    const skill = this._hot;
+    const title = this.shareTitle();
+    const path = this.sharePath();
+    if (!skill) { trackShare(null, "menu", false, PAGE); return { title, path }; }
+    const ready = this._cardPath && this._cardKey === this.cardKey() ? this._cardPath : "";
+    trackShare(skill, "menu", Boolean(ready), PAGE);
+    if (ready) return { title, path, imageUrl: ready };
+    // The share sheet waits up to three seconds; a failed card keeps the default image.
+    const promise = this.ensureShareCard().then((card: string | null) => (card ? { title, path, imageUrl: card } : { title, path }));
+    return { title, path, promise };
+  },
+
+  onShareTimeline() {
+    trackShare(this._hot, "timeline", false, PAGE);
+    return { title: this.shareTitle(), query: "" };
+  },
+
+  cardKey(): string {
+    const skill = this._hot;
+    return skill ? `${skill.id}|${skill.name}|${skillDescriptionZh(skill)}|${skill.github_stars ?? ""}` : "";
+  },
+
+  ensureShareCard(): Promise<string | null> {
+    const skill = this._hot;
+    const key = this.cardKey();
+    if (!skill || !key) return Promise.resolve(null);
+    if (this._cardPromise && this._cardKey === key) return this._cardPromise;
+    this._cardKey = key;
+    this._cardPath = "";
+    const promise = renderShareCard(SHARE_CANVAS, {
+      name: skill.name,
+      purpose: shortPurpose(skillDescriptionZh(skill), 56) || APP_TITLE,
+      stars: skill.github_stars ?? null,
+      category: categoryName(skill.category),
+    }).then((path) => {
+      if (this._cardKey === key) {
+        if (path) this._cardPath = path;
+        else this._cardPromise = null;
+      }
+      return path;
+    });
+    this._cardPromise = promise;
+    return promise;
   },
 
   navigateToSkills() {

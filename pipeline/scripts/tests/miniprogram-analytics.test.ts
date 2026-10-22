@@ -8,7 +8,9 @@ import {
   trackError,
   trackEvent,
   trackPageView,
+  trackCopyInstall,
   trackSearch,
+  trackShare,
 } from "../../../miniprogram/services/analytics";
 
 interface RequestOptions {
@@ -149,4 +151,29 @@ test("repeated events are throttled but distinct events still go through", async
   clock.mock.mockImplementation(() => 1_000_000 + 60_000);
   await trackPageView(page);
   assert.equal(requests.length, 3);
+});
+
+test("share events name the page and omit skill fields when a page shares itself", async (t) => {
+  const { requests } = mockWx(t);
+  const skill = { id: unique("skill"), slug: "pdf" };
+  await trackShare(null, "menu", false, "pages/landing/index");
+  await trackShare(skill, "button", true);
+  await trackShare(skill, "menu", false, "pages/landing/index");
+
+  const [pageShare, detailShare, landingShare] = requests.map((request) => request.data);
+  assert.equal(pageShare.event, "share");
+  assert.equal(pageShare.page, "pages/landing/index");
+  assert.deepEqual(pageShare.meta, { action: "share", channel: "menu", card: false });
+  assert.equal(detailShare.page, "pages/detail/index");
+  assert.deepEqual(detailShare.meta, { action: "share", id: skill.id, slug: "pdf", channel: "button", card: true });
+  assert.equal(landingShare.page, "pages/landing/index");
+});
+
+test("copy_install events default to the detail page and accept another page", async (t) => {
+  const { requests } = mockWx(t);
+  const skill = { id: unique("skill"), slug: "pdf" };
+  await trackCopyInstall(skill, "npx", "primary");
+  await trackCopyInstall(skill, "npx", "primary", "pages/landing/index");
+  assert.deepEqual(requests.map((request) => request.data.page), ["pages/detail/index", "pages/landing/index"]);
+  assert.deepEqual(requests[1].data.meta, { action: "copy_install", id: skill.id, slug: "pdf", kind: "npx", target: "primary" });
 });

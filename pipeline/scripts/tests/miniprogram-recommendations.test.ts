@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
-import { fetchRecommendations } from "../../../miniprogram/services/recommendations";
+import { fetchHotTool, fetchRecommendations } from "../../../miniprogram/services/recommendations";
 import type { Skill } from "../../../miniprogram/types/skill";
 
 type RadarPage = {
@@ -59,6 +59,7 @@ test("three or more hot skills become the recommendations", async (t) => {
   const { paths } = mockApi(t, skills.slice(0, 4));
   const result = await fetchRecommendations(5);
   assert.equal(result.title, "本周热门技能");
+  assert.equal(result.hot, true);
   assert.equal(result.skills.length, 4);
   assert.deepEqual(paths, ["/rest/v1/rpc/get_hot_skills"]);
 });
@@ -71,6 +72,18 @@ test("thin hot data and hot failures fall back to featured skills", async (t) =>
 
   mockApi(t, "error");
   assert.equal((await fetchRecommendations(3)).skills.length, 3);
+});
+
+test("the landing hot tool is the first hot skill, or the first featured one as a fallback", async (t) => {
+  mockApi(t, skills.slice(2, 6));
+  assert.deepEqual(await fetchHotTool(), { skill: skills[2], hot: true });
+
+  mockApi(t, skills.slice(0, 2));
+  assert.deepEqual(await fetchHotTool(), { skill: skills[0], hot: false });
+
+  mockApi(t, []);
+  const picked = await fetchHotTool();
+  assert.equal(picked?.hot, false);
 });
 
 test("radar loads recommendations at the bottom and opens skill details and explore", async (t) => {

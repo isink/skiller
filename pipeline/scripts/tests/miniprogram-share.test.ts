@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
-import { shortPurpose, skillShareTitle, APP_TITLE } from "../../../miniprogram/services/share";
+import { copyShareNudge, shortPurpose, skillShareTitle, APP_TITLE } from "../../../miniprogram/services/share";
 import {
   CARD_HEIGHT,
   CARD_WIDTH,
@@ -133,4 +133,12 @@ test("a canvas that never answers times out to null", async (t) => {
   const pending = renderShareCard("#share-canvas", { name: "a", purpose: "b", stars: 1 });
   t.mock.timers.tick(3000);
   assert.equal(await pending, null);
+});
+
+test("copying an install command nudges the user to share it", () => {
+  assert.equal(copyShareNudge("npx", "primary"), "安装命令已复制，分享给朋友一起用");
+  assert.equal(copyShareNudge("git-clone", "primary"), "安装命令已复制，分享给朋友一起用");
+  assert.equal(copyShareNudge("npx", "alternative"), "安装命令已复制，分享给朋友一起用");
+  assert.equal(copyShareNudge("link", "primary"), "GitHub 链接已复制，分享给朋友一起看");
+  assert.ok(Array.from(copyShareNudge("npx", "primary")).length <= 20);
 });

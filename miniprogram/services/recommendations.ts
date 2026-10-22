@@ -6,6 +6,7 @@ const MIN_HOT = 3;
 
 export interface Recommendations {
   title: string;
+  hot: boolean;
   skills: Skill[];
 }
 
@@ -13,9 +14,15 @@ export interface Recommendations {
 export async function fetchRecommendations(limit = RECOMMEND_LIMIT): Promise<Recommendations> {
   try {
     const hot = await fetchHotSkills(limit);
-    if (hot.length >= MIN_HOT) return { title: "本周热门技能", skills: hot.slice(0, limit) };
+    if (hot.length >= MIN_HOT) return { title: "本周热门技能", hot: true, skills: hot.slice(0, limit) };
   } catch { /* Fall through to featured skills. */ }
-  return { title: "精选技能", skills: (await fetchFeatured(limit)).slice(0, limit) };
+  return { title: "精选技能", hot: false, skills: (await fetchFeatured(limit)).slice(0, limit) };
+}
+
+/** The single hottest skill for the landing card; `hot` is false when it is only a featured fallback. */
+export async function fetchHotTool(): Promise<{ skill: Skill; hot: boolean } | null> {
+  const { hot, skills } = await fetchRecommendations();
+  return skills.length > 0 ? { skill: skills[0], hot } : null;
 }
 
 /** Shown under "已记录，我们会尽快收录": hot skills when there are enough, otherwise featured ones. */

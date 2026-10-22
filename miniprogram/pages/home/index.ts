@@ -1,6 +1,6 @@
 import { fetchCategories, fetchCategoryCounts, fetchFeatured, fetchHotSkills, fetchLatestSkills, searchSkills } from "../../services/api";
 import { readCache, writeCache } from "../../services/storage";
-import { trackPageView, trackSearch } from "../../services/analytics";
+import { trackPageView, trackSearch, trackShare } from "../../services/analytics";
 import { APP_TITLE, enableShareMenu } from "../../services/share";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
@@ -73,10 +73,12 @@ Page({
   },
 
   onShareAppMessage() {
+    trackShare(null, "menu", false, "pages/home/index");
     return { title: `${APP_TITLE}：AI 技能与 Claude Skills 技能库`, path: "/pages/home/index" };
   },
 
   onShareTimeline() {
+    trackShare(null, "timeline", false, "pages/home/index");
     return { title: `${APP_TITLE}：AI 技能与 Claude Skills 技能库` };
   },
 

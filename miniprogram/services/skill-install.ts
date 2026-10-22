@@ -1,4 +1,7 @@
 import type { Skill } from "../types/skill";
+import { trackCopyInstall } from "./analytics";
+import type { InstallCopyTarget } from "./analytics";
+import { copyShareNudge } from "./share";
 
 type InstallCommand = { installCommand: string; installHint: string };
 
@@ -225,4 +228,31 @@ export function skillInstallPlan(skill: Pick<Skill, "github_url" | "skill_md_con
     installAlternatives: [],
     sourceUrl: "",
   };
+}
+
+const NUDGE_TOAST_MS = 2200;
+
+export function copyText(data: string, toast: string, duration?: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    wx.setClipboardData({
+      data,
+      success: () => { wx.showToast({ title: toast, icon: "none", ...(duration ? { duration } : {}) }); resolve(true); },
+      fail: () => { wx.showToast({ title: "复制失败，请长按文字复制", icon: "none" }); resolve(false); },
+    });
+  });
+}
+
+/** Copies an install command or link, nudges sharing, and reports `copy_install` once the clipboard write succeeds. */
+export function copyInstall(
+  skill: { id: string; slug: string },
+  command: string,
+  kind: string,
+  target: Exclude<InstallCopyTarget, "source_link">,
+  page: string,
+): Promise<boolean> {
+  if (!command) return Promise.resolve(false);
+  return copyText(command, copyShareNudge(kind, target), NUDGE_TOAST_MS).then((ok) => {
+    if (ok) trackCopyInstall(skill, kind, target, page);
+    return ok;
+  });
 }

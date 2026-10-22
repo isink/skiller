@@ -100,7 +100,7 @@ test("copying the install command reports a copy_install event", async (t) => {
   await settle();
 
   assert.deepEqual(clipboard, [page.data.installCommand]);
-  assert.deepEqual(toasts, ["安装命令已复制"]);
+  assert.deepEqual(toasts, ["安装命令已复制，分享给朋友一起用"]);
   const event = events.find((row) => row.event === "copy_install");
   assert.ok(event);
   assert.equal(event.page, "pages/detail/index");
@@ -113,7 +113,7 @@ test("a skill without an inferable command copies the GitHub link", async (t) =>
   page.onCopyInstall();
   await settle();
   assert.deepEqual(clipboard, ["https://github.com/acme/tools/blob/main/skills/pdf/SKILL.md"]);
-  assert.deepEqual(toasts, ["GitHub 链接已复制"]);
+  assert.deepEqual(toasts, ["GitHub 链接已复制，分享给朋友一起看"]);
   assert.equal(events.find((row) => row.event === "copy_install")?.meta.kind, "link");
 });
 
