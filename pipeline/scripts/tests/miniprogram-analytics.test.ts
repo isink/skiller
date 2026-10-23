@@ -8,7 +8,9 @@ import {
   trackError,
   trackEvent,
   trackPageView,
+  trackCopyInstall,
   trackSearch,
+  trackShare,
 } from "../../../miniprogram/services/analytics";
 
 interface RequestOptions {
@@ -149,4 +151,115 @@ test("repeated events are throttled but distinct events still go through", async
   clock.mock.mockImplementation(() => 1_000_000 + 60_000);
   await trackPageView(page);
   assert.equal(requests.length, 3);
+});
+
+test("share events name the page and omit skill fields when a page shares itself", async (t) => {
+  const { requests } = mockWx(t);
+  const skill = { id: unique("skill"), slug: "pdf" };
+  await trackShare(null, "menu", false, "pages/landing/index");
+  await trackShare(skill, "button", true);
+  await trackShare(skill, "menu", false, "pages/landing/index");
+
+  const [pageShare, detailShare, landingShare] = requests.map((request) => request.data);
+  assert.equal(pageShare.event, "share");
+  assert.equal(pageShare.page, "pages/landing/index");
+  assert.deepEqual(pageShare.meta, { action: "share", channel: "menu", card: false });
+  assert.equal(detailShare.page, "pages/detail/index");
+  assert.deepEqual(detailShare.meta, { action: "share", id: skill.id, slug: "pdf", channel: "button", card: true });
+  assert.equal(landingShare.page, "pages/landing/index");
+});
+
+test("copy_install events default to the detail page and accept another page", async (t) => {
+  const { requests } = mockWx(t);
+  const skill = { id: unique("skill"), slug: "pdf" };
+  await trackCopyInstall(skill, "npx", "primary");
+  await trackCopyInstall(skill, "npx", "primary", "pages/landing/index");
+  assert.deepEqual(requests.map((request) => request.data.page), ["pages/detail/index", "pages/landing/index"]);
+  assert.deepEqual(requests[1].data.meta, { action: "copy_install", id: skill.id, slug: "pdf", kind: "npx", target: "primary" });
+});
+
+const FAILURES_KEY = "skiller.miniprogram.analytics-failures.v1";
+
+function mockFlaky(t: TestContext, state: { fail: boolean | "http" }) {
+  const warnings: unknown[][] = [];
+  const harness = mockWx(t, (options) => {
+    if (state.fail === "http") options.success({ statusCode: 400 });
+    else if (state.fail) options.fail({ errMsg: "request:fail timeout" });
+    else options.success({ statusCode: 201 });
+  });
+  (globals.wx as Record<string, unknown>).getRealtimeLogManager = () => ({ warn: (...args: unknown[]) => { warnings.push(args); } });
+  return { ...harness, warnings };
+}
+
+test("analytics requests use the shared 10 second timeout", async (t) => {
+  const { requests } = mockWx(t);
+  await trackPageView(unique("pages/detail/index"));
+  assert.equal((requests[0] as unknown as { timeout: number }).timeout, 10000);
+});
+
+test("a failed send is stored locally, logged as a warning, and reported once the network works", async (t) => {
+  const state = { fail: true as boolean | "http" };
+  const { requests, storage, warnings } = mockFlaky(t, state);
+  await trackPageView(unique("pages/a"));
+
+  const stored = storage.get(FAILURES_KEY) as Array<{ event: string; errMsg: string }>;
+  assert.equal(stored.length, 1);
+  assert.equal(stored[0].event, "page_view");
+  assert.equal(stored[0].errMsg, "request:fail timeout");
+  assert.deepEqual(warnings[0], ["mp_events send failed", "page_view", "request:fail timeout"]);
+
+  state.fail = false;
+  await trackPageView(unique("pages/b"));
+  const report = requests.at(-1)?.data as Record<string, any>;
+  assert.equal(requests.length, 3);
+  assert.equal(report.event, "js_error");
+  assert.equal(report.page, "analytics");
+  assert.match(report.error, /request:fail timeout/);
+  assert.equal(report.meta.action, "analytics_send_failures");
+  assert.equal(report.meta.failures.length, 1);
+  assert.deepEqual(storage.get(FAILURES_KEY), []);
+
+  await trackPageView(unique("pages/c"));
+  assert.equal(requests.length, 4);
+});
+
+test("only the five most recent failures are kept", async (t) => {
+  const { storage } = mockFlaky(t, { fail: true });
+  for (let index = 0; index < 7; index++) await trackSearch(unique("pages/home"), unique(`q${index}`), 1);
+  const stored = storage.get(FAILURES_KEY) as unknown[];
+  assert.equal(stored.length, 5);
+});
+
+test("a failed report keeps the stored failures for the next success", async (t) => {
+  const state = { fail: true as boolean | "http" };
+  const { requests, storage } = mockFlaky(t, state);
+  await trackPageView(unique("pages/a"));
+  requests.length = 0;
+
+  let calls = 0;
+  (globals.wx as Record<string, unknown>).request = (options: RequestOptions) => {
+    requests.push(options);
+    calls++;
+    if (calls === 1) options.success({ statusCode: 201 });
+    else options.fail({ errMsg: "request:fail" });
+  };
+  await trackPageView(unique("pages/b"));
+  assert.equal(requests.length, 2);
+  assert.equal((storage.get(FAILURES_KEY) as unknown[]).length, 1);
+});
+
+test("a rejected status such as a missing migration counts as a failure", async (t) => {
+  const { storage, warnings } = mockFlaky(t, { fail: "http" });
+  await trackEvent("share", { page: unique("pages/detail/index") });
+  const stored = storage.get(FAILURES_KEY) as Array<{ errMsg: string }>;
+  assert.equal(stored[0].errMsg, "HTTP 400");
+  assert.equal(warnings.length, 1);
+});
+
+test("a missing realtime log manager or storage never breaks tracking", async (t) => {
+  mockWx(t, (options) => options.fail({ errMsg: "request:fail" }));
+  (globals.wx as Record<string, unknown>).getRealtimeLogManager = () => { throw new Error("no log"); };
+  await assert.doesNotReject(trackPageView(unique("pages/a")));
+  (globals.wx as Record<string, unknown>).setStorageSync = () => { throw new Error("full"); };
+  await assert.doesNotReject(trackPageView(unique("pages/b")));
 });

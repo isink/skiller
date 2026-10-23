@@ -1,4 +1,4 @@
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
+import { REQUEST_TIMEOUT_MS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 import { categoryName } from "./presentation";
 import { limitPerRepo } from "./freshness";
 import type { Category, Skill } from "../types/skill";
@@ -25,6 +25,7 @@ function request<T>(path: string, query: Query = {}): Promise<T> {
     wx.request({
       url,
       method: "GET",
+      timeout: REQUEST_TIMEOUT_MS,
       header: {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,

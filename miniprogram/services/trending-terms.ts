@@ -1,4 +1,4 @@
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
+import { REQUEST_TIMEOUT_MS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 import { isDateKey } from "./radar-calendar";
 import type { TrendingMode, TrendingSnapshot, TrendingTerm, TrendingTermDisplay } from "../types/trending-term";
 
@@ -37,7 +37,7 @@ function request<T>(query: Query): Promise<T> {
     wx.request({
       url: `${SUPABASE_URL}/rest/v1/trending_terms_public?${params}`,
       method: "GET",
-      timeout: 15000,
+      timeout: REQUEST_TIMEOUT_MS,
       header: {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,

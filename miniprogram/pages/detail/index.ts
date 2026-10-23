@@ -1,28 +1,18 @@
 import { fetchSkill } from "../../services/api";
 import { cacheSkill, cachedSkill, getFavoriteIds, toggleFavorite } from "../../services/storage";
 import { trackCopyInstall, trackPageView, trackShare } from "../../services/analytics";
-import type { InstallCopyTarget, ShareChannel } from "../../services/analytics";
+import type { ShareChannel } from "../../services/analytics";
 import { APP_TITLE, enableShareMenu, shortPurpose, skillShareTitle } from "../../services/share";
 import { renderShareCard } from "../../services/share-card";
 import { parseMarkdown } from "../../services/markdown";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
-import { skillInstallPlan, skillLicense } from "../../services/skill-install";
+import { copyInstall as copyInstallCommand, copyText, skillInstallPlan, skillLicense } from "../../services/skill-install";
 import { feedbackNotice } from "../../services/feedback";
 import type { Skill, SkillBlock } from "../../types/skill";
 
 const SHARE_CANVAS = "#share-canvas";
-
-function copyText(data: string, toast: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    wx.setClipboardData({
-      data,
-      success: () => { wx.showToast({ title: toast, icon: "none" }); resolve(true); },
-      fail: () => { wx.showToast({ title: "复制失败，请长按文字复制", icon: "none" }); resolve(false); },
-    });
-  });
-}
 
 Page({
   _id: "",
@@ -148,13 +138,10 @@ Page({
     }, () => { this.ensureShareCard(); });
   },
 
-  copyInstall(command: string, target: InstallCopyTarget) {
+  copyInstall(command: string, target: "primary" | "alternative") {
     const skill = this.data.skill as Skill | null;
     if (!skill || !command) return;
-    const kind = this.data.installKind;
-    copyText(command, kind === "link" && target === "primary" ? "GitHub 链接已复制" : "安装命令已复制").then((ok) => {
-      if (ok) trackCopyInstall(skill, kind, target);
-    });
+    copyInstallCommand(skill, command, this.data.installKind, target, "pages/detail/index");
   },
 
   onCopyInstall() {

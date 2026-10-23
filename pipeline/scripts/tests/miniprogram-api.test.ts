@@ -1,7 +1,10 @@
 /// <reference path="../../../miniprogram/types/wx.d.ts" />
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fetchFeatured, fetchLatestSkills, fetchSkills, searchSkills } from "../../../miniprogram/services/api";
+import { REQUEST_TIMEOUT_MS } from "../../../miniprogram/services/config";
 import type { Skill } from "../../../miniprogram/types/skill";
 
 const globals = globalThis as typeof globalThis & { wx: unknown };
@@ -61,4 +64,23 @@ test("limited featured, search and latest fallback queries have stable tie order
     requests.filter((url) => url.pathname.endsWith("/skills")).map((url) => url.searchParams.get("order")),
     ["rank.desc,id.asc", "rank.desc,id.asc", "created_at.desc,id.asc"],
   );
+});
+
+test("every api request carries the 10 second timeout, matching app.json", async (t) => {
+  const original = globals.wx;
+  const timeouts: unknown[] = [];
+  t.after(() => { globals.wx = original; });
+  globals.wx = {
+    request(options: { timeout?: number; success(response: { statusCode: number; data: Skill[] }): void }) {
+      timeouts.push(options.timeout);
+      options.success({ statusCode: 200, data: [] });
+    },
+  };
+  await fetchFeatured(3);
+  await searchSkills("pdf");
+  assert.deepEqual(timeouts, [10000, 10000]);
+  assert.equal(REQUEST_TIMEOUT_MS, 10000);
+
+  const appJson = JSON.parse(readFileSync(join(__dirname, "../../../miniprogram/app.json"), "utf8"));
+  assert.equal(appJson.networkTimeout.request, REQUEST_TIMEOUT_MS);
 });

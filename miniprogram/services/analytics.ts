@@ -1,4 +1,4 @@
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
+import { REQUEST_TIMEOUT_MS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 
 /** Must match the check constraint on public.mp_events (migrations 024 and 025). */
 export const MP_EVENT_NAMES = ["page_view", "search", "search_empty", "js_error", "perf", "copy_install", "share"] as const;
@@ -26,6 +26,9 @@ const THROTTLE_MS: Record<MpEventName, number> = {
   share: 1500,
 };
 const MAX_THROTTLE_KEYS = 200;
+const FAILURES_KEY = "skiller.miniprogram.analytics-failures.v1";
+const MAX_FAILURES = 5;
+const MAX_FAILURE_MESSAGE_LENGTH = 200;
 
 const lastSentAt = new Map<string, number>();
 let sessionAnonId = "";
@@ -77,14 +80,43 @@ function buildRow(event: MpEventName, fields: MpEventFields): Record<string, unk
   return row;
 }
 
-/** Fire-and-forget. Never rejects and never throws; analytics must not affect the app. */
-export function trackEvent(event: MpEventName, fields: MpEventFields = {}): Promise<void> {
+interface SendFailure {
+  event: string;
+  errMsg: string;
+  at: number;
+}
+
+function storedFailures(): SendFailure[] {
+  try {
+    const value = wx.getStorageSync(FAILURES_KEY);
+    return Array.isArray(value) ? value.filter((item) => item && typeof item.errMsg === "string" && typeof item.at === "number") : [];
+  } catch { return []; }
+}
+
+function saveFailures(failures: SendFailure[]): void {
+  try { wx.setStorageSync(FAILURES_KEY, failures); }
+  catch { /* Without storage the failure is only kept in the realtime log. */ }
+}
+
+/** Keeps the latest few send errors locally and mirrors them to the realtime log. */
+function recordFailure(event: MpEventName, errMsg: string): void {
+  const failure: SendFailure = { event, errMsg: clip(errMsg, MAX_FAILURE_MESSAGE_LENGTH), at: Date.now() };
+  saveFailures([...storedFailures(), failure].slice(-MAX_FAILURES));
+  try {
+    const logger = typeof wx.getRealtimeLogManager === "function" ? wx.getRealtimeLogManager() : null;
+    logger?.warn("mp_events send failed", event, failure.errMsg);
+  } catch { /* The realtime log is a best-effort diagnostic. */ }
+}
+
+interface SendResult { ok: boolean; errMsg: string }
+
+function post(event: MpEventName, fields: MpEventFields): Promise<SendResult> {
   return new Promise((resolve) => {
     try {
-      if (!shouldSend(event, fields)) { resolve(); return; }
       wx.request({
         url: `${SUPABASE_URL}/rest/v1/mp_events`,
         method: "POST",
+        timeout: REQUEST_TIMEOUT_MS,
         header: {
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
@@ -92,13 +124,51 @@ export function trackEvent(event: MpEventName, fields: MpEventFields = {}): Prom
           Prefer: "return=minimal",
         },
         data: buildRow(event, fields),
-        success() { resolve(); },
-        fail() { resolve(); },
+        success(response?: { statusCode?: number }) {
+          const status = response?.statusCode;
+          resolve(typeof status === "number" && (status < 200 || status >= 300)
+            ? { ok: false, errMsg: `HTTP ${status}` }
+            : { ok: true, errMsg: "" });
+        },
+        fail(error?: { errMsg?: string }) { resolve({ ok: false, errMsg: error?.errMsg || "request:fail" }); },
       });
-    } catch {
-      resolve();
+    } catch (error) {
+      resolve({ ok: false, errMsg: error instanceof Error ? error.message : "request:fail" });
     }
   });
+}
+
+let flushing = false;
+
+/** After a successful send the network works again: report the stored failures once as a js_error. */
+async function flushFailures(): Promise<void> {
+  if (flushing) return;
+  const failures = storedFailures();
+  if (failures.length === 0) return;
+  flushing = true;
+  try {
+    const result = await post("js_error", {
+      page: "analytics",
+      error: `mp_events send failed x${failures.length}: ${failures.map((item) => item.errMsg).join(" | ")}`,
+      meta: { action: "analytics_send_failures", failures },
+    });
+    if (result.ok) {
+      const lastReported = failures[failures.length - 1].at;
+      saveFailures(storedFailures().filter((item) => item.at > lastReported));
+    }
+  } finally {
+    flushing = false;
+  }
+}
+
+/** Fire-and-forget. Never rejects and never throws; analytics must not affect the app. */
+export async function trackEvent(event: MpEventName, fields: MpEventFields = {}): Promise<void> {
+  try {
+    if (!shouldSend(event, fields)) return;
+    const result = await post(event, fields);
+    if (result.ok) await flushFailures();
+    else recordFailure(event, result.errMsg);
+  } catch { /* Reporting must never break the caller. */ }
 }
 
 export function trackPageView(page: string, meta?: Record<string, unknown>): Promise<void> {
@@ -108,19 +178,22 @@ export function trackPageView(page: string, meta?: Record<string, unknown>): Pro
 export type InstallCopyTarget = "primary" | "alternative" | "source_link";
 
 /** Needs migration 025: earlier databases reject the new event names and the report is dropped. */
-export function trackCopyInstall(skill: { id: string; slug: string }, kind: string, target: InstallCopyTarget): Promise<void> {
+export function trackCopyInstall(skill: { id: string; slug: string }, kind: string, target: InstallCopyTarget, page = "pages/detail/index"): Promise<void> {
   return trackEvent("copy_install", {
-    page: "pages/detail/index",
+    page,
     meta: { action: "copy_install", id: skill.id, slug: skill.slug, kind, target },
   });
 }
 
 export type ShareChannel = "button" | "menu" | "timeline";
 
-export function trackShare(skill: { id: string; slug: string }, channel: ShareChannel, withCard: boolean): Promise<void> {
+/** `skill` is null when a page shares itself rather than one skill (home, landing without a hot tool). */
+export function trackShare(skill: { id: string; slug: string } | null, channel: ShareChannel, withCard: boolean, page = "pages/detail/index"): Promise<void> {
   return trackEvent("share", {
-    page: "pages/detail/index",
-    meta: { action: "share", id: skill.id, slug: skill.slug, channel, card: withCard },
+    page,
+    meta: skill
+      ? { action: "share", id: skill.id, slug: skill.slug, channel, card: withCard }
+      : { action: "share", channel, card: withCard },
   });
 }
 
