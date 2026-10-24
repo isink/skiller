@@ -13,6 +13,7 @@ type LandingPage = {
   loadHotTool(sharedId?: string): Promise<void>;
   onCopyHotInstall(): Promise<void>;
   openHotTool(): void;
+  markLandingEntered(): void;
   onShareAppMessage(): Share;
   onShareTimeline(): { title: string; query: string };
 };
@@ -61,6 +62,7 @@ function harness(t: TestContext, options: HarnessOptions = {}) {
     getEnterOptionsSync: () => ({ scene: options.scene ?? 1001 }),
     showShareMenu() {},
     redirectTo: ({ url }: { url: string }) => { redirects.push(url); },
+    reLaunch: ({ url }: { url: string }) => { redirects.push(url); },
     navigateTo: ({ url }: { url: string }) => { navigations.push(url); },
     setClipboardData: ({ data, success }: { data: string; success(): void }) => { clipboard.push(data); success(); },
     showToast: (toast: { title: string; duration?: number }) => { calls.push(`toast:${toast.title}`); toasts.push(toast); },
@@ -108,10 +110,12 @@ function harness(t: TestContext, options: HarnessOptions = {}) {
 
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
-test("first visit shows the landing page and marks it as seen", (t) => {
+test("first visit stays unmarked until the visitor chooses an entry", (t) => {
   const { page, storage, redirects } = harness(t);
   page.onLoad({});
   assert.deepEqual(redirects, []);
+  assert.equal(storage.get(SEEN_KEY), undefined);
+  page.markLandingEntered();
   assert.equal(storage.get(SEEN_KEY), true);
 });
 

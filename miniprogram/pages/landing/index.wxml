@@ -34,7 +34,7 @@
   <text class="tool-section-label">全部工具</text>
 
   <view class="tool-grid">
-    <view class="tool-tile" hover-class="tool-tile-hover" hover-stay-time="60" bindtap="navigateToSkills">
+    <navigator class="tool-tile" url="/pages/home/index" open-type="reLaunch" hover-class="tool-tile-hover" hover-stay-time="60" bindtap="markLandingEntered">
       <view class="tool-tile-top">
         <view class="tool-icon-box">
           <image class="tool-icon" src="/assets/icons/layers.png" mode="aspectFit" />
@@ -43,9 +43,9 @@
       </view>
       <text class="tool-title">AI 技能库</text>
       <text class="tool-desc">浏览、搜索和收藏优质技能</text>
-    </view>
+    </navigator>
 
-    <view class="tool-tile" hover-class="tool-tile-hover" hover-stay-time="60" bindtap="navigateToRadar">
+    <navigator class="tool-tile" url="/pages/radar/index" open-type="reLaunch" hover-class="tool-tile-hover" hover-stay-time="60" bindtap="markLandingEntered">
       <view class="tool-tile-top">
         <view class="tool-icon-box">
           <image class="tool-icon" src="/assets/icons/radar.png" mode="aspectFit" />
@@ -54,7 +54,7 @@
       </view>
       <text class="tool-title">新词雷达</text>
       <text class="tool-desc">追踪 AI 领域热门新词与趋势</text>
-    </view>
+    </navigator>
   </view>
 
   <canvas type="2d" id="share-canvas" class="share-canvas"></canvas>

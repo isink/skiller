@@ -46,10 +46,9 @@ Page({
   onLoad(options: Record<string, string>) {
     if (shouldSkipLanding(options, currentEntryScene())) {
       this._redirected = true;
-      wx.redirectTo({ url: "/pages/home/index", fail: () => { this._redirected = false; } });
+      wx.reLaunch({ url: "/pages/home/index", fail: () => { this._redirected = false; } });
       return;
     }
-    markLandingSeen();
     enableShareMenu();
     this.loadHotTool(options.id);
   },
@@ -208,11 +207,7 @@ Page({
     return promise;
   },
 
-  navigateToSkills() {
-    wx.navigateTo({ url: "/pages/home/index" });
-  },
-
-  navigateToRadar() {
-    wx.navigateTo({ url: "/pages/radar/index" });
+  markLandingEntered() {
+    markLandingSeen();
   },
 });
