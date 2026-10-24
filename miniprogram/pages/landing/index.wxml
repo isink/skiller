@@ -1,23 +1,4 @@
 <view class="page landing-page">
-  <view wx:if="{{hotLoading}}" class="hot-card hot-card-skeleton">
-    <view class="hot-skeleton-line hot-skeleton-badge"></view>
-    <view class="hot-skeleton-line hot-skeleton-name"></view>
-    <view class="hot-skeleton-line"></view>
-    <view class="hot-skeleton-button"></view>
-  </view>
-  <view wx:elif="{{hotTool}}" class="hot-card" hover-class="hot-card-hover" hover-stay-time="60" bindtap="openHotTool">
-    <view class="hot-head">
-      <view class="hot-head-main">
-        <text class="hot-badge">{{hotLabel}}</text>
-        <text wx:if="{{hotTool.growth}}" class="hot-growth">{{hotTool.growth}}</text>
-      </view>
-      <image class="tool-arrow" src="/assets/icons/chevron-right.png" mode="aspectFit" />
-    </view>
-    <text class="hot-name">{{hotTool.name}}</text>
-    <text wx:if="{{hotTool.purpose}}" class="hot-desc">{{hotTool.purpose}}</text>
-    <button wx:if="{{hotCopyLabel}}" class="primary-button hot-copy" catchtap="onCopyHotInstall" aria-label="{{hotCopyLabel}}">{{hotCopyLabel}}</button>
-  </view>
-
   <view class="brand-header">
     <image class="brand-mark" src="/assets/icons/brand.png" mode="aspectFit" />
     <view class="brand-text">
@@ -57,5 +38,4 @@
     </navigator>
   </view>
 
-  <canvas type="2d" id="share-canvas" class="share-canvas"></canvas>
 </view>
