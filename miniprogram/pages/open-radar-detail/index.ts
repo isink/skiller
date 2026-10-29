@@ -1,7 +1,9 @@
 import { trackPageView } from "../../services/analytics";
+import { parseMarkdown } from "../../services/markdown";
 import { fetchOpenRadarItem, OPEN_RADAR_TITLE } from "../../services/open-radar";
 import { APP_TITLE, enableShareMenu } from "../../services/share";
 import type { OpenRadarItem } from "../../services/open-radar";
+import type { SkillBlock } from "../../types/skill";
 
 const PAGE = "pages/open-radar-detail/index";
 const LOAD_ERROR = "网络不佳，请稍后重试";
@@ -22,6 +24,7 @@ Page({
     loading: true,
     error: "",
     item: null as OpenRadarItem | null,
+    blocks: [] as SkillBlock[],
   },
 
   onLoad(options: Record<string, string>) {
@@ -40,11 +43,11 @@ Page({
 
   async load() {
     const seq = ++this._loadSeq;
-    if (!this._id) { this.setData({ loading: false, item: null }); return; }
+    if (!this._id) { this.setData({ loading: false, item: null, blocks: [] }); return; }
     this.setData({ loading: true, error: "" });
     try {
       const item = await fetchOpenRadarItem(this._id);
-      if (seq === this._loadSeq) this.setData({ loading: false, item });
+      if (seq === this._loadSeq) this.setData({ loading: false, item, blocks: item ? parseMarkdown(item.summary) : [] });
     } catch {
       if (seq === this._loadSeq) this.setData({ loading: false, error: LOAD_ERROR });
     }

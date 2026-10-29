@@ -2,6 +2,7 @@ import { REQUEST_TIMEOUT_MS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 import { categoryName } from "./presentation";
 import { limitPerRepo } from "./freshness";
 import { mergeRelated, relatedQueriesFor } from "./search-expansion";
+import { visibleCategories } from "./topics";
 import type { Category, Skill } from "../types/skill";
 
 export const PAGE_SIZE = 30;
@@ -72,11 +73,11 @@ export async function fetchLatestSkills(limit = 10): Promise<Skill[]> {
   return limitPerRepo(rows, 2, limit);
 }
 
-const CATEGORY_ORDER = ["official", "mp-skill", "ai", "code", "data", "devops", "security", "design", "docs", "office", "research", "misc"];
+const CATEGORY_ORDER = ["official", "ai", "code", "data", "devops", "security", "design", "docs", "office", "research", "misc"];
 
 export async function fetchCategories(): Promise<Category[]> {
   const rows = await request<Category[]>("/rest/v1/categories", { select: "id,slug,name,icon" });
-  return rows
+  return visibleCategories(rows)
     .map((category) => ({ ...category, name: categoryName(category.slug, category.name) }))
     .sort((a, b) => categoryOrder(a.slug) - categoryOrder(b.slug));
 }

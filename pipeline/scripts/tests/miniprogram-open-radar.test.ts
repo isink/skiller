@@ -13,7 +13,7 @@ type ListPage = {
   onShareAppMessage(): { title: string; path: string };
 };
 type DetailPage = {
-  data: { loading: boolean; error: string; item: OpenRadarItem | null };
+  data: { loading: boolean; error: string; item: OpenRadarItem | null; blocks: Array<{ type: string }> };
   setData(patch: Record<string, unknown>, callback?: () => void): void;
   onLoad(options: Record<string, string>): void;
   load(): Promise<void>;
@@ -39,7 +39,7 @@ function loadPage<T>(path: string): Omit<T, "setData" | "data"> & { data: Record
 const listDefinition = loadPage<ListPage>("pages/open-radar/index");
 const detailDefinition = loadPage<DetailPage>("pages/open-radar-detail/index");
 
-function harness(t: TestContext) {
+function harness(t: TestContext, rows?: unknown[]) {
   const original = globals.wx;
   const navigations: string[] = [];
   const clipboard: string[] = [];
@@ -50,7 +50,7 @@ function harness(t: TestContext) {
     setClipboardData: ({ data, success }: { data: string; success(): void }) => { clipboard.push(data); success(); },
     showToast: ({ title }: { title: string }) => { toasts.push(title); },
     stopPullDownRefresh() {},
-    request: ({ success }: { success(r: { statusCode: number }): void }) => success({ statusCode: 201 }),
+    request: ({ success }: { success(r: { statusCode: number; data?: unknown }): void }) => success(rows ? { statusCode: 200, data: rows } : { statusCode: 201 }),
   };
   t.after(() => { globals.wx = original; });
   const make = <P extends { data: unknown }>(definition: unknown): P => {
@@ -67,7 +67,7 @@ function harness(t: TestContext) {
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
 const sampleItem: OpenRadarItem = {
-  id: "demo", titleZh: "示例项目", summary: "一句话摘要", pitfalls: ["先装依赖"],
+  id: "demo", titleZh: "示例项目", summary: "一句话摘要",
   installCommand: "npm i demo", articleUrl: "https://mp.weixin.qq.com/s/demo", packageUrl: "https://example.com/demo.zip",
 };
 
@@ -79,14 +79,16 @@ test("both open radar pages are registered and have all four page files", () => 
   }
 });
 
-test("landing replaces the new-word radar tile with the open radar and keeps the hot tool card", () => {
+test("landing replaces the new-word radar tile with the open radar and has no hot tool card", () => {
   const wxml = read("pages/landing/index.wxml");
   assert.match(wxml, /<text class="tool-title">开源雷达<\/text>/);
   assert.match(wxml, /bindtap="navigateToOpenRadar"/);
   assert.ok(!wxml.includes("新词雷达"));
   assert.ok(!wxml.includes("热门新词"));
   assert.equal((wxml.match(/class="tool-tile"/g) ?? []).length, 2);
-  assert.match(wxml, /class="hot-card"/);
+  assert.ok(!wxml.includes("hot-card"));
+  assert.ok(!wxml.includes("今日推荐"));
+  assert.ok(!wxml.includes("今日热门"));
 });
 
 test("open radar pages avoid GitHub branding and web-view", () => {
@@ -138,12 +140,25 @@ test("the detail page opens as an empty shell without data", async (t) => {
   assert.equal(noId.data.item, null);
 });
 
-test("the detail template reserves every planned field", () => {
+test("the detail template shows the long text as the main body and hides the pitfalls section", () => {
   const wxml = read("pages/open-radar-detail/index.wxml");
-  for (const field of ["item.titleZh", "item.summary", "item.pitfalls", "item.installCommand", "item.articleUrl", "item.packageUrl"]) {
+  for (const field of ["item.titleZh", "blocks", "item.installCommand", "item.articleUrl", "item.packageUrl"]) {
     assert.ok(wxml.includes(field), field);
   }
-  for (const label of ["踩坑要点", "安装命令", "公众号文", "部署包"]) assert.ok(wxml.includes(label), label);
+  for (const label of ["安装命令", "公众号文", "部署包"]) assert.ok(wxml.includes(label), label);
+  assert.ok(!wxml.includes("pitfalls"));
+  assert.ok(!wxml.includes("踩坑要点"));
+  assert.ok(wxml.indexOf("blocks") < wxml.indexOf("item.installCommand"));
+});
+
+test("detail renders the summary as markdown body blocks", async (t) => {
+  const id = "3f2b8c1e-5d4a-4e6f-9a7b-1c2d3e4f5a6b";
+  const { detail } = harness(t, [{ id, title_zh: "示例项目", summary: "# 简介\n\n项目说明，含 `npm i demo`。" }]);
+  const page = detail();
+  page.onLoad({ id });
+  await settle();
+  assert.equal(page.data.item?.titleZh, "示例项目");
+  assert.deepEqual(page.data.blocks.map((block) => block.type), ["heading", "paragraph"]);
 });
 
 test("detail copies the install command and links once data exists", async (t) => {

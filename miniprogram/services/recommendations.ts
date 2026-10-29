@@ -19,12 +19,6 @@ export async function fetchRecommendations(limit = RECOMMEND_LIMIT): Promise<Rec
   return { title: "精选技能", hot: false, skills: (await fetchFeatured(limit)).slice(0, limit) };
 }
 
-/** The single hottest skill for the landing card; `hot` is false when it is only a featured fallback. */
-export async function fetchHotTool(): Promise<{ skill: Skill; hot: boolean } | null> {
-  const { hot, skills } = await fetchRecommendations();
-  return skills.length > 0 ? { skill: skills[0], hot } : null;
-}
-
 /** Shown under "已记录，我们会尽快收录": hot skills when there are enough, otherwise featured ones. */
 export function pickEmptySearchRecommendations<T>(hot: T[], featured: T[], limit = RECOMMEND_LIMIT): { recommendTitle: string; recommended: T[] } {
   if (hot.length >= MIN_HOT) return { recommendTitle: "本周热门，先看看这些", recommended: hot.slice(0, limit) };

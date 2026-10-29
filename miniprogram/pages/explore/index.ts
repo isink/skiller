@@ -6,7 +6,7 @@ import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
 import { skillFreshness } from "../../services/freshness";
-import { MP_SKILL_CATEGORY, MP_SKILL_DOC_URL, MP_SKILL_TOPIC, topicCountText } from "../../services/topics";
+import { visibleCategories } from "../../services/topics";
 import type { Category, Skill } from "../../types/skill";
 
 type ExploreSkill = Skill & { displayDescription: string; displayCategory: string; displayStars: string; displayUpdated: string; displayAdded: string };
@@ -17,9 +17,6 @@ function present(skill: Skill): ExploreSkill {
 
 Page({
   data: {
-    topic: MP_SKILL_TOPIC,
-    topicSlug: MP_SKILL_CATEGORY,
-    topicCount: topicCountText(undefined),
     categories: [] as Category[],
     counts: {} as Record<string, number>,
     activeCategory: "",
@@ -33,10 +30,10 @@ Page({
 
   onLoad(options: { category?: string }) {
     const category = options.category || "";
-    const categories = readCache<Category[]>("categories") || [];
+    const categories = visibleCategories(readCache<Category[]>("categories") || []);
     const counts = readCache<Record<string, number>>("category-counts") || {};
     const cached = readCache<Skill[]>(`explore:${category || "all"}:0`);
-    this.setData({ categories, counts, topicCount: topicCountText(counts[MP_SKILL_CATEGORY]), activeCategory: category, skills: (cached || []).map(present), loading: !cached });
+    this.setData({ categories, counts, activeCategory: category, skills: (cached || []).map(present), loading: !cached });
     this.loadCategories();
     this.loadPage(true);
     enableShareMenu();
@@ -65,7 +62,7 @@ Page({
     try {
       const [categories, counts] = await Promise.all([fetchCategories(), fetchCategoryCounts()]);
       writeCache("categories", categories); writeCache("category-counts", counts);
-      this.setData({ categories, counts, topicCount: topicCountText(counts[MP_SKILL_CATEGORY]) });
+      this.setData({ categories, counts });
     } catch { /* Cached categories remain usable. */ }
   },
 
@@ -93,13 +90,6 @@ Page({
     const cached = readCache<Skill[]>(`explore:${slug || "all"}:0`) || [];
     this.setData({ activeCategory: slug, skills: cached.map(present), offset: 0, hasMore: true, loading: cached.length === 0 });
     this.loadPage(true);
-  },
-  copyTopicDoc() {
-    wx.setClipboardData({
-      data: MP_SKILL_DOC_URL,
-      success: () => wx.showToast({ title: "官方文档链接已复制", icon: "none" }),
-      fail: () => wx.showToast({ title: "复制失败，请稍后重试", icon: "none" }),
-    });
   },
   onReachBottom() { this.loadPage(false); },
   onPullDownRefresh() { this.loadPage(true).finally(() => wx.stopPullDownRefresh()); },

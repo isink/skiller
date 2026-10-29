@@ -62,21 +62,22 @@ test("a missing view (migration not applied yet) counts as no entries, other fai
   await assert.rejects(fetchOpenRadarList(), /timeout/);
 });
 
-test("detail maps every field and normalizes pitfalls", async (t) => {
+test("detail maps the displayed fields and ignores pitfalls", async (t) => {
   const calls = mockRequest(t, {
     statusCode: 200,
     data: [{
-      id: ID, title_zh: "示例项目", summary: "摘要", pitfalls: ["先装依赖", " ", 3, "注意版本"],
+      id: ID, title_zh: "示例项目", summary: "摘要", pitfalls: ["先装依赖"],
       install_command: " npm i demo ", article_url: "https://mp.weixin.qq.com/s/demo", package_url: null,
     }],
   });
   const item = await fetchOpenRadarItem(ID);
   assert.deepEqual(item, {
-    id: ID, titleZh: "示例项目", summary: "摘要", pitfalls: ["先装依赖", "注意版本"],
+    id: ID, titleZh: "示例项目", summary: "摘要",
     installCommand: "npm i demo", articleUrl: "https://mp.weixin.qq.com/s/demo", packageUrl: "",
   });
   const url = new URL(calls[0].url);
   assert.equal(url.searchParams.get("id"), `eq.${ID}`);
+  assert.equal(url.searchParams.get("select"), "id,title_zh,summary,install_command,article_url,package_url");
   assert.equal(url.searchParams.get("limit"), "1");
 });
 

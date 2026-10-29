@@ -5,7 +5,7 @@ import test from "node:test";
 import { MP_EVENT_NAMES } from "../../../miniprogram/services/analytics";
 import { categoryName } from "../../../miniprogram/services/presentation";
 import { pickEmptySearchRecommendations } from "../../../miniprogram/services/recommendations";
-import { MP_SKILL_CATEGORY, MP_SKILL_TOPIC, topicCountText } from "../../../miniprogram/services/topics";
+import { MP_SKILL_CATEGORY, visibleCategories } from "../../../miniprogram/services/topics";
 import { MP_SKILL_CATEGORY as PIPELINE_CATEGORY, MP_SKILL_CATEGORY_ROW } from "../lib/mp-skill";
 
 const migrations = join(__dirname, "..", "..", "supabase", "migrations");
@@ -30,15 +30,22 @@ test("the home page tells users the empty search was recorded", () => {
   assert.doesNotMatch(wxml, /没有匹配的技能/);
 });
 
-test("the mini program topic uses one slug everywhere", () => {
+test("the mini program SKILL category keeps one slug but has no entry in the category list", () => {
   assert.equal(MP_SKILL_CATEGORY, "mp-skill");
   assert.equal(PIPELINE_CATEGORY, MP_SKILL_CATEGORY);
   assert.equal(categoryName(MP_SKILL_CATEGORY), "微信小程序 SKILL");
   assert.equal(MP_SKILL_CATEGORY_ROW.name, categoryName(MP_SKILL_CATEGORY));
-  assert.match(MP_SKILL_TOPIC.title, /微信小程序 SKILL/);
-  assert.equal(topicCountText(undefined), "即将收录");
-  assert.equal(topicCountText(0), "即将收录");
-  assert.equal(topicCountText(12), "12 个范例");
+  const categories = [{ slug: "official" }, { slug: "mp-skill" }, { slug: "ai" }];
+  assert.deepEqual(visibleCategories(categories), [{ slug: "official" }, { slug: "ai" }]);
+});
+
+test("explore and home no longer render the mini program SKILL topic entry", () => {
+  const explore = readFileSync(join(__dirname, "..", "..", "..", "miniprogram", "pages", "explore", "index.wxml"), "utf8");
+  assert.doesNotMatch(explore, /topic|微信小程序/);
+  const exploreTs = readFileSync(join(__dirname, "..", "..", "..", "miniprogram", "pages", "explore", "index.ts"), "utf8");
+  const homeTs = readFileSync(join(__dirname, "..", "..", "..", "miniprogram", "pages", "home", "index.ts"), "utf8");
+  assert.match(exploreTs, /visibleCategories/);
+  assert.match(homeTs, /visibleCategories/);
 });
 
 test("migration 026 creates the topic category without touching skills", () => {

@@ -1,9 +1,16 @@
 .retry-button { margin-top: var(--space-2); }
-.pitfall-list { display: flex; flex-direction: column; gap: var(--space-1); }
-.pitfall-row { display: flex; flex-direction: row; align-items: flex-start; gap: var(--space-1); }
-.pitfall-index { flex-shrink: 0; width: 36rpx; color: var(--color-accent); font-size: var(--text-md); font-weight: var(--weight-semibold); text-align: center; }
-.pitfall-text { flex: 1; min-width: 0; color: var(--color-text-2); font-size: var(--text-base); line-height: 1.6; word-break: break-word; }
 .command-box { display: block; padding: var(--space-2); border: 1rpx solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-2); color: var(--color-text); font-size: var(--text-sm); line-height: 1.6; word-break: break-all; }
 .link-row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; min-height: var(--tap-min); border-bottom: 1rpx solid var(--color-border); }
 .link-label { color: var(--color-text); font-size: var(--text-base); }
 .link-action { color: var(--color-accent); font-size: var(--text-sm); }
+.markdown-card { margin-top: var(--space-3); padding: var(--space-3); border: 1rpx solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+.md-heading { margin: var(--space-3) 0 var(--space-1); color: var(--color-text); font-weight: var(--weight-bold); line-height: 1.35; }
+.md-h1 { font-size: var(--text-xl); }
+.md-h2 { font-size: var(--text-lg); }
+.md-h3 { font-size: var(--text-md); }
+.md-h4, .md-h5, .md-h6 { font-size: var(--text-base); }
+.md-paragraph, .md-list, .md-quote { display: block; margin: var(--space-1) 0; color: var(--color-text-2); font-size: var(--text-base); line-height: 1.75; white-space: pre-wrap; }
+.md-quote { padding: var(--space-1) var(--space-2); border-left: 4rpx solid var(--color-accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--color-surface-2); color: var(--color-text-2); }
+.md-code { margin: var(--space-2) 0; padding: var(--space-2); border: 1rpx solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg); color: var(--color-text); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.65; white-space: pre; }
+.md-rule { height: 1rpx; margin: var(--space-3) 0; background: var(--color-border); }
+rich-text code { padding: 2rpx 8rpx; border-radius: 8rpx; background: var(--color-surface-2); color: var(--color-accent); font-family: var(--font-mono); }

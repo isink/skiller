@@ -1,11 +1,10 @@
 import { REQUEST_TIMEOUT_MS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 
-/** One open-source radar entry; optional content fields stay empty until an editor fills them. */
+/** One open-source radar entry; optional content fields stay empty until an editor fills them. `summary` is the long-form body shown on the detail page. */
 export interface OpenRadarItem {
   id: string;
   titleZh: string;
   summary: string;
-  pitfalls: string[];
   installCommand: string;
   articleUrl: string;
   packageUrl: string;
@@ -21,7 +20,6 @@ interface PublishedRow {
   id?: unknown;
   title_zh?: unknown;
   summary?: unknown;
-  pitfalls?: unknown;
   install_command?: unknown;
   article_url?: unknown;
   package_url?: unknown;
@@ -31,7 +29,7 @@ type ApiError = Error & { code?: string; statusCode?: number };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LIST_COLUMNS = "id,title_zh,summary";
-const DETAIL_COLUMNS = "id,title_zh,summary,pitfalls,install_command,article_url,package_url";
+const DETAIL_COLUMNS = "id,title_zh,summary,install_command,article_url,package_url";
 
 function request(query: Record<string, string | number>): Promise<unknown> {
   const params = Object.entries(query)
@@ -90,7 +88,6 @@ function toItem(row: PublishedRow | null): OpenRadarItem | null {
     id,
     titleZh,
     summary: text(row.summary),
-    pitfalls: Array.isArray(row.pitfalls) ? row.pitfalls.map(text).filter(Boolean) : [],
     installCommand: text(row.install_command),
     articleUrl: text(row.article_url),
     packageUrl: text(row.package_url),
