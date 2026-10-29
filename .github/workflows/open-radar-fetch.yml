@@ -2,7 +2,8 @@ name: Open radar fetch
 
 on:
   schedule:
-    # 每天 01:00 UTC（北京时间 09:00）：抓取热门开源日榜 + Product Hunt 日热门，写入草稿池。
+    # 每天 01:00 UTC（北京时间 09:00）：仅抓取 GitHub Trending 日榜，写入草稿池。
+    # Product Hunt 暂缓，可通过手动 workflow_dispatch 选择 product-hunt / all 按需运行。
     - cron: "0 1 * * *"
   workflow_dispatch:
     inputs:
@@ -34,7 +35,7 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       PRODUCT_HUNT_TOKEN: ${{ secrets.PRODUCT_HUNT_TOKEN }}
-      INPUT_SOURCE: ${{ inputs.source || 'all' }}
+      INPUT_SOURCE: ${{ inputs.source || 'github' }}
       INPUT_DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
     steps:
       - uses: actions/checkout@v4
