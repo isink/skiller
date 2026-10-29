@@ -203,7 +203,7 @@ Page({
     wx.navigateTo({ url: "/pages/home/index" });
   },
 
-  navigateToRadar() {
-    wx.navigateTo({ url: "/pages/radar/index" });
+  navigateToOpenRadar() {
+    wx.navigateTo({ url: "/pages/open-radar/index" });
   },
 });

@@ -1,0 +1,9 @@
+.hero { padding-bottom: var(--space-2); }
+.retry-button { margin-top: var(--space-2); }
+.radar-list { display: flex; flex-direction: column; }
+.radar-row { display: flex; flex-direction: row; align-items: center; gap: var(--space-1); min-height: var(--tap-min); padding: var(--space-2) 0; border-bottom: 1rpx solid var(--color-border); }
+.radar-row-hover { background: var(--color-surface-2); }
+.radar-row-main { flex: 1; min-width: 0; }
+.radar-row-title { display: block; color: var(--color-text); font-size: var(--text-lg); font-weight: var(--weight-semibold); line-height: 1.35; word-break: break-word; }
+.radar-row-summary { display: -webkit-box; margin-top: var(--space-half); overflow: hidden; color: var(--color-text-2); font-size: var(--text-base); line-height: 1.5; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.radar-row-arrow { flex-shrink: 0; width: 28rpx; height: 28rpx; }
