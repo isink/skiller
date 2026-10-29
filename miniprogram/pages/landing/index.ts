@@ -1,6 +1,5 @@
 import { fetchSkill } from "../../services/api";
 import { trackPageView, trackShare } from "../../services/analytics";
-import { currentEntryScene, markLandingSeen, shouldSkipLanding } from "../../services/landing";
 import { fetchHotTool } from "../../services/recommendations";
 import { APP_TITLE, enableShareMenu, shortPurpose, skillShareTitle } from "../../services/share";
 import { renderShareCard } from "../../services/share-card";
@@ -27,7 +26,6 @@ function hotLabel(hot: boolean): string {
 }
 
 Page({
-  _redirected: false,
   _hot: null as Skill | null,
   _linkOnly: false,
   _copying: false,
@@ -44,18 +42,11 @@ Page({
   },
 
   onLoad(options: Record<string, string>) {
-    if (shouldSkipLanding(options, currentEntryScene())) {
-      this._redirected = true;
-      wx.redirectTo({ url: "/pages/home/index", fail: () => { this._redirected = false; } });
-      return;
-    }
-    markLandingSeen();
     enableShareMenu();
     this.loadHotTool(options.id);
   },
 
   onShow() {
-    if (this._redirected) return;
     trackPageView(PAGE);
   },
 
