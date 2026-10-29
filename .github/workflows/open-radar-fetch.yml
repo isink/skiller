@@ -1,0 +1,48 @@
+name: Open radar fetch
+
+on:
+  schedule:
+    # 每天 01:00 UTC（北京时间 09:00）：抓取热门开源日榜 + Product Hunt 日热门，写入草稿池。
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "all, github or product-hunt"
+        type: choice
+        options: [all, github, product-hunt]
+        default: all
+      dry_run:
+        description: "Only fetch and print; do not write to Supabase"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: open-radar-fetch
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: pipeline
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      PRODUCT_HUNT_TOKEN: ${{ secrets.PRODUCT_HUNT_TOKEN }}
+      INPUT_SOURCE: ${{ inputs.source || 'all' }}
+      INPUT_DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: pipeline/package-lock.json
+      - run: npm ci
+      - name: Fetch candidates into the draft pool
+        run: npm run import:open-radar -- --source "$INPUT_SOURCE" $INPUT_DRY_RUN
