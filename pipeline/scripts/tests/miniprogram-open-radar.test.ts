@@ -67,7 +67,7 @@ function harness(t: TestContext, rows?: unknown[]) {
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
 const sampleItem: OpenRadarItem = {
-  id: "demo", titleZh: "示例项目", summary: "一句话摘要",
+  id: "demo", titleZh: "示例项目", readmeMd: "# Demo",
   installCommand: "npm i demo", articleUrl: "https://mp.weixin.qq.com/s/demo", packageUrl: "https://example.com/demo.zip",
 };
 
@@ -140,7 +140,7 @@ test("the detail page opens as an empty shell without data", async (t) => {
   assert.equal(noId.data.item, null);
 });
 
-test("the detail template shows the long text as the main body and hides the pitfalls section", () => {
+test("the detail template shows the README as the main body and hides the pitfalls section", () => {
   const wxml = read("pages/open-radar-detail/index.wxml");
   for (const field of ["item.titleZh", "blocks", "item.installCommand", "item.articleUrl", "item.packageUrl"]) {
     assert.ok(wxml.includes(field), field);
@@ -151,14 +151,28 @@ test("the detail template shows the long text as the main body and hides the pit
   assert.ok(wxml.indexOf("blocks") < wxml.indexOf("item.installCommand"));
 });
 
-test("detail renders the summary as markdown body blocks", async (t) => {
+test("detail renders the README (not the Chinese summary) as markdown body blocks", async (t) => {
   const id = "3f2b8c1e-5d4a-4e6f-9a7b-1c2d3e4f5a6b";
-  const { detail } = harness(t, [{ id, title_zh: "示例项目", summary: "# 简介\n\n项目说明，含 `npm i demo`。" }]);
+  const { detail } = harness(t, [{
+    id, title_zh: "示例项目", summary: "中文摘要不应成为正文", readme_md: "# Demo\n\nProject readme, run `npm i demo`.\n\n```sh\nnpm i demo\n```",
+  }]);
   const page = detail();
   page.onLoad({ id });
   await settle();
   assert.equal(page.data.item?.titleZh, "示例项目");
-  assert.deepEqual(page.data.blocks.map((block) => block.type), ["heading", "paragraph"]);
+  assert.deepEqual(page.data.blocks.map((block) => block.type), ["heading", "paragraph", "code"]);
+  assert.ok(!JSON.stringify(page.data.blocks).includes("中文摘要"));
+});
+
+test("detail without a README shows no body blocks and a pending notice", async (t) => {
+  const id = "3f2b8c1e-5d4a-4e6f-9a7b-1c2d3e4f5a6b";
+  const { detail } = harness(t, [{ id, title_zh: "示例项目", summary: "中文摘要", readme_md: null }]);
+  const page = detail();
+  page.onLoad({ id });
+  await settle();
+  assert.equal(page.data.item?.titleZh, "示例项目");
+  assert.deepEqual(page.data.blocks, []);
+  assert.match(read("pages/open-radar-detail/index.wxml"), /wx:else class="notice">项目说明整理中/);
 });
 
 test("detail copies the install command and links once data exists", async (t) => {

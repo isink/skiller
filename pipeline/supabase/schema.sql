@@ -1424,6 +1424,8 @@ create table if not exists public.open_radar_items (
   install_command text,
   article_url text,
   package_url text,
+  -- 项目 README（清洗后的 Markdown，migration 028）：详情页正文；已清洗掉来源平台品牌词。
+  readme_md text,
   language text,
   topics text[] not null default '{}',
   stars_today integer check (stars_today is null or stars_today >= 0),
@@ -1446,8 +1448,17 @@ create table if not exists public.open_radar_items (
     status <> 'published'
     or concat_ws(' ', title, title_zh, summary, summary_zh, install_command, array_to_string(pitfalls, ' '))
       !~* 'github'
+  ),
+  constraint open_radar_items_readme_length check (readme_md is null or char_length(readme_md) <= 100000),
+  constraint open_radar_items_published_readme_no_brand check (
+    status <> 'published'
+    or readme_md is null
+    or readme_md !~* 'github'
   )
 );
+
+-- 已存在的库（027 已执行）通过 migration 028 补列与约束。
+alter table public.open_radar_items add column if not exists readme_md text;
 
 create index if not exists open_radar_items_status_published_idx
   on public.open_radar_items (status, published_at desc nulls last);
@@ -1492,7 +1503,8 @@ select
   install_command,
   article_url,
   package_url,
-  published_at
+  published_at,
+  readme_md
 from public.open_radar_items
 where status = 'published';
 

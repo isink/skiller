@@ -1,4 +1,5 @@
 import { fetchGithubTrending } from "./github-trending";
+import { fetchGithubReadme } from "./open-radar-readme";
 import {
   filterCandidates,
   readFilterOptions,
@@ -77,4 +78,35 @@ export async function collectCandidates(
     }
   }
   return { options, outcomes };
+}
+
+export type ReadmeOutcome = { attached: number; missing: number; failed: number };
+
+/**
+ * 给日榜候选补上来源 README 原文（就地写入 readmeMd）。单个仓库失败或没有 README 只计数、不影响其他条目，
+ * 也不会让整个来源失败；对 Product Hunt 候选不做任何事。
+ */
+export async function attachReadmes(
+  candidates: readonly OpenRadarCandidate[],
+  fetchReadme: (fullName: string) => Promise<string | null> = (fullName) =>
+    fetchGithubReadme(fullName, { token: process.env.GITHUB_TOKEN || null }),
+  onError: (fullName: string, error: Error) => void = () => {},
+): Promise<ReadmeOutcome> {
+  const outcome: ReadmeOutcome = { attached: 0, missing: 0, failed: 0 };
+  for (const candidate of candidates) {
+    if (candidate.source !== "github_trending" || !candidate.fullName) continue;
+    try {
+      const readme = await fetchReadme(candidate.fullName);
+      if (readme && readme.trim()) {
+        candidate.readmeMd = readme;
+        outcome.attached++;
+      } else {
+        outcome.missing++;
+      }
+    } catch (error) {
+      outcome.failed++;
+      onError(candidate.fullName, error instanceof Error ? error : new Error(String(error)));
+    }
+  }
+  return outcome;
 }

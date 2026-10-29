@@ -47,7 +47,7 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const item = await fetchOpenRadarItem(this._id);
-      if (seq === this._loadSeq) this.setData({ loading: false, item, blocks: item ? parseMarkdown(item.summary) : [] });
+      if (seq === this._loadSeq) this.setData({ loading: false, item, blocks: item ? parseMarkdown(item.readmeMd) : [] });
     } catch {
       if (seq === this._loadSeq) this.setData({ loading: false, error: LOAD_ERROR });
     }

@@ -21,6 +21,7 @@
         <view wx:elif="{{item.type === 'rule'}}" class="md-rule"></view>
       </block>
     </view>
+    <view wx:else class="notice">项目说明整理中，稍后再来看看</view>
 
     <block wx:if="{{item.installCommand}}">
       <text class="section-title">安装命令</text>

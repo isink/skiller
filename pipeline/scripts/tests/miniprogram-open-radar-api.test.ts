@@ -62,23 +62,36 @@ test("a missing view (migration not applied yet) counts as no entries, other fai
   await assert.rejects(fetchOpenRadarList(), /timeout/);
 });
 
-test("detail maps the displayed fields and ignores pitfalls", async (t) => {
+test("detail maps the README as the body and ignores summary and pitfalls", async (t) => {
   const calls = mockRequest(t, {
     statusCode: 200,
     data: [{
-      id: ID, title_zh: "示例项目", summary: "摘要", pitfalls: ["先装依赖"],
+      id: ID, title_zh: "示例项目", summary: "中文摘要", readme_md: "\n# Demo\n\nInstall it.\n", pitfalls: ["先装依赖"],
       install_command: " npm i demo ", article_url: "https://mp.weixin.qq.com/s/demo", package_url: null,
     }],
   });
   const item = await fetchOpenRadarItem(ID);
   assert.deepEqual(item, {
-    id: ID, titleZh: "示例项目", summary: "摘要",
+    id: ID, titleZh: "示例项目", readmeMd: "# Demo\n\nInstall it.",
     installCommand: "npm i demo", articleUrl: "https://mp.weixin.qq.com/s/demo", packageUrl: "",
   });
   const url = new URL(calls[0].url);
   assert.equal(url.searchParams.get("id"), `eq.${ID}`);
-  assert.equal(url.searchParams.get("select"), "id,title_zh,summary,install_command,article_url,package_url");
+  assert.equal(url.searchParams.get("select"), "id,title_zh,readme_md,install_command,article_url,package_url");
   assert.equal(url.searchParams.get("limit"), "1");
+});
+
+test("detail without a README (not backfilled yet) maps to an empty body, never to the summary", async (t) => {
+  mockRequest(t, { statusCode: 200, data: [{ id: ID, title_zh: "示例项目", summary: "中文摘要", readme_md: null }] });
+  const item = await fetchOpenRadarItem(ID);
+  assert.equal(item?.readmeMd, "");
+  assert.ok(item && !("summary" in item));
+});
+
+test("the list keeps the short Chinese summary and does not request the README", async (t) => {
+  const calls = mockRequest(t, { statusCode: 200, data: [{ id: ID, title_zh: "示例项目", summary: "一句话", readme_md: "# long" }] });
+  assert.deepEqual(await fetchOpenRadarList(), [{ id: ID, titleZh: "示例项目", summary: "一句话" }]);
+  assert.ok(!new URL(calls[0].url).searchParams.get("select")?.includes("readme_md"));
 });
 
 test("detail returns null for unknown ids without calling the network", async (t) => {
