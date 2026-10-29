@@ -1,11 +1,9 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
-import { hasEntryParams, shouldSkipLanding } from "../../../miniprogram/services/landing";
 import type { Skill } from "../../../miniprogram/types/skill";
 
 type Share = { title: string; path: string; imageUrl?: string; promise?: Promise<{ title: string; path: string; imageUrl?: string }> };
 type LandingPage = {
-  _redirected: boolean;
   data: Record<string, any>;
   setData(patch: Record<string, unknown>, callback?: () => void): void;
   onLoad(options: Record<string, string>): void;
@@ -24,7 +22,7 @@ globals.Page = (page: typeof definition) => { definition = page; };
 require("../../../miniprogram/pages/landing/index");
 globals.Page = originalPage;
 
-const SEEN_KEY = "skiller.miniprogram.landing-seen.v1";
+const LEGACY_SEEN_KEY = "skiller.miniprogram.landing-seen.v1";
 
 let sequence = 0;
 function makeSkill(overrides: Partial<Skill> = {}): Skill {
@@ -42,12 +40,12 @@ function makeSkill(overrides: Partial<Skill> = {}): Skill {
   };
 }
 
-type HarnessOptions = { seen?: boolean; scene?: number; hot?: Skill[] | "error"; featured?: Skill[]; full?: Skill | "error"; exportFails?: boolean };
+type HarnessOptions = { legacySeen?: boolean; scene?: number; hot?: Skill[] | "error"; featured?: Skill[]; full?: Skill | "error"; exportFails?: boolean };
 
 function harness(t: TestContext, options: HarnessOptions = {}) {
   const original = globals.wx;
   const storage = new Map<string, unknown>();
-  if (options.seen) storage.set(SEEN_KEY, true);
+  if (options.legacySeen) storage.set(LEGACY_SEEN_KEY, true);
   const redirects: string[] = [];
   const navigations: string[] = [];
   const clipboard: string[] = [];
@@ -108,43 +106,37 @@ function harness(t: TestContext, options: HarnessOptions = {}) {
 
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
-test("first visit shows the landing page and marks it as seen", (t) => {
+test("a fresh install stays on the landing page and does not write a seen marker", (t) => {
   const { page, storage, redirects } = harness(t);
   page.onLoad({});
+  page.onShow();
   assert.deepEqual(redirects, []);
-  assert.equal(storage.get(SEEN_KEY), true);
+  assert.equal(storage.has(LEGACY_SEEN_KEY), false);
 });
 
-test("a returning visitor is redirected to home without a landing page view", (t) => {
-  const { page, redirects, requests } = harness(t, { seen: true });
+test("a leftover landing-seen marker no longer skips the landing page", (t) => {
+  const { page, redirects } = harness(t, { legacySeen: true });
   page.onLoad({});
   page.onShow();
-  assert.deepEqual(redirects, ["/pages/home/index"]);
-  assert.equal(requests.length, 0);
-});
-
-test("a returning visitor with query parameters stays on the entry page", (t) => {
-  const { page, redirects } = harness(t, { seen: true });
-  page.onLoad({ id: "00000000-0000-0000-0000-000000000001" });
   assert.deepEqual(redirects, []);
 });
 
-test("a returning visitor arriving from a share card is not redirected", (t) => {
-  const { page, redirects } = harness(t, { seen: true, scene: 1007 });
+test("every cold start stays on the landing page regardless of scene or query", (t) => {
+  for (const scene of [1001, 1007, 1008, 1044, 1155]) {
+    for (const query of [{} as Record<string, string>, { id: "00000000-0000-0000-0000-000000000001" }]) {
+      const { page, redirects } = harness(t, { legacySeen: true, scene });
+      page.onLoad(query);
+      assert.deepEqual(redirects, []);
+    }
+  }
+});
+
+test("a visitor with a leftover marker still gets the hot tool card", async (t) => {
+  const hot = [makeSkill({ name: "pdf" }), makeSkill(), makeSkill()];
+  const { page } = harness(t, { legacySeen: true, hot, full: hot[0] });
   page.onLoad({});
-  assert.deepEqual(redirects, []);
-});
-
-test("entry parameter detection covers queries and share scenes only", () => {
-  assert.equal(hasEntryParams({}, 1001), false);
-  assert.equal(hasEntryParams(undefined, undefined), false);
-  assert.equal(hasEntryParams({ from: "share" }), true);
-  for (const scene of [1007, 1008, 1044, 1155]) assert.equal(hasEntryParams({}, scene), true);
-});
-
-test("an unseen landing page is never skipped", (t) => {
-  harness(t);
-  assert.equal(shouldSkipLanding({}, 1001), false);
+  await settle();
+  assert.equal(page.data.hotTool?.name, "pdf");
 });
 
 const hotSkills = () => [makeSkill({ name: "pdf" }), makeSkill(), makeSkill()];
@@ -178,12 +170,6 @@ test("a failed load hides the card without breaking the page", async (t) => {
   await settle();
   assert.equal(page.data.hotLoading, false);
   assert.equal(page.data.hotTool, null);
-});
-
-test("a returning visitor redirected to home does not load the hot tool", (t) => {
-  const { page, requests } = harness(t, { seen: true });
-  page.onLoad({});
-  assert.equal(requests.length, 0);
 });
 
 test("the full skill is only fetched when the user taps copy, behind a loading indicator", async (t) => {
