@@ -1,0 +1,9 @@
+.retry-button { margin-top: var(--space-2); }
+.pitfall-list { display: flex; flex-direction: column; gap: var(--space-1); }
+.pitfall-row { display: flex; flex-direction: row; align-items: flex-start; gap: var(--space-1); }
+.pitfall-index { flex-shrink: 0; width: 36rpx; color: var(--color-accent); font-size: var(--text-md); font-weight: var(--weight-semibold); text-align: center; }
+.pitfall-text { flex: 1; min-width: 0; color: var(--color-text-2); font-size: var(--text-base); line-height: 1.6; word-break: break-word; }
+.command-box { display: block; padding: var(--space-2); border: 1rpx solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-2); color: var(--color-text); font-size: var(--text-sm); line-height: 1.6; word-break: break-all; }
+.link-row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; min-height: var(--tap-min); border-bottom: 1rpx solid var(--color-border); }
+.link-label { color: var(--color-text); font-size: var(--text-base); }
+.link-action { color: var(--color-accent); font-size: var(--text-sm); }

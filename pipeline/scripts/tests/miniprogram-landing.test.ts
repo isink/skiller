@@ -11,6 +11,8 @@ type LandingPage = {
   loadHotTool(sharedId?: string): Promise<void>;
   onCopyHotInstall(): Promise<void>;
   openHotTool(): void;
+  navigateToSkills(): void;
+  navigateToOpenRadar(): void;
   onShareAppMessage(): Share;
   onShareTimeline(): { title: string; query: string };
 };
@@ -314,4 +316,11 @@ test("a landing page opened from a shared tool shows that tool instead of today'
   await settle();
   assert.equal(fallback.data.hotTool?.id, hot[0].id);
   assert.equal(fallback.data.hotLabel, "今日热门工具");
+});
+
+test("the two tool tiles open the skill library and the open radar", (t) => {
+  const { page, navigations } = harness(t);
+  page.navigateToSkills();
+  page.navigateToOpenRadar();
+  assert.deepEqual(navigations, ["/pages/home/index", "/pages/open-radar/index"]);
 });

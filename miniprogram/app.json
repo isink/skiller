@@ -3,6 +3,8 @@
     "pages/landing/index",
     "pages/home/index",
     "pages/radar/index",
+    "pages/open-radar/index",
+    "pages/open-radar-detail/index",
     "pages/favorites/index",
     "pages/explore/index",
     "pages/detail/index"

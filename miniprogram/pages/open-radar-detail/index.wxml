@@ -1,0 +1,43 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="notice">加载中…</view>
+  <view wx:elif="{{error}}" class="empty">
+    <text class="empty-title">{{error}}</text>
+    <button class="primary-button retry-button" bindtap="reload">重新加载</button>
+  </view>
+  <view wx:elif="{{!item}}" class="empty">
+    <text class="empty-title">内容准备中</text>
+    <text class="empty-desc">这个项目的详情整理好后会显示在这里</text>
+  </view>
+  <view wx:else class="detail">
+    <text class="hero-title">{{item.titleZh}}</text>
+    <text wx:if="{{item.summary}}" class="hero-subtitle">{{item.summary}}</text>
+
+    <block wx:if="{{item.pitfalls.length}}">
+      <text class="section-title">踩坑要点</text>
+      <view class="pitfall-list">
+        <view wx:for="{{item.pitfalls}}" wx:key="*this" class="pitfall-row">
+          <text class="pitfall-index">{{index + 1}}</text>
+          <text class="pitfall-text">{{item}}</text>
+        </view>
+      </view>
+    </block>
+
+    <block wx:if="{{item.installCommand}}">
+      <text class="section-title">安装命令</text>
+      <text class="command-box" user-select>{{item.installCommand}}</text>
+      <button class="primary-button" bindtap="onCopyInstall">复制安装命令</button>
+    </block>
+
+    <block wx:if="{{item.articleUrl || item.packageUrl}}">
+      <text class="section-title">相关链接</text>
+      <view wx:if="{{item.articleUrl}}" class="link-row" data-kind="article" bindtap="onCopyLink" aria-role="button" aria-label="复制公众号文链接">
+        <text class="link-label">公众号文</text>
+        <text class="link-action">复制链接</text>
+      </view>
+      <view wx:if="{{item.packageUrl}}" class="link-row" data-kind="package" bindtap="onCopyLink" aria-role="button" aria-label="复制部署包链接">
+        <text class="link-label">部署包</text>
+        <text class="link-action">复制链接</text>
+      </view>
+    </block>
+  </view>
+</view>
