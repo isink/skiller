@@ -15,8 +15,18 @@
   <view wx:if="{{searching}}" class="notice">正在搜索…</view>
 
   <block wx:if="{{query}}">
-    <view class="section-title">搜索结果 <text class="count">{{results.length}}</text></view>
-    <block wx:if="{{!searching && !error && results.length === 0}}">
+    <view wx:if="{{results.length > 0 || related.length === 0}}" class="section-title">搜索结果 <text class="count">{{results.length}}</text></view>
+    <block wx:if="{{!searching && !error && results.length === 0 && related.length > 0}}">
+      <view class="section-title">没找到「{{query}}」，这些可能相关</view>
+      <view class="notice">已记录你的搜索，我们会尽快收录更贴近的技能。</view>
+      <view wx:for="{{related}}" wx:key="id" class="card skill-card" hover-class="card-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="openSkill">
+        <text class="skill-name">{{item.name}}</text>
+        <text class="skill-desc">{{item.displayDescription}}</text>
+        <view class="meta"><text class="meta-tag">{{item.displayCategory}}</text><text class="meta-author">{{item.author}}</text></view>
+        <view class="source-meta"><text>{{item.displayStars}}</text><text>{{item.displayUpdated}}</text></view>
+      </view>
+    </block>
+    <block wx:if="{{!searching && !error && results.length === 0 && related.length === 0}}">
       <view class="empty empty-search">
         <text class="empty-title">已记录，我们会尽快收录</text>
         <text class="empty-desc">暂时没有找到「{{query}}」相关的技能，你的搜索会帮助我们决定下一批收录什么。</text>

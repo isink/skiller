@@ -1,4 +1,4 @@
-import { fetchCategories, fetchCategoryCounts, fetchFeatured, fetchHotSkills, fetchLatestSkills, searchSkills } from "../../services/api";
+import { fetchCategories, fetchCategoryCounts, fetchFeatured, fetchHotSkills, fetchLatestSkills, searchRelatedSkills, searchSkills } from "../../services/api";
 import { readCache, writeCache } from "../../services/storage";
 import { trackPageView, trackSearch, trackShare } from "../../services/analytics";
 import { APP_TITLE, enableShareMenu } from "../../services/share";
@@ -39,6 +39,7 @@ Page({
     counts: {} as Record<string, number>,
     query: "",
     results: [] as HomeSkill[],
+    related: [] as HomeSkill[],
     searching: false,
     loading: true,
     error: "",
@@ -124,7 +125,7 @@ Page({
   onSearchInput(event: { detail: { value: string } }) {
     const query = event.detail.value;
     const sequence = ++searchSequence;
-    this.setData({ query, results: [], error: "" });
+    this.setData({ query, results: [], related: [], error: "" });
     if (searchTimer !== undefined) clearTimeout(searchTimer);
     if (!query.trim()) { this.setData({ results: [], searching: false }); return; }
     this.setData({ searching: true });
@@ -132,8 +133,15 @@ Page({
       try {
         const rows = await searchSkills(query);
         if (sequence !== searchSequence) return;
-        this.setData({ results: rows.map(present), searching: false });
+        // Reported for the original query before any related lookup, so the content gap is always recorded.
         trackSearch("pages/home/index", query, rows.length);
+        if (rows.length > 0) {
+          this.setData({ results: rows.map(present), searching: false });
+          return;
+        }
+        const related = await searchRelatedSkills(query).catch(() => [] as Skill[]);
+        if (sequence !== searchSequence) return;
+        this.setData({ results: [], related: related.map(present), searching: false });
       } catch {
         if (sequence !== searchSequence) return;
         this.setData({ results: [], searching: false, error: "搜索失败，请稍后重试。" });
@@ -149,7 +157,7 @@ Page({
   clearSearch() {
     searchSequence++;
     if (searchTimer !== undefined) clearTimeout(searchTimer);
-    this.setData({ query: "", results: [], searching: false, error: "" });
+    this.setData({ query: "", results: [], related: [], searching: false, error: "" });
   },
   openSkill(event: { currentTarget: { dataset: { id: string } } }) {
     wx.navigateTo({ url: `/pages/detail/index?id=${encodeURIComponent(event.currentTarget.dataset.id)}` });

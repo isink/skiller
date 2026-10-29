@@ -1,6 +1,7 @@
 import { REQUEST_TIMEOUT_MS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 import { categoryName } from "./presentation";
 import { limitPerRepo } from "./freshness";
+import { mergeRelated, relatedQueriesFor } from "./search-expansion";
 import type { Category, Skill } from "../types/skill";
 
 export const PAGE_SIZE = 30;
@@ -105,12 +106,35 @@ export function fetchSkills(options: { category?: string; offset?: number; limit
   });
 }
 
-export function searchSkills(input: string): Promise<Skill[]> {
-  const query = input.trim().replace(/[(),.*"%_\\]/g, " ").replace(/\s+/g, " ").slice(0, 80).trim();
-  if (!query) return Promise.resolve([]);
+function searchTerm(input: string): string {
+  return input.trim().replace(/[(),.*"%_\\]/g, " ").replace(/\s+/g, " ").slice(0, 80).trim();
+}
+
+function searchTermSkills(query: string, limit: number): Promise<Skill[]> {
   const filter = ["name", "description", "description_zh", "author"]
     .map((column) => `${column}.ilike.%${query}%`).join(",");
-  return listSkills({ or: `(${filter})`, order: "rank.desc,id.asc", limit: 50 });
+  return listSkills({ or: `(${filter})`, order: "rank.desc,id.asc", limit });
+}
+
+export function searchSkills(input: string): Promise<Skill[]> {
+  const query = searchTerm(input);
+  if (!query) return Promise.resolve([]);
+  return searchTermSkills(query, 50);
+}
+
+export const RELATED_PER_TERM = 4;
+export const RELATED_LIMIT = 10;
+
+/**
+ * Skills for synonym terms of a query that matched nothing (see search-expansion).
+ * Terms run in parallel, so this costs about one extra round trip, and a failing
+ * term only drops its own rows: the caller falls back to the plain empty state.
+ */
+export async function searchRelatedSkills(input: string): Promise<Skill[]> {
+  const terms = relatedQueriesFor(input).map(searchTerm).filter(Boolean);
+  if (!terms.length) return [];
+  const lists = await Promise.all(terms.map((term) => searchTermSkills(term, RELATED_PER_TERM).catch(() => [] as Skill[])));
+  return mergeRelated(lists, RELATED_LIMIT);
 }
 
 export async function fetchSkill(id: string): Promise<Skill | null> {
