@@ -185,6 +185,59 @@ psql "$SKILLER_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security.
 
 执行前还要只读检查孤儿收藏、负数安装计数和待处理的提交/举报数量。历史 ntfy topic 曾进入仓库，关闭触发器不能替代在 ntfy 侧轮换或停用该 topic。
 
+## 开源雷达候选抓取
+
+每天抓取「热门开源项目日榜」和 Product Hunt 日热门，写入候选池 `public.open_radar_items`（建表见 `supabase/migrations/027_open_radar_items.sql`，已同步进 `schema.sql`）。抓到的只是候选：新条目一律是 `status = 'draft'`，只有人工改成 `published`，小程序「开源雷达」才能读到。
+
+### 一次性准备
+
+1. 在 Supabase SQL Editor 执行 `027_open_radar_items.sql`（可重复执行）。它建好基表、触发器和受限视图 `open_radar_published`：基表仅 `service_role` 可读写；`anon` 只能读视图里 `status = 'published'` 的行，且读不到来源字段（`source`、`source_url`、`full_name`、热度数字等）。
+2. 申请 Product Hunt 开发者令牌：<https://www.producthunt.com/v2/oauth/applications> 创建应用，用 Developer Token（或 client credentials 换取的 access token）。
+
+### 环境变量
+
+| 变量 | 必需 | 说明 |
+| --- | --- | --- |
+| `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY` | 写库时必需 | service role 密钥，仅服务端使用；`--dry-run` 不需要 |
+| `PRODUCT_HUNT_TOKEN` | 抓 PH 时必需 | 缺失时 `--source all` 会跳过 PH 并告警；`--source product-hunt` 会直接报错 |
+| `OPEN_RADAR_MIN_STARS_TODAY` | 否，默认 `20` | 日榜项目当日新增 star 下限 |
+| `OPEN_RADAR_MIN_VOTES` | 否，默认 `30` | PH 帖子票数下限 |
+| `OPEN_RADAR_AI_ONLY` | 否，默认 `1` | 只保留名称/描述/话题命中 AI 关键词的候选，`0` 关闭 |
+| `OPEN_RADAR_GH_LIMIT`、`OPEN_RADAR_PH_LIMIT` | 否，默认 `25`、`20` | 每个来源按热度保留的最大条数 |
+| `OPEN_RADAR_GH_LANGUAGE` | 否 | 日榜限定语言，如 `python` |
+| `OPEN_RADAR_PH_WINDOW_HOURS` | 否，默认 `48` | PH 回看窗口（1–168 小时），按票数取前 50 再过滤 |
+
+日榜来自公开的 trending 页面，不需要令牌；页面结构变化导致解析不到任何条目时会明确报错，而不是静默写入空结果。
+
+### 运行
+
+```bash
+cd pipeline
+npm ci
+npm run import:open-radar -- --dry-run          # 只抓取、过滤并打印，不写库
+npm run import:open-radar                       # 抓取全部来源并写库
+npm run import:open-radar -- --source github    # 只抓一个来源：github | product-hunt | all
+```
+
+定时运行：`.github/workflows/open-radar-fetch.yml` 每天 01:00 UTC 执行，也可在 Actions 页面手动触发（可选来源和 dry-run）。需要在仓库 Secrets 里配置 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`PRODUCT_HUNT_TOKEN`。任一来源失败时整个任务标红，但另一个来源仍会照常写入。
+
+### 数据语义
+
+- 去重键是 `(source, source_id)`：日榜用小写仓库全名，PH 用帖子 id。重复运行安全：已存在的条目只刷新热度和 `last_seen_at`，不会改动 `status`、标题、摘要或任何审核内容，已发布的条目不会被打回草稿。
+- `title` / `summary` 是来源站点的原文占位（日榜标题只取仓库名，PH 摘要取 tagline）；自产中文内容写在 `title_zh`、`summary_zh`、`pitfalls`、`install_command`、`article_url`、`package_url`。小程序显示 `title_zh`（缺省回退 `title`）与 `summary_zh`（缺省回退 `summary`）。
+- `full_name` 等来源字段只在后台；对外视图不含它们。为守住「对外不出现 GitHub 字样」，数据库约束 `open_radar_items_published_no_brand` 禁止把标题、摘要、踩坑要点或安装命令里含 `github` 的条目发布，需先改写再发布。
+
+### 审核发布
+
+在 Supabase 后台（或 SQL）补充中文内容后发布：
+
+```sql
+update public.open_radar_items
+set title_zh = '示例项目', summary_zh = '一句话中文摘要', status = 'published'
+where id = '<条目 id>';
+-- 发布时间 published_at 由触发器自动写入；不要的候选可改为 'rejected'
+```
+
 ## 历史
 
 数据管道原本和 Expo iOS app 共享 `/Skiller/ios/` 目录，2026-04-28 迁移到 native 项目下独立成一个子模块（`native/pipeline/`）。旧 Expo 项目 `Skiller/ios/` 现已整体删除，`Skiller/ios/scripts` 不再存在。同时弃用了 GitHub Actions 自动同步，改为纯手动跑。

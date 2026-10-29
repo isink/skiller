@@ -8,6 +8,7 @@ on:
       - ".github/workflows/pipeline-checks.yml"
       - ".github/workflows/refresh-skill-metadata.yml"
       - ".github/workflows/daily-import.yml"
+      - ".github/workflows/open-radar-fetch.yml"
   push:
     branches:
       - master
@@ -17,6 +18,7 @@ on:
       - ".github/workflows/pipeline-checks.yml"
       - ".github/workflows/refresh-skill-metadata.yml"
       - ".github/workflows/daily-import.yml"
+      - ".github/workflows/open-radar-fetch.yml"
 
 permissions:
   contents: read
