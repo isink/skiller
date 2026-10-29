@@ -12,15 +12,16 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 
 首页依次显示：本周热门（`get_hot_skills`，7 天 Star 增长，不足 3 条时隐藏）、最新收录（`get_latest_skills`，每个仓库最多 2 条；RPC 不可用时退回按 `created_at` 排序并在客户端去重）、精选技能（最多 6 条）、分类浏览。卡片标签“本周 +N⭐”来自 `stars_growth`，“今天收录 / N 天前收录”按北京时间的日历日从 `created_at` 计算，超过 30 天不显示。两个 RPC 由 `pipeline/supabase/migrations/020_hot_and_latest_skills.sql` 创建；迁移执行前热门区自动隐藏，最新收录使用退回查询。
 
-## 欢迎页（landing）：今日热门工具卡片
+## 欢迎页（landing）
 
-欢迎页最上方是「今日热门工具」卡片：`fetchHotTool`（`services/recommendations.ts`）复用新词雷达推荐的数据源与排序——本周热门（`get_hot_skills`，不足 3 条时）退回精选技能，取第一条；退回精选时标签改为「今日推荐工具」。卡片显示名称、一句中文用途和「一键复制安装命令」按钮，点卡片进入详情页。列表行不含 SKILL.md，所以页面不预取详情，用户点按钮时才取完整内容（命中详情页缓存则不再请求）生成安装命令，期间显示 `wx.showLoading`；失败时先 toast 提示再跳转详情页。列表数据已能判断只有 GitHub 链接的技能（小程序范例等，`isLinkOnlySkill`）按钮直接显示「一键复制 GitHub 链接」并立即复制，不请求。通过好友/朋友圈分享链接（带 `id`）进入欢迎页时，卡片显示被分享的工具，标签为「好友推荐的工具」。卡片加载前显示骨架，加载失败则整张隐藏，下面的工具入口不受影响。复制逻辑 `copyInstall`（`services/skill-install.ts`）与详情页共用，同样上报 `copy_install`（`page` 为 `pages/landing/index`）。
+欢迎页只显示品牌头部、标题和「全部工具」两个入口（AI 技能库、开源雷达），不再有「今日推荐/今日热门工具」卡片，也不在加载时请求技能数据。分享欢迎页时标题为「头山 AI 工具箱：探索 AI 技能与趋势」，路径为欢迎页本身。复制逻辑 `copyInstall`（`services/skill-install.ts`）仍由技能详情页使用。
 
 ## 开源雷达
 
-- 欢迎页的第二个入口由「新词雷达」改为「开源雷达」，进入 `pages/open-radar/index`（列表）；不新增第三个入口。热门工具卡片保持不变。
-- 数据来自 Supabase 视图 `open_radar_published`（`services/open-radar.ts`，用公开 anon key，不用 web-view）：只包含 `status = 'published'` 的条目，字段为中文标题、摘要、踩坑要点、安装命令、公众号文链接、部署包链接，不含任何来源字段。列表按发布时间倒序，最多 50 条；详情按 id 读取。
+- 欢迎页的第二个入口由「新词雷达」改为「开源雷达」，进入 `pages/open-radar/index`（列表）；不新增第三个入口。
+- 数据来自 Supabase 视图 `open_radar_published`（`services/open-radar.ts`，用公开 anon key，不用 web-view）：只包含 `status = 'published'` 的条目，字段为中文标题、摘要、项目 README（`readme_md`，已清洗品牌词）、安装命令、公众号文链接、部署包链接，不含任何来源字段。列表卡片显示短中文摘要，按发布时间倒序，最多 50 条；详情按 id 读取，正文是项目 README（用 `parseMarkdown` 渲染），不是中文摘要；`readme_md` 为空时显示「项目说明整理中」。踩坑要点不在详情页展示。
 - 抓取脚本只写草稿，没有人工发布的条目时列表显示「开源雷达筹备中」占位；视图尚未创建（迁移 `027` 未执行）时同样按空列表处理，其他网络/服务错误才显示「网络不佳」并可重试。如何抓取、审核发布见 `pipeline/README.md`「开源雷达候选抓取」。
+- 详情页以 `readme_md`（项目 README，支持简单 Markdown：标题、列表、引用、代码块；迁移 `028` 新增，由抓取/回填脚本写入）作为主体正文，其下依次是安装命令和相关链接；「踩坑要点」暂不展示，小程序也不再读取 `pitfalls` 列（数据库表结构不变）。
 - 详情页字段为空则不渲染；链接和命令只提供“复制”，页面不展示 GitHub 品牌字样（数据库约束也禁止含该字样的条目发布）。
 - 原「新词雷达」页（`pages/radar/index`）代码保留，但欢迎页不再进入；下面“新词雷达”小节描述的是该页现状。
 
@@ -35,15 +36,15 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 - **一键复制安装命令**：`services/skill-install.ts` 的 `skillInstallPlan` 按仓库信息生成命令，优先 `npx skills add <仓库> --skill <名称>`；根目录技能再给出 `git clone … ~/.claude/skills/<名称>`；官方 `anthropics/skills` 另给 `/plugin marketplace add`。推断不了命令时复制 GitHub 链接。详情页同时给出 3 步安装说明、原链接（可复制）和 SKILL.md frontmatter 里的许可证（没有就不显示）。
 - **作者申请下架 / 反馈**：详情页底部「联系」弹窗提示发邮件到隐私政策公布的联系邮箱，可一键复制。
 - **分享卡片**：`onShareAppMessage` 标题为「技能名｜一句中文用途」；`services/share-card.ts` 在页面隐藏的 `canvas type="2d"` 上画 5:4 封面（技能名、用途、Star、头山 AI 工具箱），导出失败或超时就用默认截图。页面内「推荐给同事」按钮使用 `open-type="share"`。
-- **复制后引导分享**：复制安装命令（或 GitHub 链接）成功后提示「安装命令已复制，分享给朋友一起用」（文案见 `copyShareNudge`），详情页和欢迎页卡片相同。
-- **首页与欢迎页分享**：欢迎页的 `onShareAppMessage` / `onShareTimeline` 在热门工具加载后用「工具名｜一句卖点」做标题、跳转该工具详情页，并同样生成 5:4 封面；工具未加载时分享欢迎页本身。技能库首页保持应用标题。这些页面的分享都上报 `share`（`page` 区分来源，非单个技能时 `meta` 不含 `id`/`slug`）。
+- **复制后引导分享**：复制安装命令（或 GitHub 链接）成功后提示「安装命令已复制，分享给朋友一起用」（文案见 `copyShareNudge`），详情页相同。
+- **首页与欢迎页分享**：欢迎页分享欢迎页本身；技能库首页保持应用标题。
 - **事件**：复制安装命令/链接记为 `copy_install`，分享记为 `share`，`meta.action` 写明动作。这两个事件名需要先执行 `pipeline/supabase/migrations/025_mp_events_install_share.sql`，之前上报会被忽略。
 
-## 搜索无结果与「微信小程序 SKILL」专题
+## 搜索无结果
 
 - 首页搜索无结果时显示「已记录，我们会尽快收录」，并推荐本周热门（不足 3 条则用精选）。`search_empty` 事件由 `pipeline/scripts/empty-search-report.ts` 汇总补录。
 - 搜索无结果且查询属于「武打 / 武术 / 功夫 / 格斗 / 战斗 / 舞蹈 / 动漫 / 影视」等意图词时，`services/search-expansion.ts` 会并行搜索目录里真实存在的相关词（分镜、视频生成、短剧、游戏动画…），命中则显示「没找到「xxx」，这些可能相关」；仍无命中才回到上面的空状态。`search_empty` 始终按原始查询在主搜索为 0 时立即上报，不等待相关搜索。
-- 发现页顶部有「微信小程序 SKILL 专题」入口，进入后筛选分类 `mp-skill` 并显示官方文档链接。分类需要先执行 `026_mp_skill_category.sql`；专题范例用 `npm run import:mp-skills` 收录，未执行前入口仍显示、列表为空。
+- 「微信小程序 SKILL」专题入口已从发现页和首页分类中移除（`visibleCategories`，`services/topics.ts`）；数据库中的 `mp-skill` 分类和已收录范例不变，只是暂时没有分类入口。
 
 ## 在微信开发者工具中试用
 

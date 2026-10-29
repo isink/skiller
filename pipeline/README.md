@@ -192,7 +192,8 @@ psql "$SKILLER_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security.
 ### 一次性准备
 
 1. 在 Supabase SQL Editor 执行 `027_open_radar_items.sql`（可重复执行）。它建好基表、触发器和受限视图 `open_radar_published`：基表仅 `service_role` 可读写；`anon` 只能读视图里 `status = 'published'` 的行，且读不到来源字段（`source`、`source_url`、`full_name`、热度数字等）。
-2. 申请 Product Hunt 开发者令牌：<https://www.producthunt.com/v2/oauth/applications> 创建应用，用 Developer Token（或 client credentials 换取的 access token）。
+2. 再执行 `028_open_radar_readme.sql`（可重复执行）：给基表加 `readme_md` 列，加「已发布条目 README 不含 github 字样」约束，并把 `readme_md` 追加到视图 `open_radar_published` 末尾。详情页正文读的就是这一列。
+3. 申请 Product Hunt 开发者令牌：<https://www.producthunt.com/v2/oauth/applications> 创建应用，用 Developer Token（或 client credentials 换取的 access token）。
 
 ### 环境变量
 
@@ -206,6 +207,7 @@ psql "$SKILLER_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security.
 | `OPEN_RADAR_GH_LIMIT`、`OPEN_RADAR_PH_LIMIT` | 否，默认 `25`、`20` | 每个来源按热度保留的最大条数 |
 | `OPEN_RADAR_GH_LANGUAGE` | 否 | 日榜限定语言，如 `python` |
 | `OPEN_RADAR_PH_WINDOW_HOURS` | 否，默认 `48` | PH 回看窗口（1–168 小时），按票数取前 50 再过滤 |
+| `GITHUB_TOKEN` | 否 | 抓取项目 README 时使用，提升接口限额；定时任务里取 `SKILLER_GITHUB_TOKEN` 或内置令牌 |
 
 日榜来自公开的 trending 页面，不需要令牌；页面结构变化导致解析不到任何条目时会明确报错，而不是静默写入空结果。
 
@@ -221,11 +223,36 @@ npm run import:open-radar -- --source github    # 只抓一个来源：github | 
 
 定时运行：`.github/workflows/open-radar-fetch.yml` 每天 01:00 UTC 执行，也可在 Actions 页面手动触发（可选来源和 dry-run）。需要在仓库 Secrets 里配置 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`PRODUCT_HUNT_TOKEN`。任一来源失败时整个任务标红，但另一个来源仍会照常写入。
 
+### README 与回填
+
+开源雷达详情页的正文是项目自己的 README（小程序用现有 Markdown 渲染），不是我们改写的中文摘要；列表卡片仍显示 `summary_zh`（缺省回退 `summary`）这条短摘要。踩坑要点 `pitfalls` 暂不在详情页展示。
+
+- 抓取：日榜条目入库时会按仓库全名取 README 原文，清洗后写入 `readme_md`。新条目随草稿一起写入；已存在的条目刷新热度时一并更新 `readme_md`（只更新这一列和热度，不动标题、中文摘要、状态）。某个仓库没有 README 或抓取失败时只告警、不影响其他条目，库里已有的 README 保持原样。
+- 清洗规则（`scripts/lib/open-radar-readme.ts`，写库边界统一执行）：去掉 HTML 标签/注释、图片和徽章（小程序渲染不了）；来源平台的仓库链接只保留文字，仓库地址（含 `git clone` 命令里的）换成 `<repo-url>`，其余出现的 `GitHub` 品牌词换成「Git 平台」；超过 2 万字符在行边界截断。这样既满足已发布内容不含 `github` 的约束，又不必把 README 整个抹掉。数据库约束 `open_radar_items_published_readme_no_brand` 兜底：已发布条目的 `readme_md` 含 `github` 会被拒绝。
+- 小程序只读视图里的 `readme_md`，运行时不访问来源站点；`source_url`、`full_name` 仍只在后台。`readme_md` 为空的条目详情页显示「项目说明整理中」，不会回退成中文摘要。
+- 一次性回填已发布条目（需要 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`，建议带 `GITHUB_TOKEN`）：
+
+```bash
+cd pipeline
+npm run backfill:open-radar-readme -- --dry-run     # 先看会补哪些、各多长
+npm run backfill:open-radar-readme                  # 给已发布且还没有 README 的条目补上
+npm run backfill:open-radar-readme -- --status all  # published | draft | rejected | all
+npm run backfill:open-radar-readme -- --force       # 已有 README 的也重新抓取覆盖
+```
+
+  回填只写 `readme_md`。没有脚本环境时，也可以手工在 SQL Editor 里补，粘贴的原文必须先替换品牌词，否则已发布条目会被约束拒绝：
+
+```sql
+update public.open_radar_items
+set readme_md = regexp_replace('<粘贴 README 原文>', 'github', 'Git 平台', 'gi')
+where id = '<条目 id>';
+```
+
 ### 数据语义
 
-- 去重键是 `(source, source_id)`：日榜用小写仓库全名，PH 用帖子 id。重复运行安全：已存在的条目只刷新热度和 `last_seen_at`，不会改动 `status`、标题、摘要或任何审核内容，已发布的条目不会被打回草稿。
+- 去重键是 `(source, source_id)`：日榜用小写仓库全名，PH 用帖子 id。重复运行安全：已存在的条目只刷新热度、`last_seen_at` 和 `readme_md`，不会改动 `status`、标题、摘要或任何审核内容，已发布的条目不会被打回草稿。
 - `title` / `summary` 是来源站点的原文占位（日榜标题只取仓库名，PH 摘要取 tagline）；自产中文内容写在 `title_zh`、`summary_zh`、`pitfalls`、`install_command`、`article_url`、`package_url`。小程序显示 `title_zh`（缺省回退 `title`）与 `summary_zh`（缺省回退 `summary`）。
-- `full_name` 等来源字段只在后台；对外视图不含它们。为守住「对外不出现 GitHub 字样」，数据库约束 `open_radar_items_published_no_brand` 禁止把标题、摘要、踩坑要点或安装命令里含 `github` 的条目发布，需先改写再发布。
+- `full_name` 等来源字段只在后台；对外视图不含它们。为守住「对外不出现 GitHub 字样」，数据库约束 `open_radar_items_published_no_brand` 禁止把标题、摘要、踩坑要点或安装命令里含 `github` 的条目发布，需先改写再发布；`readme_md` 由脚本清洗时自动替换品牌词，详见上面「README 与回填」。
 
 ### 审核发布
 

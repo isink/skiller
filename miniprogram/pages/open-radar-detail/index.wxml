@@ -10,17 +10,18 @@
   </view>
   <view wx:else class="detail">
     <text class="hero-title">{{item.titleZh}}</text>
-    <text wx:if="{{item.summary}}" class="hero-subtitle">{{item.summary}}</text>
 
-    <block wx:if="{{item.pitfalls.length}}">
-      <text class="section-title">踩坑要点</text>
-      <view class="pitfall-list">
-        <view wx:for="{{item.pitfalls}}" wx:key="*this" class="pitfall-row">
-          <text class="pitfall-index">{{index + 1}}</text>
-          <text class="pitfall-text">{{item}}</text>
-        </view>
-      </view>
-    </block>
+    <view wx:if="{{blocks.length}}" class="markdown-card">
+      <block wx:for="{{blocks}}" wx:key="index">
+        <view wx:if="{{item.type === 'heading'}}" class="md-heading md-h{{item.level}}"><rich-text nodes="{{item.inline}}" /></view>
+        <view wx:elif="{{item.type === 'paragraph'}}" class="md-paragraph"><rich-text nodes="{{item.inline}}" /></view>
+        <view wx:elif="{{item.type === 'list'}}" class="md-list"><rich-text nodes="{{item.inline}}" /></view>
+        <view wx:elif="{{item.type === 'quote'}}" class="md-quote"><rich-text nodes="{{item.inline}}" /></view>
+        <scroll-view wx:elif="{{item.type === 'code'}}" scroll-x class="md-code"><text selectable>{{item.text}}</text></scroll-view>
+        <view wx:elif="{{item.type === 'rule'}}" class="md-rule"></view>
+      </block>
+    </view>
+    <view wx:else class="notice">项目说明整理中，稍后再来看看</view>
 
     <block wx:if="{{item.installCommand}}">
       <text class="section-title">安装命令</text>

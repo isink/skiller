@@ -2,11 +2,3 @@
 .filter-scroll { margin: 0 calc(-1 * var(--page-gutter)) var(--space-3); white-space: nowrap; }
 .filters { display: flex; flex-direction: row; padding: 0 var(--page-gutter); }
 .skill-card { display: block; }
-.topic-banner { display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); padding: var(--space-2) var(--space-3); border: 1rpx solid var(--color-accent-line); border-radius: var(--radius-md); background: var(--color-accent-soft); }
-.topic-text { flex: 1; min-width: 0; }
-.topic-title { display: block; color: var(--color-accent); font-size: var(--text-md); font-weight: var(--weight-semibold); }
-.topic-tagline { display: block; margin-top: 4rpx; color: var(--color-text-2); font-size: var(--text-sm); line-height: 1.5; }
-.topic-count { flex-shrink: 0; margin-left: var(--space-2); color: var(--color-text-3); font-size: var(--text-xs); }
-.topic-card { margin-bottom: var(--space-2); padding: var(--space-3); border: 1rpx solid var(--color-accent-line); border-radius: var(--radius-md); background: var(--color-accent-soft); }
-.topic-intro { display: block; margin-top: var(--space-1); color: var(--color-text-2); font-size: var(--text-sm); line-height: 1.7; }
-.topic-link { display: block; margin-top: var(--space-1); color: var(--color-accent); font-size: var(--text-sm); font-weight: var(--weight-medium); }

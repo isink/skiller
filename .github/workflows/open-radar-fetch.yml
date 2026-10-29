@@ -34,6 +34,7 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       PRODUCT_HUNT_TOKEN: ${{ secrets.PRODUCT_HUNT_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.SKILLER_GITHUB_TOKEN || github.token }}
       INPUT_SOURCE: ${{ inputs.source || 'all' }}
       INPUT_DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
     steps:

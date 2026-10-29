@@ -1,17 +1,21 @@
 import { REQUEST_TIMEOUT_MS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 
-/** One open-source radar entry; optional content fields stay empty until an editor fills them. */
+/** One open-source radar entry; optional content fields stay empty until they are filled. `readmeMd` is the project's own README (Markdown) and is the detail page body. */
 export interface OpenRadarItem {
   id: string;
   titleZh: string;
-  summary: string;
-  pitfalls: string[];
+  readmeMd: string;
   installCommand: string;
   articleUrl: string;
   packageUrl: string;
 }
 
-export type OpenRadarSummary = Pick<OpenRadarItem, "id" | "titleZh" | "summary">;
+/** List card: Chinese title plus a short Chinese blurb. */
+export interface OpenRadarSummary {
+  id: string;
+  titleZh: string;
+  summary: string;
+}
 
 export const OPEN_RADAR_TITLE = "开源雷达";
 export const OPEN_RADAR_LIST_LIMIT = 50;
@@ -21,7 +25,7 @@ interface PublishedRow {
   id?: unknown;
   title_zh?: unknown;
   summary?: unknown;
-  pitfalls?: unknown;
+  readme_md?: unknown;
   install_command?: unknown;
   article_url?: unknown;
   package_url?: unknown;
@@ -31,7 +35,7 @@ type ApiError = Error & { code?: string; statusCode?: number };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LIST_COLUMNS = "id,title_zh,summary";
-const DETAIL_COLUMNS = "id,title_zh,summary,pitfalls,install_command,article_url,package_url";
+const DETAIL_COLUMNS = "id,title_zh,readme_md,install_command,article_url,package_url";
 
 function request(query: Record<string, string | number>): Promise<unknown> {
   const params = Object.entries(query)
@@ -81,16 +85,19 @@ function text(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function toItem(row: PublishedRow | null): OpenRadarItem | null {
+function toIdentity(row: PublishedRow | null): { id: string; titleZh: string } | null {
   if (!row || typeof row !== "object") return null;
   const id = text(row.id);
   const titleZh = text(row.title_zh);
-  if (!UUID.test(id) || !titleZh) return null;
+  return UUID.test(id) && titleZh ? { id, titleZh } : null;
+}
+
+function toItem(row: PublishedRow | null): OpenRadarItem | null {
+  const identity = toIdentity(row);
+  if (!row || !identity) return null;
   return {
-    id,
-    titleZh,
-    summary: text(row.summary),
-    pitfalls: Array.isArray(row.pitfalls) ? row.pitfalls.map(text).filter(Boolean) : [],
+    ...identity,
+    readmeMd: text(row.readme_md),
     installCommand: text(row.install_command),
     articleUrl: text(row.article_url),
     packageUrl: text(row.package_url),
@@ -102,8 +109,8 @@ export async function fetchOpenRadarList(): Promise<OpenRadarSummary[]> {
   const rows = await fetchRows({ select: LIST_COLUMNS, order: "published_at.desc.nullslast,id.asc", limit: OPEN_RADAR_LIST_LIMIT });
   const items: OpenRadarSummary[] = [];
   for (const row of rows) {
-    const item = toItem(row);
-    if (item) items.push({ id: item.id, titleZh: item.titleZh, summary: item.summary });
+    const identity = toIdentity(row);
+    if (identity) items.push({ ...identity, summary: text(row.summary) });
   }
   return items;
 }

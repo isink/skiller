@@ -10,6 +10,7 @@
     "import:discover": "tsx scripts/import/import-github-search.ts",
     "import:mp-skills": "tsx scripts/import/import-mp-skills.ts",
     "import:open-radar": "tsx scripts/import/import-open-radar.ts",
+    "backfill:open-radar-readme": "tsx scripts/import/backfill-open-radar-readme.ts",
     "import:all": "npm run import:antigravity && npm run import:anthropic && npm run import:discover",
     "report:empty-search": "tsx scripts/empty-search-report.ts",
     "apply:overrides": "tsx scripts/import/apply-overrides.ts",

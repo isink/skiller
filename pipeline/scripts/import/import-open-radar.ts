@@ -13,13 +13,15 @@
  *   OPEN_RADAR_GH_LIMIT (25) / OPEN_RADAR_PH_LIMIT (20)           每个来源最多保留条数
  *   OPEN_RADAR_GH_LANGUAGE                     可选，限定日榜语言（如 python）
  *   OPEN_RADAR_PH_WINDOW_HOURS (48)            Product Hunt 回看窗口
+ *   GITHUB_TOKEN                               可选；抓取项目 README 时提升接口限额
  *
  * 抓到的一律是 draft；只有人工把 status 改为 published 后，小程序才会读到。
- * 重复运行是安全的：已存在的条目只刷新热度与来源字段，不覆盖审核内容或状态。
+ * 日榜条目会一并抓取项目 README（清洗后写入 readme_md，详情页正文用它）。
+ * 重复运行是安全的：已存在的条目只刷新热度、来源字段和 README，不覆盖标题、中文摘要等审核内容或状态。
  */
 
 import "dotenv/config";
-import { collectCandidates, parseSourceChoice } from "../lib/open-radar-run";
+import { attachReadmes, collectCandidates, parseSourceChoice } from "../lib/open-radar-run";
 import { persistCandidates, type OpenRadarDb } from "../lib/open-radar-store";
 
 function argValue(args: string[], name: string): string | undefined {
@@ -51,6 +53,11 @@ async function main() {
       continue;
     }
     console.log(`✓ ${outcome.source}：抓取 ${outcome.fetched} 条，保留 ${outcome.kept.length} 条`);
+    if (outcome.source === "github_trending" && outcome.kept.length > 0) {
+      const readmes = await attachReadmes(outcome.kept, undefined, (fullName, error) =>
+        console.warn(`  ⚠ ${fullName} README 抓取失败：${error.message}`));
+      console.log(`  ↳ README：取到 ${readmes.attached} 个，无 README ${readmes.missing} 个，失败 ${readmes.failed} 个`);
+    }
     if (dryRun) {
       for (const item of outcome.kept) {
         const heat = item.source === "github_trending" ? `+${item.starsToday}★` : `${item.votesCount} 票`;

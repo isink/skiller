@@ -7,6 +7,7 @@ import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
 import { skillFreshness } from "../../services/freshness";
 import { pickEmptySearchRecommendations } from "../../services/recommendations";
+import { visibleCategories } from "../../services/topics";
 import type { Category, Skill } from "../../types/skill";
 
 type HomeSkill = Skill & {
@@ -59,7 +60,7 @@ Page({
         hot: shownHot,
         featured: shownFeatured,
         latest: (latest || []).map(present),
-        categories: categories || [],
+        categories: visibleCategories(categories || []),
         counts: counts || {},
         loading: false,
       });
@@ -97,7 +98,7 @@ Page({
     const hot = freshHot ?? readCache<Skill[]>("home:hot") ?? [];
     const featured = freshFeatured ?? readCache<Skill[]>("home:featured") ?? [];
     const latest = freshLatest ?? readCache<Skill[]>("home:latest") ?? [];
-    const categories = freshCategories ?? readCache<Category[]>("categories") ?? [];
+    const categories = visibleCategories(freshCategories ?? readCache<Category[]>("categories") ?? []);
     const counts = freshCounts ?? readCache<Record<string, number>>("category-counts") ?? {};
     // An empty hot list is a valid answer (no growth history yet), so it replaces the cache.
     if (freshHot) writeCache("home:hot", freshHot);
