@@ -85,11 +85,6 @@
           <text class="source-label">许可证</text>
           <text class="source-value">{{displayLicense}}</text>
         </view>
-        <view class="source-row">
-          <text class="source-label">作者</text>
-          <text class="source-value">是作者？申请下架或反馈</text>
-          <button class="source-action" bindtap="onFeedback" aria-label="作者申请下架或反馈">联系</button>
-        </view>
       </view>
       <button class="share-button" open-type="share" aria-label="推荐给同事">推荐给同事</button>
     </view>

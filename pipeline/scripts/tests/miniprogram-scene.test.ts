@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import type { Skill } from "../../../miniprogram/types/skill";
-import { sceneBySlug, scenePicks } from "../../../miniprogram/services/scenes";
+import { sceneBySlug } from "../../../miniprogram/services/scenes";
 
 type Share = { title: string; path: string; imageUrl?: string; promise?: Promise<{ title: string; path: string; imageUrl?: string }> };
 type ScenePage = {
@@ -79,48 +79,47 @@ function harness(t: TestContext, options: { rows?: Skill[] | "error" } = {}) {
 
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 // The catalog answers in its own order; the page must keep the curated one.
-const financeRows = () => scenePicks(finance).map((pick) => makeSkill(pick.slug)).reverse();
+const financeRows = () => finance.picks.map((pick) => makeSkill(pick.slug)).reverse();
 
-test("a scene leads with three numbered must-haves and lists the rest below", async (t) => {
+test("a scene lists every skill in star order with its copy, stars and install button", async (t) => {
   const { page, requests } = harness(t, { rows: financeRows() });
   page.onLoad({ slug: "finance" });
   await settle();
   assert.equal(page.data.scene.title, "财务与税务");
-  assert.deepEqual(page.data.must.map((skill: { name: string }) => skill.name), finance.must.map((pick) => pick.nameZh));
-  assert.deepEqual(page.data.must.map((skill: { englishName: string }) => skill.englishName), finance.must.map((pick) => pick.slug));
-  assert.equal(page.data.must[0].prepare, finance.must[0].prepare);
-  assert.equal(page.data.must[0].headline, finance.must[0].headline);
-  assert.equal(page.data.must[0].say, finance.must[0].say[0]);
-  assert.equal(page.data.must[0].copyLabel, "复制给 WorkBuddy");
-  assert.deepEqual(page.data.more.map((skill: { headline: string }) => skill.headline), finance.more.map((pick) => pick.headline));
+  assert.deepEqual(page.data.skills.map((skill: { name: string }) => skill.name), finance.picks.map((pick) => pick.nameZh));
+  assert.deepEqual(page.data.skills.map((skill: { englishName: string }) => skill.englishName), finance.picks.map((pick) => pick.slug));
+  assert.equal(page.data.skills[0].prepare, finance.picks[0].prepare);
+  assert.equal(page.data.skills[0].stars, "10");
+  assert.equal(page.data.skills[0].headline, finance.picks[0].headline);
+  assert.equal(page.data.skills[0].say, finance.picks[0].say[0]);
+  assert.equal(page.data.skills[0].copyLabel, "复制给 WorkBuddy");
   assert.equal(page.data.bundleReady, true);
   assert.equal(page.data.others.length, 7);
   const query = new URL(requests[0].url).searchParams.get("slug");
-  assert.equal(query, `in.(${scenePicks(finance).map((pick) => pick.slug).join(",")})`);
+  assert.equal(query, `in.(${finance.picks.map((pick) => pick.slug).join(",")})`);
 });
 
-test("one tap copies a request that installs the three must-haves", async (t) => {
+test("one tap copies a request that installs the whole scene", async (t) => {
   const { page, clipboard, toasts, events } = harness(t, { rows: financeRows() });
   page.onLoad({ slug: "finance" });
   await settle();
   page.onCopyBundle();
   await settle();
   const lines = clipboard[0].split("\n");
-  assert.equal(lines[0], "请帮我安装「财务与税务」这 3 个 Skill：");
-  assert.equal(lines[2], `2. ${finance.must[1].slug}：https://github.com/acme/${finance.must[1].slug}`);
-  assert.equal(lines.length, 5);
-  assert.ok(!clipboard[0].includes(finance.more[0].slug));
+  assert.equal(lines[0], `请帮我安装「财务与税务」这 ${finance.picks.length} 个 Skill：`);
+  assert.equal(lines[2], `2. ${finance.picks[1].slug}：https://github.com/acme/${finance.picks[1].slug}`);
+  assert.equal(lines.length, finance.picks.length + 2);
   assert.deepEqual(toasts, ["已复制，粘贴给WorkBuddy就能装"]);
   assert.deepEqual(events().find((row) => row.event === "copy_install")?.meta, { action: "copy_install", scene: "finance", kind: "workbuddy", target: "bundle" });
 });
 
-test("a single must-have copies its own WorkBuddy request", async (t) => {
+test("a single skill copies its own WorkBuddy request", async (t) => {
   const { page, clipboard, events } = harness(t, { rows: financeRows() });
   page.onLoad({ slug: "finance" });
   await settle();
   page.onCopySkill({ currentTarget: { dataset: { index: 1 } } });
   await settle();
-  assert.equal(clipboard[0].split("\n")[0], `请帮我安装这个 Skill：${finance.must[1].slug}`);
+  assert.equal(clipboard[0].split("\n")[0], `请帮我安装这个 Skill：${finance.picks[1].slug}`);
   assert.equal(events().find((row) => row.event === "copy_install")?.meta.target, "primary");
 });
 
@@ -128,9 +127,9 @@ test("cards open the detail page and other scenes replace this one", async (t) =
   const { page, navigations, redirects } = harness(t, { rows: financeRows() });
   page.onLoad({ slug: "finance" });
   await settle();
-  page.openSkill({ currentTarget: { dataset: { id: page.data.must[0].id } } });
+  page.openSkill({ currentTarget: { dataset: { id: page.data.skills[0].id } } });
   page.openScene({ currentTarget: { dataset: { slug: "hr" } } });
-  assert.deepEqual(navigations, [`/pages/detail/index?id=${page.data.must[0].id}`]);
+  assert.deepEqual(navigations, [`/pages/detail/index?id=${page.data.skills[0].id}`]);
   assert.deepEqual(redirects, ["/pages/scene/index?slug=hr"]);
 });
 
@@ -154,7 +153,7 @@ test("a failed load keeps the cached list and says so", async (t) => {
   (globals.wx as { getStorageSync: unknown }).getStorageSync = (key: string) => first.storage.get(key) ?? "";
   page.onLoad({ slug: "finance" });
   await settle();
-  assert.equal(page.data.must.length + page.data.more.length, scenePicks(finance).length);
+  assert.equal(page.data.skills.length, finance.picks.length);
   assert.equal(page.data.error, "网络不可用，显示缓存内容。");
 });
 

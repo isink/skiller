@@ -1,28 +1,27 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { SCENES, dailyPick, sceneBySlug, scenePick, scenePicks, skillDisplayName } from "../../../miniprogram/services/scenes";
+import { SCENES, dailyPick, sceneBySlug, scenePick, skillDisplayName } from "../../../miniprogram/services/scenes";
 import { workbuddyBundlePrompt } from "../../../miniprogram/services/skill-install";
 import { sceneProblems } from "../lib/scenes-check";
 
 const catalogFor = (slugs: string[]) => slugs.map((slug) => ({ slug, description_zh: "中文简介" }));
-const allSlugs = SCENES.flatMap((scene) => scenePicks(scene).map((pick) => pick.slug));
-const mustSlugs = SCENES.flatMap((scene) => scene.must.map((pick) => pick.slug));
+const allSlugs = SCENES.flatMap((scene) => scene.picks.map((pick) => pick.slug));
 
 test("the curated collections are well formed", () => {
   assert.equal(SCENES.length, 8);
   assert.deepEqual(sceneProblems(SCENES, catalogFor(allSlugs)), []);
   for (const scene of SCENES) {
     assert.match(scene.shareTitle, /WorkBuddy/, scene.slug);
-    assert.equal(scene.must.length, 3, scene.slug);
-    for (const pick of scenePicks(scene)) for (const say of pick.say) assert.ok(Array.from(say).length <= 40, say);
+    assert.match(scene.shareTitle, new RegExp(`${scene.picks.length} 个`), scene.slug);
+    for (const pick of scene.picks) for (const say of pick.say) assert.ok(Array.from(say).length <= 40, say);
   }
 });
 
 test("the checker reports missing skills, empty summaries, duplicates and bad copy", () => {
   const pick = (slug: string, extra: Record<string, unknown> = {}) => ({ slug, nameZh: "名字", intro: "适合谁", prepare: "材料", headline: "一句话", say: ["做点事"], ...extra });
   const scenes = [
-    { slug: "a", title: "A", tagline: "", shareTitle: "", must: [pick("x"), pick("y", { say: [] }), pick("w", { headline: "" })], more: [] },
-    { slug: "a", title: "B", tagline: "", shareTitle: "", must: [pick("x")], more: [pick("z", { example: { input: "说", output: " " } })] },
+    { slug: "a", title: "A", tagline: "", shareTitle: "", picks: [pick("x"), pick("y", { say: [] }), pick("w", { headline: "" })] },
+    { slug: "a", title: "B", tagline: "", shareTitle: "", picks: [pick("x"), pick("z", { example: { input: "说", output: " " } })] },
   ];
   const catalog = [{ slug: "x", description_zh: "简介" }, { slug: "y", description_zh: " " }, { slug: "w", description_zh: "简介" }];
   assert.deepEqual(sceneProblems(scenes, catalog), [
@@ -30,7 +29,6 @@ test("the checker reports missing skills, empty summaries, duplicates and bad co
     "a/y needs one to three example requests",
     "a/w needs a headline of 1-20 characters",
     "scene a is listed twice",
-    "scene a needs exactly 3 must-have skills",
     "x appears in more than one place",
     "a/z is not in the catalog",
     "a/z has an incomplete example",
@@ -39,14 +37,14 @@ test("the checker reports missing skills, empty summaries, duplicates and bad co
 
 test("the checker asks for a re-sort when a lower skill has more stars", () => {
   const pick = (slug: string) => ({ slug, nameZh: "名字", intro: "适合谁", prepare: "材料", headline: "一句话", say: ["做点事"] });
-  const scene = { slug: "s", title: "S", tagline: "", shareTitle: "", must: [pick("a"), pick("b"), pick("c")], more: [pick("d")] };
+  const scene = { slug: "s", title: "S", tagline: "", shareTitle: "", picks: [pick("a"), pick("b"), pick("c"), pick("d")] };
   const catalog = (stars: number[]) => ["a", "b", "c", "d"].map((slug, index) => ({ slug, description_zh: "简介", github_stars: stars[index] }));
   assert.deepEqual(sceneProblems([scene], catalog([9, 9, 5, 5])), []);
   assert.deepEqual(sceneProblems([scene], catalog([9, 5, 5, 7])), ["scene s is not sorted by stars: d (7) should come before c (5)"]);
 });
 
 test("every curated skill needs a short Chinese name, intro and prepare line", () => {
-  const scene = { slug: "s", title: "S", tagline: "", shareTitle: "", more: [], must: [
+  const scene = { slug: "s", title: "S", tagline: "", shareTitle: "", picks: [
     { slug: "a", nameZh: "名字", intro: "适合谁", prepare: "材料", headline: "一句话", say: ["说"] },
     { slug: "b", nameZh: "一个特别特别长的中文名字", intro: "适合谁", prepare: "材料", headline: "一句话", say: ["说"] },
     { slug: "c", headline: "一句话", say: ["说"] },
@@ -68,20 +66,19 @@ test("lookups find a scene by slug and a skill's scene and examples", () => {
   assert.equal(sceneBySlug(undefined), null);
   const found = scenePick("meeting-notes");
   assert.equal(found?.scene.slug, "docs");
-  assert.equal(found?.must, true);
   assert.equal(found?.pick.say.length, 2);
-  assert.equal(scenePick("pdf-official")?.must, false);
+  assert.equal(scenePick("pdf-official")?.scene.slug, "docs");
   assert.equal(scenePick("not-curated"), null);
 });
 
-test("the daily pick changes at Beijing midnight and cycles through every must-have", () => {
+test("the daily pick changes at Beijing midnight and cycles through every curated skill", () => {
   const before = dailyPick(new Date("2026-10-30T15:59:59Z"));
   const after = dailyPick(new Date("2026-10-30T16:00:00Z"));
   assert.notEqual(before.pick.slug, after.pick.slug);
   assert.equal(dailyPick(new Date("2026-10-30T16:00:00Z")).pick.slug, dailyPick(new Date("2026-10-31T15:00:00Z")).pick.slug);
   const seen = new Set<string>();
-  for (let day = 0; day < mustSlugs.length; day++) seen.add(dailyPick(new Date(Date.UTC(2026, 0, 1) + day * 86400000)).pick.slug);
-  assert.deepEqual([...seen].sort(), [...mustSlugs].sort());
+  for (let day = 0; day < allSlugs.length; day++) seen.add(dailyPick(new Date(Date.UTC(2026, 0, 1) + day * 86400000)).pick.slug);
+  assert.deepEqual([...seen].sort(), [...allSlugs].sort());
 });
 
 test("the bundle request lists every installable skill in order and skips unusable sources", () => {

@@ -1,9 +1,9 @@
 /**
  * Checks the WorkBuddy scene collections (miniprogram/services/scenes.ts):
- * every scene has exactly three must-haves, every slug exists in the catalog
+ * every scene has skills, every slug exists in the catalog
  * with a Chinese summary and appears once, and every skill has a short
  * headline and one to three example requests, and each scene is sorted by
- * GitHub stars (high to low) so the top three are the must-haves.
+ * GitHub stars (high to low), the order the scene page lists them in.
  *
  *   npm run check:scenes
  *
@@ -11,11 +11,11 @@
  */
 import "dotenv/config";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../../miniprogram/services/config";
-import { SCENES, scenePicks } from "../../miniprogram/services/scenes";
+import { SCENES } from "../../miniprogram/services/scenes";
 import { sceneProblems } from "./lib/scenes-check";
 
 async function main(): Promise<void> {
-  const slugs = SCENES.flatMap((scene) => scenePicks(scene).map((pick) => pick.slug));
+  const slugs = SCENES.flatMap((scene) => scene.picks.map((pick) => pick.slug));
   const url = `${process.env.SUPABASE_URL || SUPABASE_URL}/rest/v1/skills?select=slug,description_zh,github_stars&slug=in.(${slugs.join(",")})`;
   const key = process.env.SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
   const response = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}` } });

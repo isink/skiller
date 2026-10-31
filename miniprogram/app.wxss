@@ -179,5 +179,7 @@ button::after { border: 0; }
 
 /* controls */
 .primary-button { margin-top: var(--space-3); height: var(--tap-min); border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-on-accent); font-size: var(--text-base); font-weight: var(--weight-semibold); line-height: var(--tap-min); }
+/* WeChat's default button padding pushes the label below centre; `.page` lifts specificity above it. */
+.page .primary-button { display: flex; align-items: center; justify-content: center; padding: 0 var(--space-3); line-height: 1.4; }
 .search { height: var(--tap-min); padding: 0 var(--space-3); border: 1rpx solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); font-size: var(--text-base); }
 .search-placeholder { color: var(--color-text-3); }

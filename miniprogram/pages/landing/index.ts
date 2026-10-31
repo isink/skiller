@@ -33,7 +33,7 @@ Page({
     hotLabel: "今日热门工具",
     hotTool: null as { id: string; name: string; purpose: string; growth: string } | null,
     hotCopyLabel: "",
-    scenes: SCENES.map((scene) => ({ slug: scene.slug, title: scene.title, tagline: scene.tagline })),
+    scenes: SCENES.map((scene) => ({ slug: scene.slug, title: scene.title, tagline: scene.tagline, count: scene.picks.length })),
   },
 
   onLoad(options: Record<string, string>) {

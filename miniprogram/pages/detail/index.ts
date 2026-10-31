@@ -11,7 +11,6 @@ import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
 import { copyInstall as copyInstallCommand, copyText, skillInstallPlan, skillLicense } from "../../services/skill-install";
-import { feedbackNotice } from "../../services/feedback";
 import { scenePick } from "../../services/scenes";
 import type { Skill, SkillBlock } from "../../types/skill";
 
@@ -234,21 +233,6 @@ Page({
     if (!skill || !url) return;
     copyText(url, "原链接已复制").then((ok) => {
       if (ok) trackCopyInstall(skill, this.data.installKind, "source_link");
-    });
-  },
-
-  onFeedback() {
-    const skill = this.data.skill as Skill | null;
-    if (!skill) return;
-    const notice = feedbackNotice(skill);
-    wx.showModal({
-      title: notice.title,
-      content: notice.content,
-      confirmText: "复制邮箱",
-      cancelText: "关闭",
-      success: (result: { confirm?: boolean }) => {
-        if (result.confirm) copyText(notice.email, "邮箱已复制");
-      },
     });
   },
 

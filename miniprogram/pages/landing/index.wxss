@@ -8,7 +8,8 @@
 .hot-growth { color: var(--color-text-3); font-size: var(--text-xs); }
 .hot-name { display: block; margin-top: var(--space-2); color: var(--color-text); font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: 1.3; word-break: break-all; }
 .hot-desc { display: -webkit-box; margin-top: var(--space-half); overflow: hidden; color: var(--color-text-2); font-size: var(--text-sm); line-height: 1.55; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.hot-copy { width: 100%; margin-top: var(--space-2); }
+/* `.hot-card` raises specificity above WeChat's default `button:not([size=mini]) { width: 184px }`. */
+.hot-card .hot-copy { width: 100%; margin-top: var(--space-2); }
 .hot-copy:active { opacity: 0.88; }
 
 .hot-card-skeleton { min-height: 340rpx; border-color: var(--color-border); }

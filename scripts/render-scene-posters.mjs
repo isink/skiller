@@ -66,7 +66,8 @@ function footer(scene, channel) {
 }
 
 function poster(scene, channel) {
-  const cards = scene.must.map((pick, index) => `
+  // The poster shows the three highest-starred skills; the scene page lists them all.
+  const cards = scene.picks.slice(0, 3).map((pick, index) => `
     <article class="card">
       <span class="rank">${index + 1}</span>
       <div class="card-body">

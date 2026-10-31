@@ -5,5 +5,3 @@ export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 /** Every wx.request uses this; keep it equal to `networkTimeout.request` in app.json. */
 export const REQUEST_TIMEOUT_MS = 10000;
 
-// Published in the privacy policy and terms; used for takedown and feedback requests.
-export const CONTACT_EMAIL = "handwanly@gmail.com";

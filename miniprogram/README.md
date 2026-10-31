@@ -19,12 +19,12 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 ## WorkBuddy 场景合集
 
 - 欢迎页只讲一件事：「按岗位挑 WorkBuddy 技能」。顶部是今日推荐卡片，下面是 8 个场景卡片（表格与数据、PPT 与演示、会议与写作、新媒体与营销、财务与税务、招聘与人事、销售与客户、产品与项目）；「全部 AI 技能库」和「开源雷达」收成页面底部「更多」里的两个文字链接。
-- 清单在 `services/scenes.ts`：每个场景按目录里的 GitHub 星标从高到低排（星标相同的保持现有顺序），前 3 个是 `must`（必装），其余是 `more`；星标是整个仓库的数，大多数候选来自同一个聚合仓库而并列，所以顺序主要由并列时的人工排列决定。每个技能配一句 `headline`（它帮你干什么）和 1–3 句「装好后对 WorkBuddy 这样说」。增删后运行 `cd pipeline && npm run check:scenes`。
-- **精选技能的中文文案**：每个精选技能（必装和更多）都填 `nameZh`（中文名，10 字内，替代英文名做主标题，英文名降为小字）、`intro`（适合谁、什么时候用，60 字内，替代机翻简介）、`prepare`（先准备什么材料，20 字内，显示在「这样说」上方）。场景页、详情页、今日推荐卡片和分享标题都优先用中文名；精选技能的详情页不再显示聚合仓库的星标和作者，改为「来自 GitHub 开源项目 · 由头山精选」。`check:scenes` 校验这三项。
+- 清单在 `services/scenes.ts`：每个场景按目录里的 GitHub 星标从高到低排（星标相同的保持现有顺序），场景页就按这个顺序排成一个列表；星标是整个仓库的数，大多数候选来自同一个聚合仓库而并列，所以顺序主要由并列时的人工排列决定。每个技能配一句 `headline`（它帮你干什么）和 1–3 句「装好后对 WorkBuddy 这样说」。增删后运行 `cd pipeline && npm run check:scenes`。
+- **精选技能的中文文案**：每个精选技能都填 `nameZh`（中文名，10 字内，替代英文名做主标题，英文名降为小字）、`intro`（适合谁、什么时候用，60 字内，替代机翻简介）、`prepare`（先准备什么材料，20 字内，显示在「这样说」上方）。场景页、详情页、今日推荐卡片和分享标题都优先用中文名；精选技能的详情页不再显示聚合仓库的星标和作者，改为「来自 GitHub 开源项目 · 由头山精选」。`check:scenes` 校验这三项。
 - **效果示例 `example`**：只填在 WorkBuddy 里真实跑出来的输入（`input`）和结果（`output`，可节选）。没跑过的技能不填，详情页就不显示示例块；不要放编造或占位的内容。
-- 场景页 `pages/scene/index?slug=<场景>`：3 个必装带序号、一句卖点、示例句和「复制给 WorkBuddy」；顶部「一键复制，3 个全部装上」只装必装（`workbuddyBundlePrompt`）；「还想要更多」是紧凑列表。分享标题用场景的 `shareTitle`。场景事件 `meta` 带 `scene`，整套复制记为 `copy_install`、`target: "bundle"`。
+- 场景页 `pages/scene/index?slug=<场景>`：所有技能按星标从高到低排成一个列表，每张卡片带序号、一句卖点、星标数、先准备、示例句和「复制给 WorkBuddy」；顶部「一键复制，N 个全部装上」装整个场景（`workbuddyBundlePrompt`）。分享标题用场景的 `shareTitle`。场景事件 `meta` 带 `scene`，整套复制记为 `copy_install`、`target: "bundle"`。
 - 详情页（精选技能）：标题下先显示卖点，有示例时显示「效果示例」，然后是安装、「装好后这样说」（可复制，`target: "usage"`）和所属场景链接；英文 SKILL.md 改名「技术说明（英文原文）」并默认折叠。非精选技能保持原样（标签可见、说明全文展开）。
-- 今日推荐：`dailyPick` 按北京时间日历日轮换 24 个必装技能，卡片副标题用它的卖点；读不到时才退回本周热门。
+- 今日推荐：`dailyPick` 按北京时间日历日轮换全部 51 个精选技能，卡片副标题用它的卖点；读不到时才退回本周热门。
 - 小程序的名称和简介在微信公众平台后台修改，代码里只能改 `sitemap.json` 的描述和分享标题。
 
 ## 开源雷达
@@ -45,7 +45,6 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 
 - **复制给 WorkBuddy（主按钮）**：国内用户多用 WorkBuddy，它能按一句话自己下载安装技能。来源能定位到技能目录时，`skillInstallPlan`（`services/skill-install.ts`）的主复制内容是 `workbuddyPrompt` 生成的三行中文请求（技能名、GitHub 来源、"装好后告诉我怎么用"），`installKind` 为 `workbuddy`；终端命令降为备选。小程序范例（`mp-example`）和定位不到技能目录的链接仍复制 GitHub 链接。
 - **终端安装（备选）**：`terminalInstallPlan` 按仓库信息生成命令，优先 `npx skills add <仓库> --skill <名称>`（备选标签「终端安装（需 Node.js）」）；根目录技能再给出 `git clone … ~/.claude/skills/<名称>`；官方 `anthropics/skills` 另给 `/plugin marketplace add`。详情页同时给出 3 步安装说明、原链接（可复制）和 SKILL.md frontmatter 里的许可证（没有就不显示）。
-- **作者申请下架 / 反馈**：详情页底部「联系」弹窗提示发邮件到隐私政策公布的联系邮箱，可一键复制。
 - **分享卡片**：`onShareAppMessage` 标题为「技能名｜一句中文用途」；`services/share-card.ts` 在页面隐藏的 `canvas type="2d"` 上画 5:4 封面（技能名、用途、Star、头山 AI 工具箱），导出失败或超时就用默认截图。页面内「推荐给同事」按钮使用 `open-type="share"`。
 - **复制后提示**：复制 WorkBuddy 指令后提示「已复制，粘贴给WorkBuddy就能装」；复制终端命令（或 GitHub 链接）后提示「安装命令已复制，分享给朋友一起用」（文案见 `copyShareNudge`），详情页和欢迎页卡片相同。
 - **首页与欢迎页分享**：欢迎页的 `onShareAppMessage` / `onShareTimeline` 在热门工具加载后用「工具名｜一句卖点」做标题、跳转该工具详情页，并同样生成 5:4 封面；工具未加载时分享欢迎页本身。技能库首页保持应用标题。这些页面的分享都上报 `share`（`page` 区分来源，非单个技能时 `meta` 不含 `id`/`slug`）。

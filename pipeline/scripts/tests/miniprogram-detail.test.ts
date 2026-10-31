@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import type { Skill } from "../../../miniprogram/types/skill";
-import { CONTACT_EMAIL } from "../../../miniprogram/services/config";
 
 type Share = { title: string; path: string; imageUrl?: string; promise?: Promise<{ title: string; path: string; imageUrl?: string }> };
 type DetailPage = {
@@ -141,16 +140,6 @@ test("a failed clipboard write reports nothing", async (t) => {
   page.onCopyInstall();
   await settle();
   assert.equal(events.filter((row) => row.event === "copy_install").length, 0);
-});
-
-test("the takedown entry offers to copy the contact email", (t) => {
-  const { page, modals, clipboard } = harness(t);
-  page.showSkill(makeSkill({ name: "PDF 助手" }), true);
-  page.onFeedback();
-  assert.equal(modals.length, 1);
-  assert.match(modals[0].content, /「PDF 助手」/);
-  modals[0].success({ confirm: true });
-  assert.deepEqual(clipboard, [CONTACT_EMAIL]);
 });
 
 test("sharing uses 技能名｜一句中文用途 and the generated 5:4 cover", async (t) => {

@@ -3,18 +3,20 @@
   <block wx:else>
     <view class="scene-head">
       <text class="scene-badge">WorkBuddy 技能合集</text>
-      <text class="scene-title">{{scene.title}}：3 个必装</text>
+      <text class="scene-title">{{scene.title}}</text>
       <text class="scene-tagline">{{scene.tagline}}</text>
-      <button wx:if="{{bundleReady}}" class="primary-button scene-bundle" bindtap="onCopyBundle">一键复制，3 个全部装上</button>
+      <text class="scene-sort">按 GitHub 星标从高到低排列</text>
+      <button wx:if="{{bundleReady}}" class="primary-button scene-bundle" bindtap="onCopyBundle">一键复制，{{skills.length}} 个全部装上</button>
       <text class="scene-hint">复制后粘贴进电脑上的 WorkBuddy 对话框发送，它会逐个装好。</text>
     </view>
 
     <view wx:if="{{error}}" class="notice">{{error}}</view>
-    <view wx:if="{{loading && must.length === 0}}" class="notice">正在加载技能…</view>
-    <view wx:for="{{must}}" wx:key="id" class="card scene-skill" hover-class="card-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="openSkill">
+    <view wx:if="{{loading && skills.length === 0}}" class="notice">正在加载技能…</view>
+    <view wx:for="{{skills}}" wx:key="id" class="card scene-skill" hover-class="card-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="openSkill">
       <view class="scene-skill-head">
         <text class="scene-rank">{{index + 1}}</text>
         <text class="scene-headline">{{item.headline}}</text>
+        <text wx:if="{{item.stars}}" class="scene-stars">★ {{item.stars}}</text>
       </view>
       <text class="scene-skill-name">{{item.name}}<text wx:if="{{item.englishName}}" class="scene-skill-en"> · {{item.englishName}}</text></text>
       <view wx:if="{{item.say}}" class="scene-say">
@@ -28,18 +30,6 @@
       </view>
     </view>
 
-    <block wx:if="{{more.length}}">
-      <text class="scene-section-label">还想要更多</text>
-      <view class="more-list">
-        <view wx:for="{{more}}" wx:key="id" class="more-row" hover-class="more-row-hover" data-id="{{item.id}}" bindtap="openSkill">
-          <view class="more-row-text">
-            <text class="more-row-headline">{{item.headline}}</text>
-            <text class="more-row-name">{{item.name}}</text>
-          </view>
-          <image class="more-row-arrow" src="/assets/icons/chevron-right.png" mode="aspectFit" />
-        </view>
-      </view>
-    </block>
 
     <text class="scene-section-label">其他岗位</text>
     <view class="scene-others">

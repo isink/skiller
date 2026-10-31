@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { feedbackNotice } from "../../../miniprogram/services/feedback";
-import { CONTACT_EMAIL } from "../../../miniprogram/services/config";
 import { skillInstallCommand, skillInstallPlan, skillLicense, skillSourceUrl, terminalInstallPlan, workbuddyPrompt } from "../../../miniprogram/services/skill-install";
 
 const md = (frontmatter: string) => `---\n${frontmatter}\n---\n# Body`;
@@ -105,14 +103,6 @@ test("license comes from the frontmatter and is shortened and sanitised", () => 
   assert.equal(skillLicense(md("license: MIT\nlicense: GPL")), "");
   assert.equal(skillLicense("license: MIT"), "");
   assert.equal(skillLicense(null), "");
-});
-
-test("the takedown notice names the skill and points to the published contact", () => {
-  const notice = feedbackNotice({ name: "PDF 助手", github_url: "https://github.com/acme/pdf" });
-  assert.equal(notice.email, CONTACT_EMAIL);
-  assert.match(notice.content, /「PDF 助手」和来源链接/);
-  assert.match(notice.content, new RegExp(CONTACT_EMAIL.replace(".", "\\.")));
-  assert.doesNotMatch(feedbackNotice({ name: "x", github_url: "" }).content, /来源链接/);
 });
 
 test("a skill with a GitHub source is copied to WorkBuddy first, terminal commands second", () => {

@@ -325,7 +325,7 @@ test("when today's pick cannot be loaded the card falls back to this week's hot 
 test("the scene tiles list every collection and open its page", (t) => {
   const { page, navigations } = harness(t);
   assert.equal(page.data.scenes.length, 8);
-  assert.deepEqual(page.data.scenes[0], { slug: "excel", title: "表格与数据", tagline: "Excel 汇总、数据结论、流程图" });
+  assert.deepEqual(page.data.scenes[0], { slug: "excel", title: "表格与数据", tagline: "Excel 汇总、数据结论、流程图", count: 6 });
   (page as unknown as { openScene(e: unknown): void }).openScene({ currentTarget: { dataset: { slug: "finance" } } });
   assert.deepEqual(navigations, ["/pages/scene/index?slug=finance"]);
 });

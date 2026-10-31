@@ -20,14 +20,14 @@
 
   <view class="landing-intro">
     <text class="landing-title">按岗位挑 WorkBuddy 技能</text>
-    <text class="landing-subtitle">每个岗位只推 3 个必装，复制一句话发给 WorkBuddy 就装好</text>
+    <text class="landing-subtitle">每个岗位精选好用的技能，复制一句话发给 WorkBuddy 就装好</text>
   </view>
 
   <view class="scene-grid">
     <view wx:for="{{scenes}}" wx:key="slug" class="scene-tile" hover-class="scene-tile-hover" hover-stay-time="60" data-slug="{{item.slug}}" bindtap="openScene">
       <text class="scene-tile-title">{{item.title}}</text>
       <text class="scene-tile-desc">{{item.tagline}}</text>
-      <text class="scene-tile-count">3 个必装 ›</text>
+      <text class="scene-tile-count">{{item.count}} 个技能 ›</text>
     </view>
   </view>
 
