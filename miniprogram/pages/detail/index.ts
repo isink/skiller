@@ -10,6 +10,7 @@ import { skillDescriptionZh } from "../../services/description-zh";
 import { skillMetadata } from "../../services/skill-meta";
 import { copyInstall as copyInstallCommand, copyText, skillInstallPlan, skillLicense } from "../../services/skill-install";
 import { feedbackNotice } from "../../services/feedback";
+import { scenePick } from "../../services/scenes";
 import type { Skill, SkillBlock } from "../../types/skill";
 
 const SHARE_CANVAS = "#share-canvas";
@@ -32,6 +33,8 @@ Page({
     installSteps: [] as string[],
     installAlternatives: [] as Array<{ label: string; command: string }>,
     sourceUrl: "",
+    usageSay: [] as string[],
+    usageScene: null as { slug: string; title: string } | null,
     blocks: [] as SkillBlock[],
     favorited: false,
     loading: true,
@@ -125,7 +128,10 @@ Page({
 
   showSkill(skill: Skill, clearError: boolean) {
     wx.setNavigationBarTitle({ title: skill.name });
+    const curated = scenePick(skill.slug);
     this.setData({
+      usageSay: curated ? curated.pick.say : [],
+      usageScene: curated ? { slug: curated.scene.slug, title: curated.scene.title } : null,
       skill,
       displayDescription: skillDescriptionZh(skill),
       displayCategory: categoryName(skill.category),
@@ -151,6 +157,20 @@ Page({
   onCopyAlternative(event: { currentTarget: { dataset: { index: number } } }) {
     const option = this.data.installAlternatives[Number(event.currentTarget.dataset.index)];
     if (option) this.copyInstall(option.command, "alternative");
+  },
+
+  onCopyUsage(event: { currentTarget: { dataset: { index: number } } }) {
+    const skill = this.data.skill as Skill | null;
+    const say = this.data.usageSay[Number(event.currentTarget.dataset.index)];
+    if (!skill || !say) return;
+    copyText(say, "已复制，装好技能后发给WorkBuddy").then((ok) => {
+      if (ok) trackCopyInstall(skill, "workbuddy", "usage");
+    });
+  },
+
+  openScene(event: { currentTarget: { dataset: { slug: string } } }) {
+    const slug = event.currentTarget.dataset.slug;
+    if (slug) wx.navigateTo({ url: `/pages/scene/index?slug=${encodeURIComponent(slug)}` });
   },
 
   onCopySource() {

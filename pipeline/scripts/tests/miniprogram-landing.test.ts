@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import type { Skill } from "../../../miniprogram/types/skill";
+import { dailyPick } from "../../../miniprogram/services/scenes";
 
 type Share = { title: string; path: string; imageUrl?: string; promise?: Promise<{ title: string; path: string; imageUrl?: string }> };
 type LandingPage = {
@@ -42,7 +43,7 @@ function makeSkill(overrides: Partial<Skill> = {}): Skill {
   };
 }
 
-type HarnessOptions = { legacySeen?: boolean; scene?: number; hot?: Skill[] | "error"; featured?: Skill[]; full?: Skill | "error"; exportFails?: boolean };
+type HarnessOptions = { legacySeen?: boolean; scene?: number; hot?: Skill[] | "error"; featured?: Skill[]; full?: Skill | "error"; pick?: Skill | "error"; exportFails?: boolean };
 
 function harness(t: TestContext, options: HarnessOptions = {}) {
   const original = globals.wx;
@@ -75,6 +76,10 @@ function harness(t: TestContext, options: HarnessOptions = {}) {
         return request.success({ statusCode: 200, data: options.hot ?? [] });
       }
       if (searchParams.has("featured")) return request.success({ statusCode: 200, data: options.featured ?? [] });
+      if (searchParams.has("slug")) {
+        if (options.pick === "error") return request.fail({ errMsg: "request:fail" });
+        return request.success({ statusCode: 200, data: options.pick ? [options.pick] : [] });
+      }
       if (searchParams.has("id")) {
         if (options.full === "error" || !options.full) return request.fail({ errMsg: "request:fail" });
         return request.success({ statusCode: 200, data: [options.full] });
@@ -263,7 +268,7 @@ test("before the hot tool loads the landing page shares itself", async (t) => {
   page.onLoad({});
   await settle();
   const share = page.onShareAppMessage();
-  assert.equal(share.title, "头山 AI 工具箱：探索 AI 技能与趋势");
+  assert.equal(share.title, "头山 AI 工具箱：按岗位挑 WorkBuddy 技能");
   assert.equal(share.path, "/pages/landing/index");
   assert.equal(page.onShareTimeline().query, "");
   const shares = events().filter((row) => row.event === "share");
@@ -292,4 +297,34 @@ test("the two tool tiles open the skill library and the open radar", (t) => {
   page.navigateToSkills();
   page.navigateToOpenRadar();
   assert.deepEqual(navigations, ["/pages/home/index", "/pages/open-radar/index"]);
+});
+
+test("today's curated WorkBuddy pick leads the card, labelled with its scene", async (t) => {
+  const { pick } = dailyPick();
+  const curated = makeSkill({ slug: pick.slug, name: "today" });
+  const { page, requests } = harness(t, { pick: curated, hot: hotSkills() });
+  page.onLoad({});
+  await settle();
+  assert.equal(page.data.hotTool?.id, curated.id);
+  assert.equal(page.data.hotLabel, `今日推荐 · ${dailyPick().scene.title}`);
+  assert.equal(page.data.hotTool?.growth, "");
+  assert.ok(requests.some((request) => new URL(request.url).searchParams.get("slug") === `in.(${pick.slug})`));
+  assert.ok(!requests.some((request) => request.url.includes("get_hot_skills")));
+});
+
+test("when today's pick cannot be loaded the card falls back to this week's hot skill", async (t) => {
+  const hot = hotSkills();
+  const { page } = harness(t, { pick: "error", hot });
+  page.onLoad({});
+  await settle();
+  assert.equal(page.data.hotTool?.id, hot[0].id);
+  assert.equal(page.data.hotLabel, "今日热门工具");
+});
+
+test("the scene tiles list every collection and open its page", (t) => {
+  const { page, navigations } = harness(t);
+  assert.equal(page.data.scenes.length, 8);
+  assert.deepEqual(page.data.scenes[0], { slug: "excel", title: "表格与数据", tagline: "Excel 汇总、数据看板、流程图", count: 6 });
+  (page as unknown as { openScene(e: unknown): void }).openScene({ currentTarget: { dataset: { slug: "finance" } } });
+  assert.deepEqual(navigations, ["/pages/scene/index?slug=finance"]);
 });

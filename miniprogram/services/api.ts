@@ -54,6 +54,17 @@ export function fetchFeatured(limit = 20): Promise<Skill[]> {
   return listSkills({ featured: "eq.true", order: "rank.desc,id.asc", limit });
 }
 
+const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+
+/** Catalog rows for the given slugs, in the order asked; unknown or unsafe slugs are skipped. */
+export async function fetchSkillsBySlugs(slugs: string[]): Promise<Skill[]> {
+  const safe = slugs.filter((slug) => SLUG_PATTERN.test(slug));
+  if (safe.length === 0) return [];
+  const rows = await listSkills({ slug: `in.(${safe.join(",")})`, limit: safe.length });
+  const bySlug = new Map(rows.map((row) => [row.slug, row]));
+  return safe.map((slug) => bySlug.get(slug)).filter((row): row is Skill => Boolean(row));
+}
+
 /** Star growth over the last 7 days, one skill per repository. Needs migration 020. */
 export function fetchHotSkills(limit = 10): Promise<Skill[]> {
   return request<Skill[]>("/rest/v1/rpc/get_hot_skills", { p_days: 7, p_limit: limit, p_min_growth: 3 });

@@ -12,6 +12,8 @@
     "import:open-radar": "tsx scripts/import/import-open-radar.ts",
     "import:all": "npm run import:antigravity && npm run import:anthropic && npm run import:discover",
     "report:empty-search": "tsx scripts/empty-search-report.ts",
+    "check:scenes": "tsx scripts/check-scenes.ts",
+    "wechat:submit-pages": "tsx scripts/wechat-submit-pages.ts",
     "apply:overrides": "tsx scripts/import/apply-overrides.ts",
     "upsert:trending": "tsx scripts/import/upsert-trending-terms.ts",
     "enrich:skills": "tsx scripts/enrich/enrich-skills.ts",

@@ -1,5 +1,6 @@
 /**
- * Submits mini program pages (skill detail pages, categories and main pages)
+ * Submits mini program pages (skill detail pages, categories, WorkBuddy scene
+ * collections and main pages)
  * to WeChat search via wxa/search/wxaapi_submitpages.
  *
  *   npx tsx scripts/wechat-submit-pages.ts --dry-run
@@ -11,6 +12,7 @@
  */
 import "dotenv/config";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../../miniprogram/services/config";
+import { SCENES } from "../../miniprogram/services/scenes";
 import {
   buildPages, fetchCategorySlugs, fetchSkillIds, parseArgs, submitPages,
   type FetchLike,
@@ -25,7 +27,7 @@ async function main(): Promise<void> {
     fetchSkillIds(fetchImpl, supabaseUrl, anonKey, options.limit),
     fetchCategorySlugs(fetchImpl, supabaseUrl, anonKey),
   ]);
-  const pages = buildPages(ids, slugs);
+  const pages = buildPages(ids, slugs, SCENES.map((scene) => scene.slug));
   const result = await submitPages({
     pages,
     batchSize: options.batchSize,

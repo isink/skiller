@@ -16,6 +16,14 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 
 欢迎页最上方是「今日热门工具」卡片：`fetchHotTool`（`services/recommendations.ts`）复用新词雷达推荐的数据源与排序——本周热门（`get_hot_skills`，不足 3 条时）退回精选技能，取第一条；退回精选时标签改为「今日推荐工具」。卡片显示名称、一句中文用途和「一键复制给 WorkBuddy」按钮，点卡片进入详情页。WorkBuddy 安装指令只需要列表行里的名称和来源链接，所以点按钮立即复制，不请求详情；小程序范例和指向不了技能目录的来源按钮显示「一键复制 GitHub 链接」；没有可用来源时不显示按钮。通过好友/朋友圈分享链接（带 `id`）进入欢迎页时，卡片显示被分享的工具，标签为「好友推荐的工具」。卡片加载前显示骨架，加载失败则整张隐藏，下面的工具入口不受影响。复制逻辑 `copyInstall`（`services/skill-install.ts`）与详情页共用，同样上报 `copy_install`（`page` 为 `pages/landing/index`）。
 
+## WorkBuddy 场景合集
+
+- 欢迎页的主线是「按岗位挑 WorkBuddy 技能」：8 个场景（表格与数据、PPT 与演示、文档会议与写作、新媒体与营销、财务与税务、招聘与人事、销售与客户、产品与项目），共 51 个人工精选的办公技能。清单在 `services/scenes.ts`，按目录 slug 引用，每个技能配 2 句「装好后对 WorkBuddy 这样说」。增删后运行 `cd pipeline && npm run check:scenes`，确认每个 slug 在目录里存在、有中文简介且没有重复。
+- 场景页 `pages/scene/index?slug=<场景>`：按清单顺序列出技能（`fetchSkillsBySlugs`），每张卡片显示用途、第一句示例和「复制给 WorkBuddy」；顶部「一键复制给 WorkBuddy，全部装上」复制 `workbuddyBundlePrompt` 生成的整套安装请求。分享标题用场景的 `shareTitle`（都含 WorkBuddy），封面同样由 `share-card` 绘制。场景事件 `meta` 带 `scene`，整套复制记为 `copy_install`、`target: "bundle"`。
+- 详情页：精选技能多出「装好后这样说」卡片，示例可单独复制（`copy_install`、`target: "usage"`），并链接回所属场景。
+- 欢迎页卡片改为「今日推荐 · 场景名」：`dailyPick` 按北京时间日历日轮换 51 个精选技能，`fetchDailyPick` 按 slug 读取；读不到时才退回下面的本周热门逻辑。
+- 小程序的名称和简介在微信公众平台后台修改，代码里只能改 `sitemap.json` 的描述和分享标题。
+
 ## 开源雷达
 
 - 欢迎页的第二个入口由「新词雷达」改为「开源雷达」，进入 `pages/open-radar/index`（列表）；不新增第三个入口。热门工具卡片保持不变。

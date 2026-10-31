@@ -1,0 +1,46 @@
+name: WeChat search page submit
+
+on:
+  schedule:
+    # 每周一 03:00 UTC（北京时间 11:00），在周一的全量导入之后：把详情页、分类和 WorkBuddy 场景合集提交给微信搜索。
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only list the pages; do not call WeChat"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wechat-submit-pages
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: pipeline
+    env:
+      WECHAT_MP_APPID: ${{ secrets.WECHAT_MP_APPID }}
+      WECHAT_MP_APPSECRET: ${{ secrets.WECHAT_MP_APPSECRET }}
+      INPUT_DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: pipeline/package-lock.json
+      - run: npm ci
+      - name: Submit pages
+        run: |
+          if [ -z "$INPUT_DRY_RUN" ] && { [ -z "$WECHAT_MP_APPID" ] || [ -z "$WECHAT_MP_APPSECRET" ]; }; then
+            echo "::warning::WECHAT_MP_APPID / WECHAT_MP_APPSECRET are not set; running a dry run instead."
+            INPUT_DRY_RUN=--dry-run
+          fi
+          npm run wechat:submit-pages -- $INPUT_DRY_RUN

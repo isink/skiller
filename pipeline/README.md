@@ -243,3 +243,9 @@ where id = '<条目 id>';
 ## 历史
 
 数据管道原本和 Expo iOS app 共享 `/Skiller/ios/` 目录，2026-04-28 迁移到 native 项目下独立成一个子模块（`native/pipeline/`）。旧 Expo 项目 `Skiller/ios/` 现已整体删除，`Skiller/ios/scripts` 不再存在。同时弃用了 GitHub Actions 自动同步，改为纯手动跑。
+
+## 微信搜索页面提交
+
+`npm run wechat:submit-pages`（`scripts/wechat-submit-pages.ts`）把首页等主页面、分类页、WorkBuddy 场景合集页和全部技能详情页提交给微信搜索；加 `-- --dry-run` 只列出不提交。需要 `WECHAT_MP_APPID` 和 `WECHAT_MP_APPSECRET`。GitHub Actions 工作流 `wechat-submit-pages.yml` 每周一北京时间 11:00 运行；仓库未配置这两个 secret 时自动改为干跑并给出警告。
+
+`npm run check:scenes` 用公开 anon key 核对小程序 `services/scenes.ts` 里的场景合集：slug 是否都在目录里、是否有中文简介、是否重复、示例句数是否为 1–3 句。

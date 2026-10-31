@@ -1,6 +1,7 @@
 import { fetchSkill } from "../../services/api";
 import { trackPageView, trackShare } from "../../services/analytics";
-import { fetchHotTool } from "../../services/recommendations";
+import { fetchDailyPick, fetchHotTool } from "../../services/recommendations";
+import { SCENES } from "../../services/scenes";
 import { APP_TITLE, enableShareMenu, shortPurpose, skillShareTitle } from "../../services/share";
 import { renderShareCard } from "../../services/share-card";
 import { copyInstall, skillInstallPlan } from "../../services/skill-install";
@@ -15,7 +16,7 @@ const PAGE = "pages/landing/index";
 const SHARE_CANVAS = "#share-canvas";
 const HOT_CACHE = "landing:hot-tool";
 
-type HotPick = { skill: Skill; hot: boolean };
+type HotPick = { skill: Skill; hot: boolean; label?: string };
 
 function hotLabel(hot: boolean): string {
   return hot ? "今日热门工具" : "今日推荐工具";
@@ -32,6 +33,7 @@ Page({
     hotLabel: "今日热门工具",
     hotTool: null as { id: string; name: string; purpose: string; growth: string } | null,
     hotCopyLabel: "",
+    scenes: SCENES.map((scene) => ({ slug: scene.slug, title: scene.title, tagline: scene.tagline, count: scene.picks.length })),
   },
 
   onLoad(options: Record<string, string>) {
@@ -56,7 +58,17 @@ Page({
       } catch { /* Fall back to today's pick. */ }
     }
     const cached = readCache<HotPick>(HOT_CACHE);
-    if (cached?.skill?.id) this.showHotTool(cached.skill, hotLabel(cached.hot), cached.hot ? growthLabel(cached.skill) : "");
+    if (cached?.skill?.id) this.showHotTool(cached.skill, cached.label || hotLabel(cached.hot), cached.hot ? growthLabel(cached.skill) : "");
+    // Today's curated WorkBuddy skill first; star growth only when it cannot be loaded.
+    try {
+      const daily = await fetchDailyPick();
+      if (daily) {
+        const label = `今日推荐 · ${daily.sceneTitle}`;
+        writeCache(HOT_CACHE, { skill: daily.skill, hot: false, label });
+        this.showHotTool(daily.skill, label, "");
+        return;
+      }
+    } catch { /* Fall back to this week's hot skills. */ }
     try {
       const pick = await fetchHotTool();
       if (pick) {
@@ -101,7 +113,7 @@ Page({
 
   shareTitle(): string {
     const skill = this._hot;
-    return skill ? skillShareTitle(skill.name, skillDescriptionZh(skill)) : `${APP_TITLE}：探索 AI 技能与趋势`;
+    return skill ? skillShareTitle(skill.name, skillDescriptionZh(skill)) : `${APP_TITLE}：按岗位挑 WorkBuddy 技能`;
   },
 
   sharePath(): string {
@@ -154,6 +166,10 @@ Page({
     });
     this._cardPromise = promise;
     return promise;
+  },
+
+  openScene(event: { currentTarget: { dataset: { slug: string } } }) {
+    wx.navigateTo({ url: `/pages/scene/index?slug=${encodeURIComponent(event.currentTarget.dataset.slug)}` });
   },
 
   navigateToSkills() {

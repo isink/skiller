@@ -61,7 +61,7 @@ export function isEmptySearch(query: string, resultCount: number): boolean {
 }
 
 function shouldSend(event: MpEventName, fields: MpEventFields): boolean {
-  const key = `${event}|${fields.page ?? ""}|${fields.query ?? ""}|${fields.error ?? ""}|${String(fields.meta?.id ?? "")}|${String(fields.meta?.target ?? "")}|${String(fields.meta?.channel ?? "")}`;
+  const key = `${event}|${fields.page ?? ""}|${fields.query ?? ""}|${fields.error ?? ""}|${String(fields.meta?.id ?? "")}|${String(fields.meta?.target ?? "")}|${String(fields.meta?.channel ?? "")}|${String(fields.meta?.scene ?? "")}`;
   const now = Date.now();
   const last = lastSentAt.get(key);
   if (last !== undefined && now - last < THROTTLE_MS[event]) return false;
@@ -192,7 +192,7 @@ export function trackPageView(page: string, meta?: Record<string, unknown>): Pro
   return trackEvent("page_view", { page, meta });
 }
 
-export type InstallCopyTarget = "primary" | "alternative" | "source_link";
+export type InstallCopyTarget = "primary" | "alternative" | "source_link" | "usage" | "bundle";
 
 /** Needs migration 025: earlier databases reject the new event names and the report is dropped. */
 export function trackCopyInstall(skill: { id: string; slug: string }, kind: string, target: InstallCopyTarget, page = "pages/detail/index"): Promise<void> {

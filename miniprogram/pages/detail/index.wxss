@@ -63,3 +63,11 @@
 .md-rule { height: 1rpx; margin: var(--space-3) 0; background: var(--color-border); }
 rich-text code { padding: 2rpx 8rpx; border-radius: 8rpx; background: var(--color-surface-2); color: var(--color-accent); font-family: var(--font-mono); }
 rich-text strong { color: var(--color-text); font-weight: var(--weight-bold); }
+
+.usage-card { margin-top: var(--space-3); padding: var(--space-3); border: 1rpx solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.usage-item { display: flex; flex-direction: row; align-items: center; margin-top: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--color-surface-2); }
+.usage-item:active { background: var(--color-surface-pressed); }
+.usage-text { flex: 1; min-width: 0; color: var(--color-text); font-size: var(--text-sm); line-height: 1.6; }
+.usage-action { flex-shrink: 0; margin-left: var(--space-2); color: var(--color-accent); font-size: var(--text-sm); font-weight: var(--weight-medium); }
+.usage-scene { display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-top: var(--space-2); color: var(--color-accent); font-size: var(--text-sm); }
+.usage-arrow { width: 28rpx; height: 28rpx; flex-shrink: 0; }

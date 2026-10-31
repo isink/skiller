@@ -200,3 +200,29 @@ test("the timeline share reports the event too", (t) => {
   assert.equal(share.query, `id=${encodeURIComponent(skill.id)}`);
   assert.equal(events.find((row) => row.event === "share")?.meta.channel, "timeline");
 });
+
+test("a curated skill shows what to say to WorkBuddy and links back to its collection", async (t) => {
+  const { page, clipboard, toasts, events } = harness(t);
+  const navigations: string[] = [];
+  (globals.wx as { navigateTo: unknown }).navigateTo = ({ url }: { url: string }) => { navigations.push(url); };
+  const skill = makeSkill({ slug: "meeting-notes" });
+  page.showSkill(skill, true);
+  assert.equal(page.data.usageSay.length, 2);
+  assert.deepEqual(page.data.usageScene, { slug: "docs", title: "文档、会议与写作" });
+
+  const detail = page as unknown as { onCopyUsage(e: unknown): void; openScene(e: unknown): void };
+  detail.onCopyUsage({ currentTarget: { dataset: { index: 1 } } });
+  await settle();
+  assert.deepEqual(clipboard, [page.data.usageSay[1]]);
+  assert.deepEqual(toasts, ["已复制，装好技能后发给WorkBuddy"]);
+  assert.deepEqual(events.find((row) => row.event === "copy_install")?.meta, { action: "copy_install", id: skill.id, slug: "meeting-notes", kind: "workbuddy", target: "usage" });
+  detail.openScene({ currentTarget: { dataset: { slug: "docs" } } });
+  assert.deepEqual(navigations, ["/pages/scene/index?slug=docs"]);
+});
+
+test("a skill outside the collections shows no usage block", (t) => {
+  const { page } = harness(t);
+  page.showSkill(makeSkill(), true);
+  assert.deepEqual(page.data.usageSay, []);
+  assert.equal(page.data.usageScene, null);
+});

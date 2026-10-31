@@ -20,6 +20,11 @@ test("pages cover the main pages, categories and every skill detail with its id"
   assert.deepEqual(details.map((page) => page.query), ids.map((id) => `id=${id}`));
 });
 
+test("WorkBuddy scene collections are submitted by slug", () => {
+  const pages = buildPages([], [], ["finance", "finance", "bad slug!"]);
+  assert.deepEqual(pages.filter((page) => page.path === "pages/scene/index"), [{ path: "pages/scene/index", query: "slug=finance" }]);
+});
+
 test("batches keep order and never exceed the size", () => {
   assert.deepEqual(chunk([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]]);
   assert.deepEqual(chunk([], 2), []);

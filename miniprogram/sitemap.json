@@ -1,4 +1,4 @@
 {
-  "desc": "头山 AI 工具箱：AI 技能、Claude Skills、AI 工具、技能库与开源雷达，页面可公开访问。",
+  "desc": "头山 AI 工具箱：按岗位精选的 WorkBuddy 技能（Excel、PPT、会议纪要、小红书、财务、HR、销售），以及 Claude Skills 技能库与开源雷达，页面可公开访问。",
   "rules": [{ "action": "allow", "page": "*" }]
 }

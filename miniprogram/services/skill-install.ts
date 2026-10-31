@@ -1,6 +1,5 @@
 import type { Skill } from "../types/skill";
 import { trackCopyInstall } from "./analytics";
-import type { InstallCopyTarget } from "./analytics";
 import { copyShareNudge } from "./share";
 
 type InstallCommand = { installCommand: string; installHint: string };
@@ -175,6 +174,23 @@ export function workbuddyPrompt(name: string | null | undefined, sourceUrl: stri
   ].join("\n");
 }
 
+/**
+ * One request that installs a whole collection: WorkBuddy works through the
+ * list in order. Skills without a usable GitHub source are left out.
+ */
+export function workbuddyBundlePrompt(title: string, skills: Array<{ name?: string; github_url: string | null }>): string {
+  const lines = skills
+    .map((skill) => ({ name: Array.from((skill.name || "").replace(/\s+/g, " ").trim()).slice(0, MAX_PROMPT_NAME).join(""), url: skillSourceUrl(skill.github_url) }))
+    .filter((skill) => skill.url && githubInstallSource(skill.url) !== null)
+    .map((skill, index) => `${index + 1}. ${skill.name || "Skill"}：${skill.url}`);
+  if (lines.length === 0) return "";
+  return [
+    `请帮我安装「${title}」这 ${lines.length} 个 Skill：`,
+    ...lines,
+    "逐个装进你的技能里，全部装好后列一张表，用一句话说明每个能做什么。",
+  ].join("\n");
+}
+
 const NO_SOURCE_HINT = "暂无法生成安装命令：技能来源尚未确认。可继续阅读下方说明。";
 
 type PlanInput = Pick<Skill, "github_url" | "skill_md_content"> & { name?: string; category?: string; tags?: string[] };
@@ -293,7 +309,7 @@ export function copyInstall(
   skill: { id: string; slug: string },
   command: string,
   kind: string,
-  target: Exclude<InstallCopyTarget, "source_link">,
+  target: "primary" | "alternative",
   page: string,
 ): Promise<boolean> {
   if (!command) return Promise.resolve(false);

@@ -7,6 +7,7 @@ export type FetchLike = (input: string, init?: { method?: string; headers?: Reco
 
 export const DETAIL_PAGE_PATH = "pages/detail/index";
 export const EXPLORE_PAGE_PATH = "pages/explore/index";
+export const SCENE_PAGE_PATH = "pages/scene/index";
 export const STATIC_PAGES: WxPage[] = [
   { path: "pages/landing/index" },
   { path: "pages/home/index" },
@@ -44,8 +45,11 @@ function positive(arg: string, maximum = Number.MAX_SAFE_INTEGER): number {
   return value;
 }
 
-export function buildPages(skillIds: string[], categorySlugs: string[] = []): WxPage[] {
+export function buildPages(skillIds: string[], categorySlugs: string[] = [], sceneSlugs: string[] = []): WxPage[] {
   const pages: WxPage[] = [...STATIC_PAGES];
+  for (const slug of new Set(sceneSlugs)) {
+    if (SLUG_PATTERN.test(slug)) pages.push({ path: SCENE_PAGE_PATH, query: `slug=${encodeURIComponent(slug)}` });
+  }
   for (const slug of new Set(categorySlugs)) {
     if (SLUG_PATTERN.test(slug)) pages.push({ path: EXPLORE_PAGE_PATH, query: `category=${encodeURIComponent(slug)}` });
   }
