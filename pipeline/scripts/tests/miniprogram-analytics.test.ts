@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../../../miniprogram/services/config";
 import {
+  appBuildMeta,
   getAnonId,
   isEmptySearch,
   trackError,
@@ -262,4 +263,21 @@ test("a missing realtime log manager or storage never breaks tracking", async (t
   await assert.doesNotReject(trackPageView(unique("pages/a")));
   (globals.wx as Record<string, unknown>).setStorageSync = () => { throw new Error("full"); };
   await assert.doesNotReject(trackPageView(unique("pages/b")));
+});
+
+test("events carry the build type and released version when WeChat reports them", async (t) => {
+  const { requests } = mockWx(t);
+  const wx = globals.wx as Record<string, unknown>;
+  wx.getAccountInfoSync = () => ({ miniProgram: { appId: "wx1", envVersion: "release", version: "2.2.0" } });
+  await trackPageView(unique("pages/landing/index"));
+  await trackPageView(unique("pages/detail/index"), { id: "skill-1" });
+  assert.deepEqual(requests[0].data.meta, { env: "release", app_version: "2.2.0" });
+  assert.deepEqual(requests[1].data.meta, { id: "skill-1", env: "release", app_version: "2.2.0" });
+
+  wx.getAccountInfoSync = () => ({ miniProgram: { envVersion: "develop", version: "" } });
+  assert.deepEqual(appBuildMeta(), { env: "develop" });
+  wx.getAccountInfoSync = () => { throw new Error("unsupported"); };
+  assert.deepEqual(appBuildMeta(), {});
+  delete wx.getAccountInfoSync;
+  assert.deepEqual(appBuildMeta(), {});
 });

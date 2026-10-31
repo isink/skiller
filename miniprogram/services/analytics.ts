@@ -70,13 +70,30 @@ function shouldSend(event: MpEventName, fields: MpEventFields): boolean {
   return true;
 }
 
+/**
+ * Which build sent the event: `env` is develop, trial or release; `app_version`
+ * is the released version and is empty outside release. Kept in `meta` so no
+ * migration is needed. Empty when the API is unavailable.
+ */
+export function appBuildMeta(): Record<string, string> {
+  try {
+    const info = typeof wx.getAccountInfoSync === "function" ? wx.getAccountInfoSync()?.miniProgram : null;
+    const env = typeof info?.envVersion === "string" ? info.envVersion : "";
+    if (!env) return {};
+    const version = typeof info.version === "string" ? info.version : "";
+    return version ? { env, app_version: version } : { env };
+  } catch { return {}; }
+}
+
 function buildRow(event: MpEventName, fields: MpEventFields): Record<string, unknown> {
   const row: Record<string, unknown> = { event, anon_id: getAnonId() };
   if (fields.page) row.page = clip(fields.page, MAX_PAGE_LENGTH);
   if (fields.query !== undefined) row.query = clip(fields.query.trim(), MAX_QUERY_LENGTH);
   if (fields.resultCount !== undefined) row.result_count = fields.resultCount;
   if (fields.error) row.error = clip(fields.error, MAX_ERROR_LENGTH);
-  if (fields.meta) row.meta = fields.meta;
+  const build = appBuildMeta();
+  const meta = Object.keys(build).length ? { ...fields.meta, ...build } : fields.meta;
+  if (meta) row.meta = meta;
   return row;
 }
 

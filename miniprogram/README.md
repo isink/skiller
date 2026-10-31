@@ -62,6 +62,8 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 - 所有 `wx.request`（`api.ts`、`trending-terms.ts`、`analytics.ts`）统一使用 `services/config.ts` 的 `REQUEST_TIMEOUT_MS`（10 秒），与 `app.json` 的 `networkTimeout.request` 保持一致。
 - 埋点发送失败（网络错误或非 2xx，如未执行迁移 025）不再静默：错误信息写入本机存储 `skiller.miniprogram.analytics-failures.v1`（最多 5 条）并用 `wx.getRealtimeLogManager().warn` 记录；下一次有埋点发送成功时，合并为一条 `js_error`（`page=analytics`，`meta.action=analytics_send_failures`）补报并清空。不需要新迁移。
 
+- 每条埋点的 `meta` 带上版本来源（`appBuildMeta`，取自 `wx.getAccountInfoSync().miniProgram`）：`env` 为 `develop` / `trial` / `release`，正式版另有 `app_version`。只看线上用户时按 `meta->>'env' = 'release'` 过滤；加入这项之前的历史事件没有 `env`，无法区分开发、体验和正式版。不需要迁移。
+
 ## 已知边界
 
 - 首次离线启动没有预置目录；在线成功后会缓存已访问的列表和详情。
