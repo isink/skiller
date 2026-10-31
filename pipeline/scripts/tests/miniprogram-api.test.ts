@@ -84,3 +84,11 @@ test("every api request carries the 10 second timeout, matching app.json", async
   const appJson = JSON.parse(readFileSync(join(__dirname, "../../../miniprogram/app.json"), "utf8"));
   assert.equal(appJson.networkTimeout.request, REQUEST_TIMEOUT_MS);
 });
+
+test("browsing lists only ask for skills with a Chinese summary; search does not filter", async (t) => {
+  const requests = mockRequests(t);
+  await fetchSkills({ category: "office" });
+  await searchSkills("pdf");
+  assert.equal(requests[0].searchParams.get("description_zh"), "neq.");
+  assert.equal(requests[1].searchParams.get("description_zh"), null);
+});

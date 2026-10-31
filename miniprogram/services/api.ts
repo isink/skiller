@@ -109,6 +109,8 @@ export function fetchSkills(options: { category?: string; offset?: number; limit
   const limit = Math.min(50, Math.max(1, options.limit ?? PAGE_SIZE));
   return listSkills({
     ...(options.category ? { category: `eq.${options.category}` } : {}),
+    // Browsing lists only show skills with a Chinese summary; search still finds the rest.
+    description_zh: "neq.",
     // Repository stars and ranks are shared by many skills; a unique final key
     // keeps offset pages stable when those values tie.
     order: options.orderBy === "created_at" ? "created_at.desc,id.asc" : "github_stars.desc.nullslast,rank.desc,id.asc",

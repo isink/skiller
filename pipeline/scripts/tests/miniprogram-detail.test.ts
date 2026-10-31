@@ -298,3 +298,13 @@ test("a skill outside the collections shows its SKILL.md right away", (t) => {
   assert.ok(page.data.blocks.length > 0);
   assert.equal(page.data.skill.skill_md_content, null);
 });
+
+test("terminal commands start folded under the WorkBuddy request and open on tap", (t) => {
+  const { page } = harness(t);
+  page.showSkill(makeSkill(), true);
+  assert.equal(page.data.installKind, "workbuddy");
+  assert.ok(page.data.installAlternatives.length > 0);
+  assert.equal(page.data.altsOpen, false);
+  (page as unknown as { onToggleAlternatives(): void }).onToggleAlternatives();
+  assert.equal(page.data.altsOpen, true);
+});

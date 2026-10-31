@@ -47,6 +47,7 @@ Page({
     usagePrepare: "",
     usageExample: null as { input: string; output: string } | null,
     markdownOpen: true,
+    altsOpen: false,
     usageScene: null as { slug: string; title: string } | null,
     blocks: [] as SkillBlock[],
     favorited: false,
@@ -201,6 +202,11 @@ Page({
     if (!open || this._blocksFor === this._markdown) return {};
     this._blocksFor = this._markdown;
     return { blocks: parseMarkdown(this._markdown || "暂未提供技能说明。") };
+  },
+
+  /** Terminal commands matter only to Claude Code users, so they start folded under the WorkBuddy request. */
+  onToggleAlternatives() {
+    this.setData({ altsOpen: !this.data.altsOpen });
   },
 
   onToggleMarkdown() {

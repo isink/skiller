@@ -35,7 +35,11 @@
         </view>
         <text wx:if="{{installCommand}}" class="install-command" selectable>{{installCommand}}</text>
         <text class="install-hint">{{installHint}}</text>
-        <view wx:if="{{installAlternatives.length}}" class="install-alts">
+        <view wx:if="{{installAlternatives.length && installKind === 'workbuddy'}}" class="alts-toggle" bindtap="onToggleAlternatives">
+          <text>其他安装方式（终端 / Claude Code）</text>
+          <text class="alts-toggle-action">{{altsOpen ? '收起' : '展开'}}</text>
+        </view>
+        <view wx:if="{{installAlternatives.length && (altsOpen || installKind !== 'workbuddy')}}" class="install-alts">
           <view wx:for="{{installAlternatives}}" wx:key="label" class="install-alt" data-index="{{index}}" bindtap="onCopyAlternative">
             <text class="install-alt-label">{{item.label}} · 点按复制</text>
             <text class="install-alt-command">{{item.command}}</text>
