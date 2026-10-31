@@ -242,3 +242,27 @@ test("a skill outside the collections shows no usage block", (t) => {
   assert.equal(page.data.englishName, "");
   assert.equal(page.data.markdownOpen, true);
 });
+
+test("a reader votes once per skill and the vote is reported and remembered", async (t) => {
+  const { page, events } = harness(t);
+  const stored = new Map<string, unknown>();
+  Object.assign(globals.wx as object, {
+    getStorageSync: (key: string) => stored.get(key) ?? "",
+    setStorageSync: (key: string, value: unknown) => { stored.set(key, value); },
+  });
+  const skill = makeSkill();
+  page.showSkill(skill, true);
+  assert.equal(page.data.vote, "");
+  const detail = page as unknown as { onVote(e: unknown): void };
+  detail.onVote({ currentTarget: { dataset: { vote: "down" } } });
+  detail.onVote({ currentTarget: { dataset: { vote: "up" } } });
+  await settle();
+  assert.equal(page.data.vote, "down");
+  const votes = events.filter((row) => row.event === "feedback");
+  assert.equal(votes.length, 1);
+  assert.deepEqual(votes[0].meta, { action: "feedback", id: skill.id, slug: skill.slug, vote: "down" });
+
+  page.data.vote = "";
+  page.showSkill(skill, true);
+  assert.equal(page.data.vote, "down", "a returning reader is not asked again");
+});

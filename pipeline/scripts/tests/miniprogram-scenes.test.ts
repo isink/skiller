@@ -45,7 +45,7 @@ test("the checker asks for a re-sort when a lower skill has more stars", () => {
   assert.deepEqual(sceneProblems([scene], catalog([9, 5, 5, 7])), ["scene s is not sorted by stars: d (7) should come before c (5)"]);
 });
 
-test("must-haves need a short Chinese name, intro and prepare line", () => {
+test("every curated skill needs a short Chinese name, intro and prepare line", () => {
   const scene = { slug: "s", title: "S", tagline: "", shareTitle: "", more: [], must: [
     { slug: "a", nameZh: "名字", intro: "适合谁", prepare: "材料", headline: "一句话", say: ["说"] },
     { slug: "b", nameZh: "一个特别特别长的中文名字", intro: "适合谁", prepare: "材料", headline: "一句话", say: ["说"] },

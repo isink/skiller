@@ -7,6 +7,7 @@ import {
   getAnonId,
   isEmptySearch,
   trackError,
+  trackFeedback,
   trackEvent,
   trackPageView,
   trackCopyInstall,
@@ -280,4 +281,12 @@ test("events carry the build type and released version when WeChat reports them"
   assert.deepEqual(appBuildMeta(), {});
   delete wx.getAccountInfoSync;
   assert.deepEqual(appBuildMeta(), {});
+});
+
+test("feedback events carry the skill and the vote", async (t) => {
+  const { requests } = mockWx(t);
+  await trackFeedback({ id: unique("id"), slug: "pdf" }, "up");
+  assert.equal(requests[0].data.event, "feedback");
+  assert.equal(requests[0].data.page, "pages/detail/index");
+  assert.equal((requests[0].data.meta as Record<string, unknown>).vote, "up");
 });

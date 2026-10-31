@@ -83,3 +83,10 @@ rich-text strong { color: var(--color-text); font-weight: var(--weight-bold); }
 .detail-english { display: block; margin-top: 4rpx; color: var(--color-text-3); font-size: var(--text-xs); word-break: break-all; }
 .detail-source-note { display: block; margin-top: var(--space-2); color: var(--color-text-3); font-size: var(--text-xs); }
 .usage-prepare { display: block; margin-top: var(--space-1); color: var(--color-text-2); font-size: var(--text-sm); line-height: 1.6; }
+.vote-card { margin-top: var(--space-3); padding: var(--space-2) var(--space-3); border: 1rpx solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.vote-question { display: block; color: var(--color-text); font-size: var(--text-base); font-weight: var(--weight-medium); }
+.vote-actions { display: flex; flex-direction: row; gap: var(--space-2); margin-top: var(--space-2); }
+.vote-button { flex: 1; margin: 0; min-height: var(--tap-min); border: 1rpx solid var(--color-border-strong); border-radius: var(--radius-pill); background: transparent; color: var(--color-text); font-size: var(--text-sm); line-height: var(--tap-min); }
+.vote-button::after { border: 0; }
+.vote-button:active { background: var(--color-surface-pressed); }
+.vote-thanks { display: block; color: var(--color-text-2); font-size: var(--text-sm); line-height: 1.6; }

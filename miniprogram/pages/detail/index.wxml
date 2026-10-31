@@ -61,6 +61,16 @@
           <image class="usage-arrow" src="/assets/icons/chevron-right.png" mode="aspectFit" />
         </view>
       </view>
+      <view class="vote-card">
+        <block wx:if="{{!vote}}">
+          <text class="vote-question">装好用过了吗？好不好用？</text>
+          <view class="vote-actions">
+            <button class="vote-button" data-vote="up" bindtap="onVote" aria-label="好用">👍 好用</button>
+            <button class="vote-button" data-vote="down" bindtap="onVote" aria-label="不好用">👎 不好用</button>
+          </view>
+        </block>
+        <text wx:else class="vote-thanks">{{vote === 'up' ? '谢谢，已记下「好用」' : '谢谢，已记下「不好用」'}}，我们会据此调整推荐。</text>
+      </view>
       <view class="source-card">
         <view wx:if="{{sourceUrl}}" class="source-row">
           <text class="source-label">原链接</text>

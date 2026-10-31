@@ -15,11 +15,11 @@ export interface SceneExample {
 
 export interface ScenePick {
   slug: string;
-  /** 中文名，替代英文技能名做主标题；必装必填。 */
+  /** 中文名，替代英文技能名做主标题；必填。 */
   nameZh?: string;
-  /** 两句话：适合谁、什么时候用，替代机翻简介；必装必填。 */
+  /** 两句话：适合谁、什么时候用，替代机翻简介；必填。 */
   intro?: string;
-  /** 用之前要准备的材料，显示在「这样说」上方；必装必填。 */
+  /** 用之前要准备的材料，显示在「这样说」上方；必填。 */
   prepare?: string;
   /** 一句话说清它帮你干什么，例如「会议记录 → 结论、待办、负责人」。 */
   headline: string;
@@ -52,9 +52,9 @@ export const SCENES: Scene[] = [
       { slug: "mermaid-expert", nameZh: "流程图画手", intro: "要画审批流程、组织架构、系统关系图时用。你用文字描述，它画成图。", prepare: "一段流程或结构的文字说明", headline: "说一句话，流程图、架构图就画好", say: ["把这段报销审批流程画成流程图", "根据这份组织说明画一张部门架构图"] },
     ],
     more: [
-      { slug: "office-productivity", headline: "Word、Excel、PPT 批量处理", say: ["把这周的会议记录整理成 Word 周报，再做一页 PPT 摘要", "把这个文件夹里的 Excel 统一成同一个模板格式"] },
-      { slug: "dashboard-design", headline: "运营看板该放什么、怎么排", say: ["帮我设计一个运营日报看板，列出该放哪些指标和图表", "这个看板太乱了，帮我重新排一下布局和层级"] },
-      { slug: "kpi-dashboard-design", headline: "KPI 看板与指标口径", say: ["为销售团队设计一套 KPI 看板，包含目标完成率和趋势", "给每个 KPI 写清楚计算口径和数据来源"] },
+      { slug: "office-productivity", nameZh: "办公文件批处理", intro: "要一次处理很多 Word、Excel、PPT 文件时用，比如统一格式、批量转换。", prepare: "要处理的一批文件", headline: "Word、Excel、PPT 批量处理", say: ["把这周的会议记录整理成 Word 周报，再做一页 PPT 摘要", "把这个文件夹里的 Excel 统一成同一个模板格式"] },
+      { slug: "dashboard-design", nameZh: "看板设计顾问", intro: "要搭运营或业务看板时用。告诉你该放哪些指标、怎么排布。", prepare: "看板给谁看、关心哪些数", headline: "运营看板该放什么、怎么排", say: ["帮我设计一个运营日报看板，列出该放哪些指标和图表", "这个看板太乱了，帮我重新排一下布局和层级"] },
+      { slug: "kpi-dashboard-design", nameZh: "KPI 看板设计", intro: "要给团队设计 KPI 看板时用。写清每个指标的口径和数据来源。", prepare: "团队目标和现有数据", headline: "KPI 看板与指标口径", say: ["为销售团队设计一套 KPI 看板，包含目标完成率和趋势", "给每个 KPI 写清楚计算口径和数据来源"] },
     ],
   },
   {
@@ -68,9 +68,9 @@ export const SCENES: Scene[] = [
       { slug: "pptx-deck-creation", nameZh: "PPT 故事线规划", intro: "要做需要说服别人的汇报时用。先帮你理清每页讲什么，再出整套 PPT。", prepare: "汇报对象和核心内容", headline: "先理故事线，再出整套 PPT", say: ["我要给客户讲新产品，先规划 PPT 的故事线，再生成可编辑的 PPTX", "检查这份 PPT 是不是每页只讲一个重点"] },
     ],
     more: [
-      { slug: "nanobanana-ppt-skills", headline: "文章 → 图文并茂的 PPT", say: ["把这篇文章做成图文并茂的 PPT", "按科技风给这份大纲配图并生成演示文稿"] },
-      { slug: "frontend-slides", headline: "PPT → 带动画的网页演示", say: ["把这份 PPT 转成带动画的网页演示", "从零做一个 5 页的发布会网页幻灯片"] },
-      { slug: "pitch-psychologist", headline: "让提案更容易被接受", say: ["帮我调整这份提案的顺序，让客户更容易接受报价", "找出这份路演稿里会让投资人犹豫的地方"] },
+      { slug: "nanobanana-ppt-skills", nameZh: "图文 PPT 生成", intro: "要把文章或文档做成图文并茂的 PPT 时用。", prepare: "一篇文章或文档", headline: "文章 → 图文并茂的 PPT", say: ["把这篇文章做成图文并茂的 PPT", "按科技风给这份大纲配图并生成演示文稿"] },
+      { slug: "frontend-slides", nameZh: "网页动画幻灯片", intro: "要把 PPT 做成带动画、在浏览器里播放的演示时用。", prepare: "现有 PPT 或演示大纲", headline: "PPT → 带动画的网页演示", say: ["把这份 PPT 转成带动画的网页演示", "从零做一个 5 页的发布会网页幻灯片"] },
+      { slug: "pitch-psychologist", nameZh: "提案说服力顾问", intro: "提案、路演前想让内容更容易被接受时用。指出会让人犹豫的地方。", prepare: "提案或路演稿", headline: "让提案更容易被接受", say: ["帮我调整这份提案的顺序，让客户更容易接受报价", "找出这份路演稿里会让投资人犹豫的地方"] },
     ],
   },
   {
@@ -84,11 +84,11 @@ export const SCENES: Scene[] = [
       { slug: "internal-comms-anthropic", nameZh: "周报通知写手", intro: "要写周报、项目进展、全员通知时用。给它几条要点，它写成完整文稿。", prepare: "这周的几条要点或通知内容", headline: "几条要点 → 周报和全员通知", say: ["根据这些要点写一份本周项目进展周报", "写一份全员通知，说明下周起的新报销流程"] },
     ],
     more: [
-      { slug: "meeting-distiller-pro", headline: "转写稿 → 按人分组的行动项", say: ["把这份会议转写稿提炼成行动项清单，按负责人分组", "写一封会后跟进邮件发给参会人"] },
-      { slug: "avoid-ai-writing", headline: "去掉 AI 腔，读着像人写的", say: ["把这段文字改得更像人写的，去掉 AI 腔", "检查这篇稿子里有哪些套话，逐条改掉"] },
-      { slug: "docx-official", headline: "批量改 Word、留修订痕迹", say: ["把这份合同里的「甲方」都改成公司全称，并保留修订痕迹", "把这几份 Word 里的表格提取出来汇总到一起"] },
-      { slug: "pdf-official", headline: "PDF 合并、拆分、取文字", say: ["把这几个 PDF 合并成一个，按文件名排序", "提取这份 PDF 第 3 到 8 页的文字"] },
-      { slug: "pdf-conversion-router", headline: "PDF → 可编辑文档和表格", say: ["把这份 PDF 报告转成可以编辑的文档，保留表格", "把扫描版 PDF 里的表格提取成 Excel"] },
+      { slug: "meeting-distiller-pro", nameZh: "会议行动项提炼", intro: "会议转写稿很长、要抓出谁做什么时用。按负责人整理行动项。", prepare: "会议转写稿", headline: "转写稿 → 按人分组的行动项", say: ["把这份会议转写稿提炼成行动项清单，按负责人分组", "写一封会后跟进邮件发给参会人"] },
+      { slug: "avoid-ai-writing", nameZh: "去 AI 腔改写", intro: "稿子读着像机器写的时用。找出套话和 AI 腔，改得更自然。", prepare: "要改的文稿", headline: "去掉 AI 腔，读着像人写的", say: ["把这段文字改得更像人写的，去掉 AI 腔", "检查这篇稿子里有哪些套话，逐条改掉"] },
+      { slug: "docx-official", nameZh: "Word 批量编辑", intro: "要批量改 Word、提取表格或保留修订痕迹时用。", prepare: "一份或几份 Word 文件", headline: "批量改 Word、留修订痕迹", say: ["把这份合同里的「甲方」都改成公司全称，并保留修订痕迹", "把这几份 Word 里的表格提取出来汇总到一起"] },
+      { slug: "pdf-official", nameZh: "PDF 合并拆分", intro: "要合并、拆分 PDF，或提取其中文字时用。", prepare: "要处理的 PDF 文件", headline: "PDF 合并、拆分、取文字", say: ["把这几个 PDF 合并成一个，按文件名排序", "提取这份 PDF 第 3 到 8 页的文字"] },
+      { slug: "pdf-conversion-router", nameZh: "PDF 转可编辑", intro: "要把 PDF 报告转成能编辑的文档，或把表格提出来时用。", prepare: "要转换的 PDF", headline: "PDF → 可编辑文档和表格", say: ["把这份 PDF 报告转成可以编辑的文档，保留表格", "把扫描版 PDF 里的表格提取成 Excel"] },
     ],
   },
   {
@@ -102,11 +102,11 @@ export const SCENES: Scene[] = [
       { slug: "linkdigest-social-link-reader", nameZh: "爆款链接拆解", intro: "看到爆款想学它的写法时用。把小红书、抖音等公开链接读成文字和要点。", prepare: "一个公开的笔记或视频链接", headline: "爆款链接 → 文字和爆点拆解", say: ["读一下这个小红书链接，总结它的爆点", "把这个抖音视频的字幕和要点提取出来"] },
     ],
     more: [
-      { slug: "copywriting", headline: "落地页和促销邮件文案", say: ["为新品落地页写一版文案：标题、卖点和行动按钮", "把这封促销邮件改得更有说服力，但不要夸大"] },
-      { slug: "marketing-psychology", headline: "用心理学找出页面该改的地方", say: ["用心理学分析我们的定价页，找出最该改的 3 处", "给这次大促设计几个提升下单的小机制"] },
-      { slug: "customer-research", headline: "用户评价 → 痛点和画像", say: ["从这 50 条用户评价里归纳出 5 个主要痛点", "根据这些访谈记录整理用户画像"] },
-      { slug: "seo-content-writer", headline: "搜索友好的长文", say: ["围绕「家用净水器怎么选」写一篇搜索友好的文章", "给这篇文章补上合适的关键词和小标题"] },
-      { slug: "agricidaniel-claude-seo-skills-seo-sxo", headline: "页面和搜索词是否对得上", say: ["分析这个页面和目标关键词是否匹配，给出修改建议", "看看搜这个词的用户真正想要什么样的页面"] },
+      { slug: "copywriting", nameZh: "营销文案写手", intro: "要写落地页、促销邮件文案时用。会先确认需求，不编造卖点。", prepare: "产品信息和目标用户", headline: "落地页和促销邮件文案", say: ["为新品落地页写一版文案：标题、卖点和行动按钮", "把这封促销邮件改得更有说服力，但不要夸大"] },
+      { slug: "marketing-psychology", nameZh: "营销心理学顾问", intro: "活动或定价页想提升转化时用。用心理学找出最该改的地方。", prepare: "活动方案或页面内容", headline: "用心理学找出页面该改的地方", say: ["用心理学分析我们的定价页，找出最该改的 3 处", "给这次大促设计几个提升下单的小机制"] },
+      { slug: "customer-research", nameZh: "用户调研分析", intro: "手上有用户评价、访谈记录要归纳时用。整理出痛点和用户画像。", prepare: "用户评价或访谈记录", headline: "用户评价 → 痛点和画像", say: ["从这 50 条用户评价里归纳出 5 个主要痛点", "根据这些访谈记录整理用户画像"] },
+      { slug: "seo-content-writer", nameZh: "搜索友好文章", intro: "要写能被搜索到的长文时用。自然融入关键词，不堆砌。", prepare: "主题和目标关键词", headline: "搜索友好的长文", say: ["围绕「家用净水器怎么选」写一篇搜索友好的文章", "给这篇文章补上合适的关键词和小标题"] },
+      { slug: "agricidaniel-claude-seo-skills-seo-sxo", nameZh: "搜索意图分析", intro: "页面搜不到，或想知道用户搜某个词想看什么时用。", prepare: "页面内容和目标关键词", headline: "页面和搜索词是否对得上", say: ["分析这个页面和目标关键词是否匹配，给出修改建议", "看看搜这个词的用户真正想要什么样的页面"] },
     ],
   },
   {
@@ -120,9 +120,9 @@ export const SCENES: Scene[] = [
       { slug: "receipt-accounting", nameZh: "收款登记助手", intro: "要整理到账记录、核对哪些款还没核销时用。会区分客户回款和预付款。", prepare: "一批收款或银行到账记录", headline: "收款登记与未核销金额", say: ["把这批收款记录整理成收款登记表，标出未核销金额", "区分哪些是客户回款、哪些是预付款"] },
     ],
     more: [
-      { slug: "sales-accounting", headline: "销售发票 → 应收台账", say: ["根据这些销售发票生成应收账款台账", "列出超过账期还没收回的发票"] },
-      { slug: "startup-business-analyst-financial-projections", headline: "融资用的财务预测", say: ["根据这些假设生成一份融资用的财务预测", "按现在的花钱速度，算算现金还能撑几个月"] },
-      { slug: "anthropics-knowledge-work-plugins-finance-skills-reconciliation", headline: "银行流水对总账，差异自动列出来", say: ["把这个月的银行流水和总账对一下，列出差异", "把对不上的款项按原因分类"] },
+      { slug: "sales-accounting", nameZh: "应收台账助手", intro: "要根据销售发票整理应收账款、找出逾期未收时用。", prepare: "销售发票明细", headline: "销售发票 → 应收台账", say: ["根据这些销售发票生成应收账款台账", "列出超过账期还没收回的发票"] },
+      { slug: "startup-business-analyst-financial-projections", nameZh: "融资财务预测", intro: "要准备融资用的财务预测、测算现金能撑多久时用。", prepare: "业务假设和当前开支", headline: "融资用的财务预测", say: ["根据这些假设生成一份融资用的财务预测", "按现在的花钱速度，算算现金还能撑几个月"] },
+      { slug: "anthropics-knowledge-work-plugins-finance-skills-reconciliation", nameZh: "银行对账助手", intro: "月底要把银行流水和总账对一遍时用。列出差异并按原因分类。", prepare: "银行流水和总账数据", headline: "银行流水对总账，差异自动列出来", say: ["把这个月的银行流水和总账对一下，列出差异", "把对不上的款项按原因分类"] },
     ],
   },
   {
@@ -136,11 +136,11 @@ export const SCENES: Scene[] = [
       { slug: "performance-management", nameZh: "绩效考核助手", intro: "要设计考核表，或根据评分定等级时用。包含 KPI 和行为评分。", prepare: "岗位和考核周期，或已有评分", headline: "绩效考核表和评级", say: ["设计一套季度绩效考核表，包含 KPI 和行为评分", "根据这些评分给出绩效等级和改进建议"] },
     ],
     more: [
-      { slug: "interview-coach", headline: "面试题、模拟面试和反馈", say: ["根据这个岗位描述准备 10 个面试问题和参考答案", "模拟一场产品经理面试，结束后给我反馈"] },
-      { slug: "cv-generator", headline: "按岗位优化简历", say: ["根据这份岗位描述优化我的简历", "把我的工作经历改写成更有成果感的描述"] },
-      { slug: "employment-contract-templates", headline: "录用通知和合同模板", say: ["生成一份录用通知书模板", "列出一份试用期劳动合同应包含的要点"] },
-      { slug: "okr-system", headline: "部门 OKR 制定与检查", say: ["帮市场部制定下季度 OKR，每个目标 3 个关键结果", "检查这份 OKR 的关键结果是否可衡量"] },
-      { slug: "leave-management", headline: "请假登记与年假余额", say: ["把这个月的请假申请整理成表，算出每个人剩余年假", "列出下周请假的人和他们的交接人"] },
+      { slug: "interview-coach", nameZh: "面试准备助手", intro: "要准备面试题、做模拟面试时用。招聘方和求职者都能用。", prepare: "岗位描述", headline: "面试题、模拟面试和反馈", say: ["根据这个岗位描述准备 10 个面试问题和参考答案", "模拟一场产品经理面试，结束后给我反馈"] },
+      { slug: "cv-generator", nameZh: "简历优化助手", intro: "要按岗位改简历、把经历写得更有成果感时用。", prepare: "你的简历和目标岗位", headline: "按岗位优化简历", say: ["根据这份岗位描述优化我的简历", "把我的工作经历改写成更有成果感的描述"] },
+      { slug: "employment-contract-templates", nameZh: "劳动合同模板", intro: "要起草录用通知、劳动合同要点时用。正式使用前请法务把关。", prepare: "岗位、薪资和试用期信息", headline: "录用通知和合同模板", say: ["生成一份录用通知书模板", "列出一份试用期劳动合同应包含的要点"] },
+      { slug: "okr-system", nameZh: "OKR 制定助手", intro: "部门要定季度 OKR、检查关键结果能否衡量时用。", prepare: "部门目标或现有 OKR", headline: "部门 OKR 制定与检查", say: ["帮市场部制定下季度 OKR，每个目标 3 个关键结果", "检查这份 OKR 的关键结果是否可衡量"] },
+      { slug: "leave-management", nameZh: "请假登记表", intro: "要整理请假申请、算出每人剩余年假时用。", prepare: "请假申请记录", headline: "请假登记与年假余额", say: ["把这个月的请假申请整理成表，算出每个人剩余年假", "列出下周请假的人和他们的交接人"] },
     ],
   },
   {
@@ -154,9 +154,9 @@ export const SCENES: Scene[] = [
       { slug: "sales-enablement", nameZh: "销售资料助手", intro: "要给团队准备一页纸介绍、异议应对话术时用。", prepare: "产品资料和常见客户问题", headline: "一页纸产品介绍和异议应对", say: ["做一页纸的产品介绍给销售团队用", "整理一份常见异议和应对话术"] },
     ],
     more: [
-      { slug: "email-sequence", headline: "欢迎、唤醒等系列邮件", say: ["设计一组 5 封的新客户欢迎邮件", "为很久没下单的老客户设计一组唤醒邮件"] },
-      { slug: "offers", headline: "套餐、赠品和限时优惠设计", say: ["帮我设计一个更有吸引力的套餐方案", "给这门课程设计赠品和限时优惠"] },
-      { slug: "objection-preemptor", headline: "提前化解客户顾虑", say: ["客户可能对价格有哪些顾虑？帮我提前写进方案里", "找出这份销售页里让人犹豫的地方"] },
+      { slug: "email-sequence", nameZh: "系列邮件设计", intro: "要设计欢迎、唤醒等一组连续邮件时用。", prepare: "客户类型和想达成的目标", headline: "欢迎、唤醒等系列邮件", say: ["设计一组 5 封的新客户欢迎邮件", "为很久没下单的老客户设计一组唤醒邮件"] },
+      { slug: "offers", nameZh: "套餐方案设计", intro: "要设计套餐、赠品、限时优惠时用。", prepare: "产品和价格信息", headline: "套餐、赠品和限时优惠设计", say: ["帮我设计一个更有吸引力的套餐方案", "给这门课程设计赠品和限时优惠"] },
+      { slug: "objection-preemptor", nameZh: "客户顾虑预判", intro: "写方案或销售页时，想提前化解客户顾虑时用。", prepare: "方案或销售页文稿", headline: "提前化解客户顾虑", say: ["客户可能对价格有哪些顾虑？帮我提前写进方案里", "找出这份销售页里让人犹豫的地方"] },
     ],
   },
   {

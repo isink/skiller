@@ -1,6 +1,8 @@
 import { fetchSkill } from "../../services/api";
 import { cacheSkill, cachedSkill, getFavoriteIds, toggleFavorite } from "../../services/storage";
-import { trackCopyInstall, trackPageView, trackShare } from "../../services/analytics";
+import { trackCopyInstall, trackFeedback, trackPageView, trackShare } from "../../services/analytics";
+import { saveSkillVote, skillVote } from "../../services/skill-votes";
+import type { SkillVote } from "../../services/skill-votes";
 import type { ShareChannel } from "../../services/analytics";
 import { APP_TITLE, enableShareMenu, shortPurpose, skillShareTitle } from "../../services/share";
 import { renderShareCard } from "../../services/share-card";
@@ -35,6 +37,7 @@ Page({
     sourceUrl: "",
     usageSay: [] as string[],
     usageHeadline: "",
+    vote: "" as SkillVote | "",
     displayName: "",
     englishName: "",
     usagePrepare: "",
@@ -139,6 +142,7 @@ Page({
     wx.setNavigationBarTitle({ title: displayName });
     this.setData({
       usageSay: curated ? curated.pick.say : [],
+      vote: skillVote(skill.id),
       usageHeadline: curated ? curated.pick.headline : "",
       displayName,
       englishName: curated?.pick.nameZh ? skill.name : "",
@@ -174,6 +178,15 @@ Page({
   onCopyAlternative(event: { currentTarget: { dataset: { index: number } } }) {
     const option = this.data.installAlternatives[Number(event.currentTarget.dataset.index)];
     if (option) this.copyInstall(option.command, "alternative");
+  },
+
+  onVote(event: { currentTarget: { dataset: { vote: SkillVote } } }) {
+    const skill = this.data.skill as Skill | null;
+    const vote = event.currentTarget.dataset.vote;
+    if (!skill || this.data.vote || (vote !== "up" && vote !== "down")) return;
+    saveSkillVote(skill.id, vote);
+    this.setData({ vote });
+    trackFeedback(skill, vote);
   },
 
   onToggleMarkdown() {

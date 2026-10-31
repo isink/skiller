@@ -153,7 +153,7 @@ CloudBase 迁移脚本默认只读取 Supabase 并报告数据量；只有传入
 ## 小程序增长：空搜索补录与「微信小程序 SKILL」专题
 
 - **空搜索补录**：小程序搜索无结果时上报 `search_empty`。`npm run report:empty-search`（需要 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`，建议带 `GITHUB_TOKEN`）读取近 7 天记录，按搜索词聚合排序，跳过站内已有匹配的词，用 GitHub 仓库搜索找出带 `SKILL.md` 的候选仓库并输出 Markdown 报告。默认只读；加 `--import` 才会复用 `import:discover` 的导入逻辑把未收录的候选入库，之后照常运行 `npm run enrich:skills` 生成中文简介。常用参数：`--days`、`--limit`、`--min-count`、`--per-term`、`--min-stars`、`--no-github`、`--out 文件`。
-- **访问事件**：`copy_install`（复制安装命令/链接）和 `share`（分享详情页）由 `migrations/025_mp_events_install_share.sql` 加入 `mp_events` 的事件白名单。迁移执行前，小程序上报这两类事件会被数据库拒绝并被静默忽略，不影响使用。
+- **访问事件**：`copy_install`（复制安装命令/链接）和 `share`（分享详情页）由 `migrations/025_mp_events_install_share.sql` 加入 `mp_events` 的事件白名单。 `feedback`（详情页「好用 / 不好用」）由 `migrations/029_mp_events_feedback.sql` 加入。迁移执行前，小程序上报这两类事件会被数据库拒绝并被静默忽略，不影响使用。
 - **「微信小程序 SKILL」专题**：分类 `mp-skill` 由 `migrations/026_mp_skill_category.sql` 创建。`npm run import:mp-skills` 默认只做干跑（列出会收录的范例仓库）；确认后加 `-- --apply` 才写库。判定标准是同一目录下同时有 `SKILL.md` 和 `mcp.json`（微信官方《小程序 AI 开发模式》的 SKILL 目录结构），官方示例仓库里的其他 `SKILL.md` 也一并收录。中文简介留给 `enrich:skills` 根据技能内容生成，不照抄 README。`import:discover` 重新导入这些技能时会保留 `mp-skill` 分类和标签。
 
 ## 数据库变更与验证

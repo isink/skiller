@@ -16,7 +16,7 @@ export function sceneProblems(scenes: Scene[], catalog: Array<{ slug: string; de
     if (sceneSlugs.has(scene.slug)) problems.push(`scene ${scene.slug} is listed twice`);
     sceneSlugs.add(scene.slug);
     if (scene.must.length !== MUST_COUNT) problems.push(`scene ${scene.slug} needs exactly ${MUST_COUNT} must-have skills`);
-    for (const pick of scene.must) {
+    for (const pick of scenePicks(scene)) {
       if (!within(pick.nameZh, MAX_NAME)) problems.push(`${scene.slug}/${pick.slug} needs a Chinese name of 1-${MAX_NAME} characters`);
       if (!within(pick.intro, MAX_INTRO)) problems.push(`${scene.slug}/${pick.slug} needs an intro of 1-${MAX_INTRO} characters`);
       if (!within(pick.prepare, MAX_PREPARE)) problems.push(`${scene.slug}/${pick.slug} needs a prepare line of 1-${MAX_PREPARE} characters`);

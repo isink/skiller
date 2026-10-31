@@ -48,11 +48,11 @@ test("migration 026 creates the topic category without touching skills", () => {
   assert.doesNotMatch(text, /(?:update|delete from|drop|truncate)\s+(?:table\s+)?public\.skills/i);
 });
 
-test("migration 025 allows every event name the mini program can send", () => {
-  const text = sql("025_mp_events_install_share.sql");
+test("the newest events migration (029) allows every event name the mini program can send", () => {
+  const text = sql("029_mp_events_feedback.sql");
   const allowed = [...text.matchAll(/check \(event in \(([^)]*)\)\)/g)][0]?.[1].match(/'([a-z_]+)'/g)?.map((name) => name.slice(1, -1)) ?? [];
   assert.deepEqual([...allowed].sort(), [...MP_EVENT_NAMES].sort());
-  // 024 already whitelists the original five; 025 only extends it.
+  // 024 already whitelists the original five; 025 and 029 only extend it.
   for (const name of ["page_view", "search", "search_empty", "js_error", "perf"]) assert.match(sql("024_mp_events.sql"), new RegExp(`'${name}'`));
   assert.match(text, /mp_events_event_check/);
   assert.doesNotMatch(text, /drop table|truncate|delete from/i);

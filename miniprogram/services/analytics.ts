@@ -1,7 +1,7 @@
 import { REQUEST_TIMEOUT_MS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 
-/** Must match the check constraint on public.mp_events (migrations 024 and 025). */
-export const MP_EVENT_NAMES = ["page_view", "search", "search_empty", "js_error", "perf", "copy_install", "share"] as const;
+/** Must match the check constraint on public.mp_events (migrations 024, 025 and 029). */
+export const MP_EVENT_NAMES = ["page_view", "search", "search_empty", "js_error", "perf", "copy_install", "share", "feedback"] as const;
 export type MpEventName = typeof MP_EVENT_NAMES[number];
 
 export interface MpEventFields {
@@ -24,6 +24,7 @@ const THROTTLE_MS: Record<MpEventName, number> = {
   perf: 3000,
   copy_install: 1500,
   share: 1500,
+  feedback: 1500,
 };
 const MAX_THROTTLE_KEYS = 200;
 const FAILURES_KEY = "skiller.miniprogram.analytics-failures.v1";
@@ -212,6 +213,11 @@ export function trackShare(skill: { id: string; slug: string } | null, channel: 
       ? { action: "share", id: skill.id, slug: skill.slug, channel, card: withCard }
       : { action: "share", channel, card: withCard },
   });
+}
+
+/** Needs migration 029: earlier databases reject `feedback` and the report is dropped. */
+export function trackFeedback(skill: { id: string; slug: string }, vote: "up" | "down", page = "pages/detail/index"): Promise<void> {
+  return trackEvent("feedback", { page, meta: { action: "feedback", id: skill.id, slug: skill.slug, vote } });
 }
 
 /** Reports `search`, plus `search_empty` when a non-blank query found nothing. */
