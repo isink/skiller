@@ -266,3 +266,35 @@ test("a reader votes once per skill and the vote is reported and remembered", as
   page.showSkill(skill, true);
   assert.equal(page.data.vote, "down", "a returning reader is not asked again");
 });
+
+test("the SKILL.md text never goes into page data, and markdown is sent only while shown", (t) => {
+  const { page } = harness(t);
+  const patches: Array<Record<string, unknown>> = [];
+  const setData = page.setData;
+  page.setData = function (patch, callback) { patches.push(patch); setData.call(this, patch, callback); };
+  const markdown = `---\nname: meeting-notes\n---\n# Meeting notes\n\n${"Turn raw notes into minutes. ".repeat(400)}`;
+  const curated = makeSkill({ slug: "meeting-notes", skill_md_content: markdown });
+
+  page.showSkill(curated, true);
+  assert.equal(page.data.skill.skill_md_content, null);
+  assert.equal(page.data.installKind, "workbuddy", "the install plan still reads the full skill");
+  assert.ok(!("blocks" in patches[0]), "a folded SKILL.md is not parsed or sent");
+  assert.ok(JSON.stringify(patches[0]).length < markdown.length / 2, "the first render is far smaller than the SKILL.md");
+
+  page.showSkill(curated, true);
+  assert.ok(!("blocks" in patches[1]));
+  (page as unknown as { onToggleMarkdown(): void }).onToggleMarkdown();
+  assert.ok(Array.isArray(patches[2].blocks) && (patches[2].blocks as unknown[]).length > 0, "opening it sends the blocks once");
+  page.showSkill(curated, true);
+  assert.ok(!("blocks" in patches[3]), "an unchanged refresh does not resend them");
+  page.showSkill({ ...curated, skill_md_content: `${markdown}\n\n## Changed` }, true);
+  assert.ok("blocks" in patches[4], "changed text while open is sent again");
+});
+
+test("a skill outside the collections shows its SKILL.md right away", (t) => {
+  const { page } = harness(t);
+  page.showSkill(makeSkill(), true);
+  assert.equal(page.data.markdownOpen, true);
+  assert.ok(page.data.blocks.length > 0);
+  assert.equal(page.data.skill.skill_md_content, null);
+});

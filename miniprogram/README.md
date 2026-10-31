@@ -52,6 +52,8 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 - **好用反馈**：详情页安装区下方问「装好用过了吗？好不好用？」，点 👍/👎 上报 `feedback`（`meta.vote` 为 `up`/`down`），投票存本机 `skiller.miniprogram.skill-votes.v1`，每个技能只问一次。需要先执行 `pipeline/supabase/migrations/029_mp_events_feedback.sql`，之前上报会被拒绝并记入埋点失败。按技能统计的 SQL 写在该迁移文件末尾。
 - **事件**：复制安装命令/链接记为 `copy_install`（`meta.kind` 为 `workbuddy` / `npx` / `git-clone` / `link`），分享记为 `share`，`meta.action` 写明动作。这两个事件名需要先执行 `pipeline/supabase/migrations/025_mp_events_install_share.sql`，之前上报会被忽略。
 
+- **详情页的数据量**：`setData` 里的 `skill` 不带 `skill_md_content`（原文留在页面实例的 `_markdown`），SKILL.md 只在「技术说明」展开时才解析成 `blocks` 并发送，内容没变的刷新不会重发。精选技能默认折叠，打开详情页每次只传约 2 KB；以前 `pptx-official` 这类长说明每次要传 100 KB 以上，且缓存和网络各传一次。
+
 ## 搜索无结果与「微信小程序 SKILL」专题
 
 - 首页搜索无结果时显示「已记录，我们会尽快收录」，并推荐本周热门（不足 3 条则用精选）。`search_empty` 事件由 `pipeline/scripts/empty-search-report.ts` 汇总补录。

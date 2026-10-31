@@ -22,6 +22,10 @@ Page({
   _cardKey: "",
   _cardPath: "",
   _cardPromise: null as Promise<string | null> | null,
+  /** The SKILL.md text, kept off `data` so it is not sent to the view twice. */
+  _markdown: "",
+  /** The markdown text the rendered `blocks` came from; null before the first render. */
+  _blocksFor: null as string | null,
   data: {
     skill: null as Skill | null,
     displayDescription: "",
@@ -140,6 +144,10 @@ Page({
     const curated = scenePick(skill.slug);
     const displayName = curated?.pick.nameZh || skill.name;
     wx.setNavigationBarTitle({ title: displayName });
+    // Curated skills lead with the Chinese copy; the English SKILL.md starts folded.
+    // A refresh after the cached copy keeps whatever the reader chose.
+    const markdownOpen = this.data.skill ? this.data.markdownOpen : !curated;
+    this._markdown = skill.skill_md_content || "";
     this.setData({
       usageSay: curated ? curated.pick.say : [],
       vote: skillVote(skill.id),
@@ -148,18 +156,17 @@ Page({
       englishName: curated?.pick.nameZh ? skill.name : "",
       usagePrepare: curated?.pick.prepare || "",
       usageExample: curated?.pick.example || null,
-      // Curated skills lead with the Chinese copy; the English SKILL.md starts folded.
-      // A refresh after the cached copy keeps whatever the reader chose.
-      markdownOpen: this.data.skill ? this.data.markdownOpen : !curated,
+      markdownOpen,
       usageScene: curated ? { slug: curated.scene.slug, title: curated.scene.title } : null,
-      skill,
+      // The view only needs the list fields; the SKILL.md text stays in `_markdown`.
+      skill: { ...skill, skill_md_content: null },
       // Curated skills read the hand-written intro instead of the machine summary.
       displayDescription: curated?.pick.intro || skillDescriptionZh(skill),
       displayCategory: categoryName(skill.category),
       displayLicense: skillLicense(skill.skill_md_content),
       ...skillMetadata(skill),
       ...skillInstallPlan(skill),
-      blocks: parseMarkdown(skill.skill_md_content || "暂未提供技能说明。"),
+      ...this.blocksPatch(markdownOpen),
       loading: false,
       error: clearError ? "" : this.data.error,
     }, () => { this.ensureShareCard(); });
@@ -189,8 +196,16 @@ Page({
     trackFeedback(skill, vote);
   },
 
+  /** Parses and sends the SKILL.md only while it is shown, and only when its text changed. */
+  blocksPatch(open: boolean): { blocks?: SkillBlock[] } {
+    if (!open || this._blocksFor === this._markdown) return {};
+    this._blocksFor = this._markdown;
+    return { blocks: parseMarkdown(this._markdown || "暂未提供技能说明。") };
+  },
+
   onToggleMarkdown() {
-    this.setData({ markdownOpen: !this.data.markdownOpen });
+    const open = !this.data.markdownOpen;
+    this.setData({ markdownOpen: open, ...this.blocksPatch(open) });
   },
 
   onCopyUsage(event: { currentTarget: { dataset: { index: number } } }) {
