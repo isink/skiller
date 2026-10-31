@@ -79,14 +79,15 @@ test("both open radar pages are registered and have all four page files", () => 
   }
 });
 
-test("landing replaces the new-word radar tile with the open radar and keeps the hot tool card", () => {
+test("landing keeps the open radar as a small link under the scenes, with no new-word radar", () => {
   const wxml = read("pages/landing/index.wxml");
-  assert.match(wxml, /<text class="tool-title">开源雷达<\/text>/);
-  assert.match(wxml, /bindtap="navigateToOpenRadar"/);
+  assert.match(wxml, /bindtap="navigateToOpenRadar">开源雷达<\/text>/);
+  assert.match(wxml, /bindtap="navigateToSkills">全部 AI 技能库<\/text>/);
   assert.ok(!wxml.includes("新词雷达"));
   assert.ok(!wxml.includes("热门新词"));
-  assert.equal((wxml.match(/class="tool-tile"/g) ?? []).length, 2);
+  assert.ok(!wxml.includes("tool-tile"));
   assert.match(wxml, /class="hot-card"/);
+  assert.ok(wxml.indexOf("scene-grid") < wxml.indexOf("more-links"));
 });
 
 test("open radar pages avoid GitHub branding and web-view", () => {

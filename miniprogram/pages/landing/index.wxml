@@ -18,51 +18,24 @@
     <button wx:if="{{hotCopyLabel}}" class="primary-button hot-copy" catchtap="onCopyHotInstall" aria-label="{{hotCopyLabel}}">{{hotCopyLabel}}</button>
   </view>
 
-  <view class="brand-header">
-    <image class="brand-mark" src="/assets/icons/brand.png" mode="aspectFit" />
-    <view class="brand-text">
-      <text class="brand-name">头山</text>
-      <text class="brand-tagline">AI 工具箱</text>
-    </view>
-  </view>
-
   <view class="landing-intro">
     <text class="landing-title">按岗位挑 WorkBuddy 技能</text>
-    <text class="landing-subtitle">复制一句话发给 WorkBuddy，技能自动装好</text>
+    <text class="landing-subtitle">每个岗位只推 3 个必装，复制一句话发给 WorkBuddy 就装好</text>
   </view>
 
   <view class="scene-grid">
-    <view wx:for="{{scenes}}" wx:key="slug" class="scene-tile" hover-class="tool-tile-hover" hover-stay-time="60" data-slug="{{item.slug}}" bindtap="openScene">
+    <view wx:for="{{scenes}}" wx:key="slug" class="scene-tile" hover-class="scene-tile-hover" hover-stay-time="60" data-slug="{{item.slug}}" bindtap="openScene">
       <text class="scene-tile-title">{{item.title}}</text>
       <text class="scene-tile-desc">{{item.tagline}}</text>
-      <text class="scene-tile-count">{{item.count}} 个技能</text>
+      <text class="scene-tile-count">3 个必装 ›</text>
     </view>
   </view>
 
-  <text class="tool-section-label">全部工具</text>
-
-  <view class="tool-grid">
-    <view class="tool-tile" hover-class="tool-tile-hover" hover-stay-time="60" bindtap="navigateToSkills">
-      <view class="tool-tile-top">
-        <view class="tool-icon-box">
-          <image class="tool-icon" src="/assets/icons/layers.png" mode="aspectFit" />
-        </view>
-        <image class="tool-arrow" src="/assets/icons/chevron-right.png" mode="aspectFit" />
-      </view>
-      <text class="tool-title">AI 技能库</text>
-      <text class="tool-desc">浏览、搜索和收藏优质技能</text>
-    </view>
-
-    <view class="tool-tile" hover-class="tool-tile-hover" hover-stay-time="60" bindtap="navigateToOpenRadar">
-      <view class="tool-tile-top">
-        <view class="tool-icon-box">
-          <image class="tool-icon" src="/assets/icons/radar.png" mode="aspectFit" />
-        </view>
-        <image class="tool-arrow" src="/assets/icons/chevron-right.png" mode="aspectFit" />
-      </view>
-      <text class="tool-title">开源雷达</text>
-      <text class="tool-desc">精选开源 AI 项目，中文摘要与上手要点</text>
-    </view>
+  <view class="more-links">
+    <text class="more-label">更多</text>
+    <text class="more-link" bindtap="navigateToSkills">全部 AI 技能库</text>
+    <text class="more-dot">·</text>
+    <text class="more-link" bindtap="navigateToOpenRadar">开源雷达</text>
   </view>
 
   <canvas type="2d" id="share-canvas" class="share-canvas"></canvas>

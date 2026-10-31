@@ -1,28 +1,30 @@
 import { fetchSkillsBySlugs } from "../../services/api";
 import { trackEvent, trackPageView } from "../../services/analytics";
 import type { ShareChannel } from "../../services/analytics";
-import { enableShareMenu, shortPurpose } from "../../services/share";
+import { enableShareMenu } from "../../services/share";
 import { renderShareCard } from "../../services/share-card";
 import { copyInstall, copyText, skillInstallPlan, workbuddyBundlePrompt } from "../../services/skill-install";
 import { readCache, writeCache } from "../../services/storage";
-import { skillDescriptionZh } from "../../services/description-zh";
-import { SCENES, sceneBySlug } from "../../services/scenes";
+import { SCENES, sceneBySlug, scenePicks } from "../../services/scenes";
 import type { Scene, ScenePick } from "../../services/scenes";
 import type { Skill } from "../../types/skill";
 
 const PAGE = "pages/scene/index";
 const SHARE_CANVAS = "#share-canvas";
 
-type SceneSkill = { id: string; name: string; purpose: string; say: string; copyLabel: string };
+type MustSkill = { id: string; name: string; headline: string; say: string; copyLabel: string };
+type MoreSkill = { id: string; name: string; headline: string };
 
 Page({
   _scene: null as Scene | null,
   _skills: [] as Skill[],
+  _must: [] as Skill[],
   _cardPromise: null as Promise<string | null> | null,
   _cardPath: "",
   data: {
     scene: null as Scene | null,
-    skills: [] as SceneSkill[],
+    must: [] as MustSkill[],
+    more: [] as MoreSkill[],
     others: [] as Array<{ slug: string; title: string }>,
     bundleReady: false,
     loading: true,
@@ -52,7 +54,7 @@ Page({
     const scene = this._scene;
     if (!scene) return;
     try {
-      const skills = await fetchSkillsBySlugs(scene.picks.map((pick: ScenePick) => pick.slug));
+      const skills = await fetchSkillsBySlugs(scenePicks(scene).map((pick: ScenePick) => pick.slug));
       writeCache(`scene:${scene.slug}`, skills);
       this.showSkills(skills);
     } catch {
@@ -60,27 +62,36 @@ Page({
     }
   },
 
+  /** Rows come back in curated order (fetchSkillsBySlugs); split them into must-haves and the rest. */
   showSkills(skills: Skill[]) {
     const scene = this._scene;
     if (!scene) return;
+    const bySlug = new Map(skills.map((skill) => [skill.slug, skill]));
+    const pair = (picks: ScenePick[]) => picks
+      .map((pick) => ({ pick, skill: bySlug.get(pick.slug) }))
+      .filter((item): item is { pick: ScenePick; skill: Skill } => Boolean(item.skill));
+    const must = pair(scene.must);
+    const more = pair(scene.more);
     this._skills = skills;
+    this._must = must.map((item) => item.skill);
     this.setData({
       loading: false,
       error: "",
-      bundleReady: Boolean(workbuddyBundlePrompt(scene.title, skills)),
-      skills: skills.map((skill) => ({
+      bundleReady: Boolean(workbuddyBundlePrompt(scene.title, this._must)),
+      must: must.map(({ pick, skill }) => ({
         id: skill.id,
         name: skill.name,
-        purpose: shortPurpose(skillDescriptionZh(skill), 48),
-        say: scene.picks.find((pick: ScenePick) => pick.slug === skill.slug)?.say[0] || "",
+        headline: pick.headline,
+        say: pick.say[0] || "",
         copyLabel: skillInstallPlan(skill).installCopyLabel,
       })),
+      more: more.map(({ pick, skill }) => ({ id: skill.id, name: skill.name, headline: pick.headline })),
     }, () => { this.ensureShareCard(); });
   },
 
   onCopyBundle() {
     const scene = this._scene;
-    const prompt = scene ? workbuddyBundlePrompt(scene.title, this._skills) : "";
+    const prompt = scene ? workbuddyBundlePrompt(scene.title, this._must) : "";
     if (!scene || !prompt) return;
     copyText(prompt, "已复制，粘贴给WorkBuddy就能装", 2200).then((ok) => {
       if (ok) trackEvent("copy_install", { page: PAGE, meta: { action: "copy_install", scene: scene.slug, kind: "workbuddy", target: "bundle" } });
@@ -88,7 +99,7 @@ Page({
   },
 
   onCopySkill(event: { currentTarget: { dataset: { index: number } } }) {
-    const skill = this._skills[Number(event.currentTarget.dataset.index)];
+    const skill = this._must[Number(event.currentTarget.dataset.index)];
     if (!skill) return;
     const plan = skillInstallPlan(skill);
     if (plan.installCommand) copyInstall(skill, plan.installCommand, plan.installKind, "primary", PAGE);

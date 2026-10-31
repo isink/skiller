@@ -18,10 +18,12 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 
 ## WorkBuddy 场景合集
 
-- 欢迎页的主线是「按岗位挑 WorkBuddy 技能」：8 个场景（表格与数据、PPT 与演示、文档会议与写作、新媒体与营销、财务与税务、招聘与人事、销售与客户、产品与项目），共 51 个人工精选的办公技能。清单在 `services/scenes.ts`，按目录 slug 引用，每个技能配 2 句「装好后对 WorkBuddy 这样说」。增删后运行 `cd pipeline && npm run check:scenes`，确认每个 slug 在目录里存在、有中文简介且没有重复。
-- 场景页 `pages/scene/index?slug=<场景>`：按清单顺序列出技能（`fetchSkillsBySlugs`），每张卡片显示用途、第一句示例和「复制给 WorkBuddy」；顶部「一键复制给 WorkBuddy，全部装上」复制 `workbuddyBundlePrompt` 生成的整套安装请求。分享标题用场景的 `shareTitle`（都含 WorkBuddy），封面同样由 `share-card` 绘制。场景事件 `meta` 带 `scene`，整套复制记为 `copy_install`、`target: "bundle"`。
-- 详情页：精选技能多出「装好后这样说」卡片，示例可单独复制（`copy_install`、`target: "usage"`），并链接回所属场景。
-- 欢迎页卡片改为「今日推荐 · 场景名」：`dailyPick` 按北京时间日历日轮换 51 个精选技能，`fetchDailyPick` 按 slug 读取；读不到时才退回下面的本周热门逻辑。
+- 欢迎页只讲一件事：「按岗位挑 WorkBuddy 技能」。顶部是今日推荐卡片，下面是 8 个场景卡片（表格与数据、PPT 与演示、会议与写作、新媒体与营销、财务与税务、招聘与人事、销售与客户、产品与项目）；「全部 AI 技能库」和「开源雷达」收成页面底部「更多」里的两个文字链接。
+- 清单在 `services/scenes.ts`：每个场景恰好 3 个 `must`（必装，按推荐顺序）和若干 `more`；每个技能配一句 `headline`（它帮你干什么）和 1–3 句「装好后对 WorkBuddy 这样说」。增删后运行 `cd pipeline && npm run check:scenes`。
+- **效果示例 `example`**：只填在 WorkBuddy 里真实跑出来的输入（`input`）和结果（`output`，可节选）。没跑过的技能不填，详情页就不显示示例块；不要放编造或占位的内容。
+- 场景页 `pages/scene/index?slug=<场景>`：3 个必装带序号、一句卖点、示例句和「复制给 WorkBuddy」；顶部「一键复制，3 个全部装上」只装必装（`workbuddyBundlePrompt`）；「还想要更多」是紧凑列表。分享标题用场景的 `shareTitle`。场景事件 `meta` 带 `scene`，整套复制记为 `copy_install`、`target: "bundle"`。
+- 详情页（精选技能）：标题下先显示卖点，有示例时显示「效果示例」，然后是安装、「装好后这样说」（可复制，`target: "usage"`）和所属场景链接；英文 SKILL.md 改名「技术说明（英文原文）」并默认折叠。非精选技能保持原样（标签可见、说明全文展开）。
+- 今日推荐：`dailyPick` 按北京时间日历日轮换 24 个必装技能，卡片副标题用它的卖点；读不到时才退回本周热门。
 - 小程序的名称和简介在微信公众平台后台修改，代码里只能改 `sitemap.json` 的描述和分享标题。
 
 ## 开源雷达

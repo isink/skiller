@@ -16,7 +16,7 @@ const PAGE = "pages/landing/index";
 const SHARE_CANVAS = "#share-canvas";
 const HOT_CACHE = "landing:hot-tool";
 
-type HotPick = { skill: Skill; hot: boolean; label?: string };
+type HotPick = { skill: Skill; hot: boolean; label?: string; headline?: string };
 
 function hotLabel(hot: boolean): string {
   return hot ? "今日热门工具" : "今日推荐工具";
@@ -33,7 +33,7 @@ Page({
     hotLabel: "今日热门工具",
     hotTool: null as { id: string; name: string; purpose: string; growth: string } | null,
     hotCopyLabel: "",
-    scenes: SCENES.map((scene) => ({ slug: scene.slug, title: scene.title, tagline: scene.tagline, count: scene.picks.length })),
+    scenes: SCENES.map((scene) => ({ slug: scene.slug, title: scene.title, tagline: scene.tagline })),
   },
 
   onLoad(options: Record<string, string>) {
@@ -58,14 +58,14 @@ Page({
       } catch { /* Fall back to today's pick. */ }
     }
     const cached = readCache<HotPick>(HOT_CACHE);
-    if (cached?.skill?.id) this.showHotTool(cached.skill, cached.label || hotLabel(cached.hot), cached.hot ? growthLabel(cached.skill) : "");
+    if (cached?.skill?.id) this.showHotTool(cached.skill, cached.label || hotLabel(cached.hot), cached.hot ? growthLabel(cached.skill) : "", cached.headline);
     // Today's curated WorkBuddy skill first; star growth only when it cannot be loaded.
     try {
       const daily = await fetchDailyPick();
       if (daily) {
         const label = `今日推荐 · ${daily.sceneTitle}`;
-        writeCache(HOT_CACHE, { skill: daily.skill, hot: false, label });
-        this.showHotTool(daily.skill, label, "");
+        writeCache(HOT_CACHE, { skill: daily.skill, hot: false, label, headline: daily.headline });
+        this.showHotTool(daily.skill, label, "", daily.headline);
         return;
       }
     } catch { /* Fall back to this week's hot skills. */ }
@@ -80,7 +80,7 @@ Page({
     if (!cached?.skill?.id) this.setData({ hotLoading: false });
   },
 
-  showHotTool(skill: Skill, label: string, growth: string) {
+  showHotTool(skill: Skill, label: string, growth: string, headline?: string) {
     this._hot = skill;
     // The list row is enough: the WorkBuddy request needs only the name and source link.
     this._plan = skillInstallPlan(skill);
@@ -91,7 +91,7 @@ Page({
       hotTool: {
         id: skill.id,
         name: skill.name,
-        purpose: shortPurpose(skillDescriptionZh(skill), 40),
+        purpose: headline || shortPurpose(skillDescriptionZh(skill), 40),
         growth,
       },
       hotCopyLabel: copyLabel ? `一键${copyLabel}` : "",

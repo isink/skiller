@@ -308,6 +308,7 @@ test("today's curated WorkBuddy pick leads the card, labelled with its scene", a
   assert.equal(page.data.hotTool?.id, curated.id);
   assert.equal(page.data.hotLabel, `今日推荐 · ${dailyPick().scene.title}`);
   assert.equal(page.data.hotTool?.growth, "");
+  assert.equal(page.data.hotTool?.purpose, pick.headline);
   assert.ok(requests.some((request) => new URL(request.url).searchParams.get("slug") === `in.(${pick.slug})`));
   assert.ok(!requests.some((request) => request.url.includes("get_hot_skills")));
 });
@@ -324,7 +325,7 @@ test("when today's pick cannot be loaded the card falls back to this week's hot 
 test("the scene tiles list every collection and open its page", (t) => {
   const { page, navigations } = harness(t);
   assert.equal(page.data.scenes.length, 8);
-  assert.deepEqual(page.data.scenes[0], { slug: "excel", title: "表格与数据", tagline: "Excel 汇总、数据看板、流程图", count: 6 });
+  assert.deepEqual(page.data.scenes[0], { slug: "excel", title: "表格与数据", tagline: "Excel 汇总、数据结论、流程图" });
   (page as unknown as { openScene(e: unknown): void }).openScene({ currentTarget: { dataset: { slug: "finance" } } });
   assert.deepEqual(navigations, ["/pages/scene/index?slug=finance"]);
 });

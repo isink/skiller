@@ -27,10 +27,10 @@ export async function fetchHotTool(): Promise<{ skill: Skill; hot: boolean } | n
 }
 
 /** Today's curated WorkBuddy pick for the landing card; null when that skill cannot be loaded. */
-export async function fetchDailyPick(now: Date = new Date()): Promise<{ skill: Skill; sceneTitle: string } | null> {
+export async function fetchDailyPick(now: Date = new Date()): Promise<{ skill: Skill; sceneTitle: string; headline: string } | null> {
   const { scene, pick } = dailyPick(now);
   const [skill] = await fetchSkillsBySlugs([pick.slug]);
-  return skill ? { skill, sceneTitle: scene.title } : null;
+  return skill ? { skill, sceneTitle: scene.title, headline: pick.headline } : null;
 }
 
 /** Shown under "已记录，我们会尽快收录": hot skills when there are enough, otherwise featured ones. */

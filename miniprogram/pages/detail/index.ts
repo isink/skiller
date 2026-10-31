@@ -34,6 +34,9 @@ Page({
     installAlternatives: [] as Array<{ label: string; command: string }>,
     sourceUrl: "",
     usageSay: [] as string[],
+    usageHeadline: "",
+    usageExample: null as { input: string; output: string } | null,
+    markdownOpen: true,
     usageScene: null as { slug: string; title: string } | null,
     blocks: [] as SkillBlock[],
     favorited: false,
@@ -131,6 +134,11 @@ Page({
     const curated = scenePick(skill.slug);
     this.setData({
       usageSay: curated ? curated.pick.say : [],
+      usageHeadline: curated ? curated.pick.headline : "",
+      usageExample: curated?.pick.example || null,
+      // Curated skills lead with the Chinese copy; the English SKILL.md starts folded.
+      // A refresh after the cached copy keeps whatever the reader chose.
+      markdownOpen: this.data.skill ? this.data.markdownOpen : !curated,
       usageScene: curated ? { slug: curated.scene.slug, title: curated.scene.title } : null,
       skill,
       displayDescription: skillDescriptionZh(skill),
@@ -157,6 +165,10 @@ Page({
   onCopyAlternative(event: { currentTarget: { dataset: { index: number } } }) {
     const option = this.data.installAlternatives[Number(event.currentTarget.dataset.index)];
     if (option) this.copyInstall(option.command, "alternative");
+  },
+
+  onToggleMarkdown() {
+    this.setData({ markdownOpen: !this.data.markdownOpen });
   },
 
   onCopyUsage(event: { currentTarget: { dataset: { index: number } } }) {

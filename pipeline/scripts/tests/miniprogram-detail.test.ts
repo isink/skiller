@@ -208,7 +208,14 @@ test("a curated skill shows what to say to WorkBuddy and links back to its colle
   const skill = makeSkill({ slug: "meeting-notes" });
   page.showSkill(skill, true);
   assert.equal(page.data.usageSay.length, 2);
-  assert.deepEqual(page.data.usageScene, { slug: "docs", title: "文档、会议与写作" });
+  assert.deepEqual(page.data.usageScene, { slug: "docs", title: "会议与写作" });
+  assert.equal(page.data.usageHeadline, "会议记录 → 结论、待办、负责人");
+  assert.equal(page.data.usageExample, null);
+  assert.equal(page.data.markdownOpen, false);
+  (page as unknown as { onToggleMarkdown(): void }).onToggleMarkdown();
+  assert.equal(page.data.markdownOpen, true);
+  page.showSkill(skill, true);
+  assert.equal(page.data.markdownOpen, true, "a refresh keeps the reader's choice");
 
   const detail = page as unknown as { onCopyUsage(e: unknown): void; openScene(e: unknown): void };
   detail.onCopyUsage({ currentTarget: { dataset: { index: 1 } } });
@@ -225,4 +232,6 @@ test("a skill outside the collections shows no usage block", (t) => {
   page.showSkill(makeSkill(), true);
   assert.deepEqual(page.data.usageSay, []);
   assert.equal(page.data.usageScene, null);
+  assert.equal(page.data.usageHeadline, "");
+  assert.equal(page.data.markdownOpen, true);
 });
