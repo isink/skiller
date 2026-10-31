@@ -117,6 +117,8 @@ CloudBase 迁移脚本默认只读取 Supabase 并报告数据量；只有传入
 
 仓库改名时 GitHub 会重定向旧名，导入器与元数据刷新会先用 `GET /repos/{owner}/{repo}` 取规范的 `full_name`，再写入 `github_url`、slug 和 Star 快照，避免同一仓库按新旧两个 key 重复计数。部署此改动前，先在 SQL Editor 执行一次 `supabase/migrations/024_merge_renamed_repo_ecc.sql`（可重复执行），合并已存的 `affaan-m/everything-claude-code` 与 `affaan-m/ECC`。
 
+`get_hot_skills` 选仓库代表时跳过其他语言的文档副本（路径含 `docs/ja-JP/`、`i18n/ko/`、`translations/te/` 等；中文与英文保留），避免欢迎页「今日热门工具」显示日文副本。现有库在 SQL Editor 执行一次 `supabase/migrations/028_hot_skills_skip_translations.sql`（可重复执行），`schema.sql` 已同步。
+
 完整主同步（`npm run sync`）仍可手动运行。技能来源元数据由 Supabase Cron 每 15 分钟调用一次 `refresh-skill-metadata` Edge Function 分批刷新；它不会运行导入、富化或修改技能正文。先应用 `017_skill_source_freshness.sql` 和 `018_batched_skill_metadata_refresh.sql`，再部署函数并配置 Cron。只读 GitHub Token 放在 Edge Function Secret `SKILLER_GITHUB_TOKEN`，服务端密钥放在 Supabase Vault 供 Cron 调用，均不能放进小程序。`.github/workflows/refresh-skill-metadata.yml` 仅保留手动运行入口，避免两个定时器重复刷新。
 
 每轮最多请求 GitHub 60 次，优先核对 36 个仓库的 Star，剩余配额核对具体 `SKILL.md` 的最近提交日期。一个仓库每天最多核对一次；仓库没有新提交时，不重复请求文件。数据库记录每条成功进度，失败或超时的条目留到下一轮，不会把旧值标成当天核对。当前约 2,847 个仓库、7,818 个技能，首次补齐文件日期预计需要多天。函数保留 JWT 验证，并在内部再要求服务端密钥；数据库 RPC、游标和租约只授予 `service_role`。租约防止手动调用和 Cron 同时重复处理。

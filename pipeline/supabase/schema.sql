@@ -1053,6 +1053,9 @@ as $$
     from public.skills as skill
     join growth on growth.repo_key = skill.repo_key
     where coalesce(skill.description_zh, '') <> ''
+      -- Translated copies of a repository's docs (docs/ja-JP/…, translations/te/…)
+      -- are duplicates in a language the reader cannot use; Chinese and English stay.
+      and skill.github_url !~* '/(docs|i18n|locales?|translations?|lang|languages)/(ja|ko|de|es|fr|pt|it|ru|te|hi|vi|th|id|tr|ar|pl|nl|uk|fa|bn|ms)([-_][a-z]{2,4})?/'
     order by skill.repo_key, skill.featured desc, skill.rank desc,
       skill.install_count desc, skill.id
   )

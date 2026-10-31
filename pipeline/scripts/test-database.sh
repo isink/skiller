@@ -87,7 +87,8 @@ apply_hardening_migrations() {
     "$pipeline_dir/supabase/migrations/017_skill_source_freshness.sql" \
     "$pipeline_dir/supabase/migrations/018_batched_skill_metadata_refresh.sql" \
     "$pipeline_dir/supabase/migrations/020_hot_and_latest_skills.sql" \
-    "$pipeline_dir/supabase/migrations/021_invalidate_changed_skill_enrichment.sql"; do
+    "$pipeline_dir/supabase/migrations/021_invalidate_changed_skill_enrichment.sql" \
+    "$pipeline_dir/supabase/migrations/028_hot_skills_skip_translations.sql"; do
     run_sql "$migration"
   done
 }
