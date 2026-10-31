@@ -5,7 +5,7 @@ import { copyShareNudge } from "./share";
 
 type InstallCommand = { installCommand: string; installHint: string };
 
-export type InstallKind = "npx" | "git-clone" | "link" | "none";
+export type InstallKind = "workbuddy" | "npx" | "git-clone" | "link" | "none";
 export type InstallAlternative = { label: string; command: string };
 export type InstallPlan = InstallCommand & {
   installKind: InstallKind;
@@ -130,6 +130,11 @@ function isRepositoryRootSkill(source: GithubSource): boolean {
 }
 
 const STEPS: Record<Exclude<InstallKind, "none">, string[]> = {
+  workbuddy: [
+    "点「复制给 WorkBuddy」，安装指令会进入剪贴板",
+    "在电脑上打开 WorkBuddy，把指令粘贴进对话框发送",
+    "装好后直接说出需求，技能会被自动调用",
+  ],
   npx: [
     "点「复制安装命令」，命令会进入剪贴板",
     "在电脑终端粘贴并回车（需已安装 Node.js），按提示选择要装到的 AI 工具",
@@ -154,14 +159,55 @@ const MP_SKILL_STEPS = [
   "把 SKILL 分包放进你的小程序工程，在 app.json 的 agent.skills 里登记，再用开发者工具的 AI 开发模式调试",
 ];
 
-const NO_SOURCE_HINT = "暂无法生成安装命令：技能来源尚未确认。可继续阅读下方说明。";
+const WORKBUDDY_HINT = "粘贴给 WorkBuddy 等能联网的 AI 助手，它会自己下载并安装；用终端安装见下方命令。";
+const MAX_PROMPT_NAME = 60;
 
 /**
- * Chooses what the detail page copies. Preference: the `skills` CLI command,
- * then a git clone into ~/.claude/skills for root-level skills, then the
- * GitHub link when the repository layout cannot be inferred safely.
+ * A plain-language request the user pastes into WorkBuddy, which fetches and
+ * installs the skill itself. Needs only the list row, not SKILL.md.
  */
-export function skillInstallPlan(skill: Pick<Skill, "github_url" | "skill_md_content"> & { category?: string; tags?: string[] }): InstallPlan {
+export function workbuddyPrompt(name: string | null | undefined, sourceUrl: string): string {
+  const clean = Array.from((name || "").replace(/\s+/g, " ").trim()).slice(0, MAX_PROMPT_NAME).join("");
+  return [
+    `请帮我安装这个 Skill${clean ? `：${clean}` : ""}`,
+    `来源：${sourceUrl}`,
+    "装进你的技能里，装好后用一句话告诉我它能做什么、怎么用。",
+  ].join("\n");
+}
+
+const NO_SOURCE_HINT = "暂无法生成安装命令：技能来源尚未确认。可继续阅读下方说明。";
+
+type PlanInput = Pick<Skill, "github_url" | "skill_md_content"> & { name?: string; category?: string; tags?: string[] };
+
+/**
+ * Chooses what the detail page copies. When the source points at a skill
+ * folder the primary copy is a request for WorkBuddy, and the terminal
+ * commands become alternatives.
+ */
+export function skillInstallPlan(skill: PlanInput): InstallPlan {
+  const plan = terminalInstallPlan(skill);
+  const mpExample = skill.category === "mp-skill" && Boolean(skill.tags?.includes("mp-example"));
+  if (mpExample || !plan.sourceUrl || githubInstallSource(skill.github_url || "") === null) return plan;
+  const terminal: InstallAlternative[] = plan.installKind === "link"
+    ? []
+    : [{ label: plan.installKind === "npx" ? "终端安装（需 Node.js）" : "手动安装到 Claude Code", command: plan.installCommand }];
+  return {
+    installCommand: workbuddyPrompt(skill.name, plan.sourceUrl),
+    installHint: WORKBUDDY_HINT,
+    installKind: "workbuddy",
+    installCopyLabel: "复制给 WorkBuddy",
+    installSteps: STEPS.workbuddy,
+    installAlternatives: [...terminal, ...plan.installAlternatives],
+    sourceUrl: plan.sourceUrl,
+  };
+}
+
+/**
+ * The terminal route. Preference: the `skills` CLI command, then a git clone
+ * into ~/.claude/skills for root-level skills, then the GitHub link when the
+ * repository layout cannot be inferred safely.
+ */
+export function terminalInstallPlan(skill: PlanInput): InstallPlan {
   const sourceUrl = skillSourceUrl(skill.github_url);
   if (skill.category === "mp-skill" && skill.tags?.includes("mp-example") && sourceUrl) {
     return {
@@ -228,17 +274,6 @@ export function skillInstallPlan(skill: Pick<Skill, "github_url" | "skill_md_con
     installAlternatives: [],
     sourceUrl: "",
   };
-}
-
-/**
- * True when a list row (which has no SKILL.md) already proves the only thing
- * to copy is the GitHub link: mini program examples, or a source the CLI and
- * git clone commands cannot be built from whatever the SKILL.md says.
- */
-export function isLinkOnlySkill(skill: Pick<Skill, "github_url" | "skill_md_content"> & { category?: string; tags?: string[] }): boolean {
-  if (skillInstallPlan({ ...skill, skill_md_content: null }).installKind !== "link") return false;
-  const mpExample = skill.category === "mp-skill" && Boolean(skill.tags?.includes("mp-example"));
-  return mpExample || githubInstallSource(skill.github_url || "") === null;
 }
 
 const NUDGE_TOAST_MS = 2200;

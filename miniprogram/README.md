@@ -14,7 +14,7 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 
 ## 欢迎页（landing）：今日热门工具卡片
 
-欢迎页最上方是「今日热门工具」卡片：`fetchHotTool`（`services/recommendations.ts`）复用新词雷达推荐的数据源与排序——本周热门（`get_hot_skills`，不足 3 条时）退回精选技能，取第一条；退回精选时标签改为「今日推荐工具」。卡片显示名称、一句中文用途和「一键复制安装命令」按钮，点卡片进入详情页。列表行不含 SKILL.md，所以页面不预取详情，用户点按钮时才取完整内容（命中详情页缓存则不再请求）生成安装命令，期间显示 `wx.showLoading`；失败时先 toast 提示再跳转详情页。列表数据已能判断只有 GitHub 链接的技能（小程序范例等，`isLinkOnlySkill`）按钮直接显示「一键复制 GitHub 链接」并立即复制，不请求。通过好友/朋友圈分享链接（带 `id`）进入欢迎页时，卡片显示被分享的工具，标签为「好友推荐的工具」。卡片加载前显示骨架，加载失败则整张隐藏，下面的工具入口不受影响。复制逻辑 `copyInstall`（`services/skill-install.ts`）与详情页共用，同样上报 `copy_install`（`page` 为 `pages/landing/index`）。
+欢迎页最上方是「今日热门工具」卡片：`fetchHotTool`（`services/recommendations.ts`）复用新词雷达推荐的数据源与排序——本周热门（`get_hot_skills`，不足 3 条时）退回精选技能，取第一条；退回精选时标签改为「今日推荐工具」。卡片显示名称、一句中文用途和「一键复制给 WorkBuddy」按钮，点卡片进入详情页。WorkBuddy 安装指令只需要列表行里的名称和来源链接，所以点按钮立即复制，不请求详情；小程序范例和指向不了技能目录的来源按钮显示「一键复制 GitHub 链接」；没有可用来源时不显示按钮。通过好友/朋友圈分享链接（带 `id`）进入欢迎页时，卡片显示被分享的工具，标签为「好友推荐的工具」。卡片加载前显示骨架，加载失败则整张隐藏，下面的工具入口不受影响。复制逻辑 `copyInstall`（`services/skill-install.ts`）与详情页共用，同样上报 `copy_install`（`page` 为 `pages/landing/index`）。
 
 ## 开源雷达
 
@@ -32,12 +32,13 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 
 ## 详情页：安装、分享与反馈
 
-- **一键复制安装命令**：`services/skill-install.ts` 的 `skillInstallPlan` 按仓库信息生成命令，优先 `npx skills add <仓库> --skill <名称>`；根目录技能再给出 `git clone … ~/.claude/skills/<名称>`；官方 `anthropics/skills` 另给 `/plugin marketplace add`。推断不了命令时复制 GitHub 链接。详情页同时给出 3 步安装说明、原链接（可复制）和 SKILL.md frontmatter 里的许可证（没有就不显示）。
+- **复制给 WorkBuddy（主按钮）**：国内用户多用 WorkBuddy，它能按一句话自己下载安装技能。来源能定位到技能目录时，`skillInstallPlan`（`services/skill-install.ts`）的主复制内容是 `workbuddyPrompt` 生成的三行中文请求（技能名、GitHub 来源、"装好后告诉我怎么用"），`installKind` 为 `workbuddy`；终端命令降为备选。小程序范例（`mp-example`）和定位不到技能目录的链接仍复制 GitHub 链接。
+- **终端安装（备选）**：`terminalInstallPlan` 按仓库信息生成命令，优先 `npx skills add <仓库> --skill <名称>`（备选标签「终端安装（需 Node.js）」）；根目录技能再给出 `git clone … ~/.claude/skills/<名称>`；官方 `anthropics/skills` 另给 `/plugin marketplace add`。详情页同时给出 3 步安装说明、原链接（可复制）和 SKILL.md frontmatter 里的许可证（没有就不显示）。
 - **作者申请下架 / 反馈**：详情页底部「联系」弹窗提示发邮件到隐私政策公布的联系邮箱，可一键复制。
 - **分享卡片**：`onShareAppMessage` 标题为「技能名｜一句中文用途」；`services/share-card.ts` 在页面隐藏的 `canvas type="2d"` 上画 5:4 封面（技能名、用途、Star、头山 AI 工具箱），导出失败或超时就用默认截图。页面内「推荐给同事」按钮使用 `open-type="share"`。
-- **复制后引导分享**：复制安装命令（或 GitHub 链接）成功后提示「安装命令已复制，分享给朋友一起用」（文案见 `copyShareNudge`），详情页和欢迎页卡片相同。
+- **复制后提示**：复制 WorkBuddy 指令后提示「已复制，粘贴给WorkBuddy就能装」；复制终端命令（或 GitHub 链接）后提示「安装命令已复制，分享给朋友一起用」（文案见 `copyShareNudge`），详情页和欢迎页卡片相同。
 - **首页与欢迎页分享**：欢迎页的 `onShareAppMessage` / `onShareTimeline` 在热门工具加载后用「工具名｜一句卖点」做标题、跳转该工具详情页，并同样生成 5:4 封面；工具未加载时分享欢迎页本身。技能库首页保持应用标题。这些页面的分享都上报 `share`（`page` 区分来源，非单个技能时 `meta` 不含 `id`/`slug`）。
-- **事件**：复制安装命令/链接记为 `copy_install`，分享记为 `share`，`meta.action` 写明动作。这两个事件名需要先执行 `pipeline/supabase/migrations/025_mp_events_install_share.sql`，之前上报会被忽略。
+- **事件**：复制安装命令/链接记为 `copy_install`（`meta.kind` 为 `workbuddy` / `npx` / `git-clone` / `link`），分享记为 `share`，`meta.action` 写明动作。这两个事件名需要先执行 `pipeline/supabase/migrations/025_mp_events_install_share.sql`，之前上报会被忽略。
 
 ## 搜索无结果与「微信小程序 SKILL」专题
 

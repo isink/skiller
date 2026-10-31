@@ -141,4 +141,6 @@ test("copying an install command nudges the user to share it", () => {
   assert.equal(copyShareNudge("npx", "alternative"), "安装命令已复制，分享给朋友一起用");
   assert.equal(copyShareNudge("link", "primary"), "GitHub 链接已复制，分享给朋友一起看");
   assert.ok(Array.from(copyShareNudge("npx", "primary")).length <= 20);
+  assert.equal(copyShareNudge("workbuddy", "primary"), "已复制，粘贴给WorkBuddy就能装");
+  assert.ok(Array.from(copyShareNudge("workbuddy", "primary")).length <= 20);
 });

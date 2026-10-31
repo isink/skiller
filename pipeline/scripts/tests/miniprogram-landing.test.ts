@@ -153,7 +153,7 @@ test("the hot tool card shows the hottest skill with name, one-line description 
   assert.equal(page.data.hotLoading, false);
   assert.equal(page.data.hotLabel, "今日热门工具");
   assert.deepEqual(page.data.hotTool, { id: hot[0].id, name: "pdf", purpose: "读取和处理 PDF 文件", growth: "本周 +42⭐" });
-  assert.equal(page.data.hotCopyLabel, "一键复制安装命令");
+  assert.equal(page.data.hotCopyLabel, "一键复制给 WorkBuddy");
 });
 
 test("without enough hot skills the card falls back to a featured skill and says so", async (t) => {
@@ -174,63 +174,32 @@ test("a failed load hides the card without breaking the page", async (t) => {
   assert.equal(page.data.hotTool, null);
 });
 
-test("the full skill is only fetched when the user taps copy, behind a loading indicator", async (t) => {
+test("copying for WorkBuddy uses the list row, with no loading or detail fetch", async (t) => {
   const hot = hotSkills();
   const { page, clipboard, toasts, calls, events, detailFetches } = harness(t, { hot, full: hot[0] });
   page.onLoad({});
   await settle();
-  assert.equal(detailFetches(), 0);
-  assert.equal(page.data.hotCopyLabel, "一键复制安装命令");
 
   await page.onCopyHotInstall();
   await settle();
 
-  assert.equal(detailFetches(), 1);
-  assert.deepEqual(clipboard, ["npx skills add https://github.com/acme/tools/tree/main/skills/pdf --skill pdf-reader"]);
-  assert.equal(toasts.at(-1)?.title, "安装命令已复制，分享给朋友一起用");
-  assert.deepEqual(calls.slice(0, 3), ["loading:正在获取安装命令", "hideLoading", "toast:安装命令已复制，分享给朋友一起用"]);
+  assert.equal(detailFetches(), 0);
+  assert.deepEqual(clipboard, ["请帮我安装这个 Skill：pdf\n来源：https://github.com/acme/tools/tree/main/skills/pdf\n装进你的技能里，装好后用一句话告诉我它能做什么、怎么用。"]);
+  assert.equal(toasts.at(-1)?.title, "已复制，粘贴给WorkBuddy就能装");
+  assert.ok(!calls.some((call) => call.startsWith("loading") || call === "hideLoading"));
   const event = events().find((row) => row.event === "copy_install");
   assert.equal(event?.page, "pages/landing/index");
-  assert.deepEqual(event?.meta, { action: "copy_install", id: hot[0].id, slug: hot[0].slug, kind: "npx", target: "primary" });
-
-  await page.onCopyHotInstall();
-  assert.equal(detailFetches(), 1);
+  assert.deepEqual(event?.meta, { action: "copy_install", id: hot[0].id, slug: hot[0].slug, kind: "workbuddy", target: "primary" });
 });
 
-test("a second tap while the command is loading is ignored", async (t) => {
-  const hot = hotSkills();
-  const { page, clipboard, detailFetches } = harness(t, { hot, full: hot[0] });
-  page.onLoad({});
-  await settle();
-  await Promise.all([page.onCopyHotInstall(), page.onCopyHotInstall()]);
-  assert.equal(detailFetches(), 1);
-  assert.equal(clipboard.length, 1);
-});
-
-test("when the full skill cannot be loaded a toast explains it, then the detail page opens", async (t) => {
-  const hot = hotSkills();
-  const { page, clipboard, navigations, calls } = harness(t, { hot, full: "error" });
-  page.onLoad({});
-  await settle();
-  t.mock.timers.enable({ apis: ["setTimeout"] });
-  await page.onCopyHotInstall();
-
-  assert.deepEqual(clipboard, []);
-  assert.deepEqual(calls, ["loading:正在获取安装命令", "hideLoading", "toast:网络不佳，带你去详情页复制"]);
-  assert.deepEqual(navigations, []);
-  t.mock.timers.tick(1200);
-  assert.deepEqual(navigations, [`/pages/detail/index?id=${hot[0].id}`]);
-});
-
-test("a skill with no usable source also goes through toast then detail page", async (t) => {
+test("a skill with no usable source hides the copy button and a tap opens the detail page", async (t) => {
   const hot = [makeSkill({ github_url: "https://example.com/not-github", skill_md_content: null }), makeSkill(), makeSkill()];
-  const { page, navigations, calls } = harness(t, { hot, full: hot[0] });
+  const { page, navigations, clipboard } = harness(t, { hot, full: hot[0] });
   page.onLoad({});
   await settle();
-  t.mock.timers.enable({ apis: ["setTimeout"] });
+  assert.equal(page.data.hotCopyLabel, "");
   await page.onCopyHotInstall();
-  assert.equal(calls.at(-1), "toast:暂无安装命令，带你去详情页看看");
-  t.mock.timers.tick(1200);
+  assert.deepEqual(clipboard, []);
   assert.deepEqual(navigations, [`/pages/detail/index?id=${hot[0].id}`]);
 });
 
@@ -243,7 +212,7 @@ test("tapping the card opens the skill detail page", async (t) => {
   assert.deepEqual(navigations, [`/pages/detail/index?id=${hot[0].id}`]);
 });
 
-test("a skill the list already proves is link-only copies the link with no loading or fetch", async (t) => {
+test("a mini program example copies the GitHub link with no loading or fetch", async (t) => {
   const example = makeSkill({ category: "mp-skill", tags: ["mp-example"], skill_md_content: null, github_url: "https://github.com/acme/mp-demo" });
   const hot = [example, makeSkill(), makeSkill()];
   const { page, clipboard, calls, detailFetches } = harness(t, { hot });

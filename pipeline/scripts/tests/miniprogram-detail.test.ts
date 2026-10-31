@@ -83,10 +83,16 @@ function harness(t: TestContext, options: { exportFails?: boolean } = {}) {
 
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
-test("the detail page shows the install command, three steps, source link and license", (t) => {
+test("the detail page leads with the WorkBuddy request, then the terminal command, steps, source link and license", (t) => {
   const { page } = harness(t);
-  page.showSkill(makeSkill(), true);
-  assert.equal(page.data.installCommand, "npx skills add https://github.com/acme/tools/tree/main/skills/pdf --skill pdf-reader");
+  const skill = makeSkill();
+  page.showSkill(skill, true);
+  assert.equal(page.data.installKind, "workbuddy");
+  assert.equal(page.data.installCopyLabel, "复制给 WorkBuddy");
+  assert.equal(page.data.installCommand, `请帮我安装这个 Skill：${skill.name}\n来源：https://github.com/acme/tools/tree/main/skills/pdf\n装进你的技能里，装好后用一句话告诉我它能做什么、怎么用。`);
+  assert.deepEqual(page.data.installAlternatives, [
+    { label: "终端安装（需 Node.js）", command: "npx skills add https://github.com/acme/tools/tree/main/skills/pdf --skill pdf-reader" },
+  ]);
   assert.equal(page.data.installSteps.length, 3);
   assert.equal(page.data.sourceUrl, "https://github.com/acme/tools/tree/main/skills/pdf");
   assert.equal(page.data.displayLicense, "MIT");
@@ -100,19 +106,19 @@ test("copying the install command reports a copy_install event", async (t) => {
   await settle();
 
   assert.deepEqual(clipboard, [page.data.installCommand]);
-  assert.deepEqual(toasts, ["安装命令已复制，分享给朋友一起用"]);
+  assert.deepEqual(toasts, ["已复制，粘贴给WorkBuddy就能装"]);
   const event = events.find((row) => row.event === "copy_install");
   assert.ok(event);
   assert.equal(event.page, "pages/detail/index");
-  assert.deepEqual(event.meta, { action: "copy_install", id: skill.id, slug: skill.slug, kind: "npx", target: "primary" });
+  assert.deepEqual(event.meta, { action: "copy_install", id: skill.id, slug: skill.slug, kind: "workbuddy", target: "primary" });
 });
 
-test("a skill without an inferable command copies the GitHub link", async (t) => {
+test("a source that points at no skill folder copies the GitHub link", async (t) => {
   const { page, clipboard, toasts, events } = harness(t);
-  page.showSkill(makeSkill({ skill_md_content: "no frontmatter", github_url: "https://github.com/acme/tools/blob/main/skills/pdf/SKILL.md" }), true);
+  page.showSkill(makeSkill({ skill_md_content: "no frontmatter", github_url: "https://github.com/acme/tools/pulls" }), true);
   page.onCopyInstall();
   await settle();
-  assert.deepEqual(clipboard, ["https://github.com/acme/tools/blob/main/skills/pdf/SKILL.md"]);
+  assert.deepEqual(clipboard, ["https://github.com/acme/tools/pulls"]);
   assert.deepEqual(toasts, ["GitHub 链接已复制，分享给朋友一起看"]);
   assert.equal(events.find((row) => row.event === "copy_install")?.meta.kind, "link");
 });
@@ -120,7 +126,7 @@ test("a skill without an inferable command copies the GitHub link", async (t) =>
 test("alternatives and the source link are copied and reported separately", async (t) => {
   const { page, clipboard, events } = harness(t);
   page.showSkill(makeSkill({ github_url: "https://github.com/acme/tidy", skill_md_content: "---\nname: tidy\n---\n" }), true);
-  page.onCopyAlternative({ currentTarget: { dataset: { index: 0 } } });
+  page.onCopyAlternative({ currentTarget: { dataset: { index: 1 } } });
   page.onCopySource();
   page.onCopyAlternative({ currentTarget: { dataset: { index: 9 } } });
   await settle();

@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { feedbackNotice } from "../../../miniprogram/services/feedback";
 import { CONTACT_EMAIL } from "../../../miniprogram/services/config";
-import { isLinkOnlySkill, skillInstallCommand, skillInstallPlan, skillLicense, skillSourceUrl } from "../../../miniprogram/services/skill-install";
+import { skillInstallCommand, skillInstallPlan, skillLicense, skillSourceUrl, terminalInstallPlan, workbuddyPrompt } from "../../../miniprogram/services/skill-install";
 
 const md = (frontmatter: string) => `---\n${frontmatter}\n---\n# Body`;
 
-test("a skill with a SKILL.md name installs through the skills CLI", () => {
-  const plan = skillInstallPlan({
+test("the terminal route installs a named skill through the skills CLI", () => {
+  const plan = terminalInstallPlan({
     github_url: "https://github.com/acme/tools/tree/main/skills/pdf",
     skill_md_content: md("name: pdf-reader\ndescription: x"),
   });
@@ -22,7 +22,7 @@ test("a skill with a SKILL.md name installs through the skills CLI", () => {
 });
 
 test("a repository-root skill also offers a git clone into ~/.claude/skills", () => {
-  const plan = skillInstallPlan({
+  const plan = terminalInstallPlan({
     github_url: "https://github.com/acme/tidy",
     skill_md_content: md("name: tidy"),
   });
@@ -33,7 +33,7 @@ test("a repository-root skill also offers a git clone into ~/.claude/skills", ()
 });
 
 test("without a usable name a root skill falls back to git clone", () => {
-  const plan = skillInstallPlan({
+  const plan = terminalInstallPlan({
     github_url: "https://github.com/acme/tidy/blob/main/SKILL.md",
     skill_md_content: "# Tidy\nNo frontmatter here.",
   });
@@ -43,7 +43,7 @@ test("without a usable name a root skill falls back to git clone", () => {
 });
 
 test("a skill in a sub-folder with no usable name copies the GitHub link", () => {
-  const plan = skillInstallPlan({
+  const plan = terminalInstallPlan({
     github_url: "https://github.com/acme/tools/blob/main/skills/pdf/SKILL.md",
     skill_md_content: "no frontmatter",
   });
@@ -54,7 +54,7 @@ test("a skill in a sub-folder with no usable name copies the GitHub link", () =>
 });
 
 test("the official Anthropic repository adds the Claude Code plugin command", () => {
-  const plan = skillInstallPlan({
+  const plan = terminalInstallPlan({
     github_url: "https://github.com/anthropics/skills/tree/main/skills/pdf",
     skill_md_content: md("name: pdf"),
   });
@@ -90,7 +90,7 @@ test("mini program SKILL examples are referenced, not installed", () => {
     github_url: "https://github.com/acme/mp/tree/main/gen",
     skill_md_content: md("name: gen"),
   });
-  assert.equal(helper.installKind, "npx");
+  assert.equal(helper.installKind, "workbuddy");
 });
 
 test("license comes from the frontmatter and is shortened and sanitised", () => {
@@ -115,11 +115,40 @@ test("the takedown notice names the skill and points to the published contact", 
   assert.doesNotMatch(feedbackNotice({ name: "x", github_url: "" }).content, /来源链接/);
 });
 
-test("a list row is link-only for mini program examples and sources no command can be built from", () => {
-  assert.equal(isLinkOnlySkill({ category: "mp-skill", tags: ["mp-example"], github_url: "https://github.com/acme/demo", skill_md_content: null }), true);
-  assert.equal(isLinkOnlySkill({ github_url: "https://github.com/acme/tools/pulls", skill_md_content: null }), true);
-  // A normal GitHub skill may still get an npx command once SKILL.md is known.
-  assert.equal(isLinkOnlySkill({ github_url: "https://github.com/acme/tools/tree/main/skills/pdf", skill_md_content: null }), false);
-  assert.equal(isLinkOnlySkill({ github_url: "https://github.com/acme/tools", skill_md_content: null }), false);
-  assert.equal(isLinkOnlySkill({ github_url: "https://example.com/x", skill_md_content: null }), false);
+test("a skill with a GitHub source is copied to WorkBuddy first, terminal commands second", () => {
+  const plan = skillInstallPlan({
+    name: "PDF Reader",
+    github_url: "https://github.com/acme/tidy",
+    skill_md_content: md("name: tidy"),
+  });
+  assert.equal(plan.installKind, "workbuddy");
+  assert.equal(plan.installCopyLabel, "复制给 WorkBuddy");
+  assert.equal(plan.installCommand, workbuddyPrompt("PDF Reader", "https://github.com/acme/tidy"));
+  assert.match(plan.installCommand, /^请帮我安装这个 Skill：PDF Reader\n来源：https:\/\/github\.com\/acme\/tidy\n/);
+  assert.match(plan.installSteps[1], /WorkBuddy/);
+  assert.deepEqual(plan.installAlternatives, [
+    { label: "终端安装（需 Node.js）", command: "npx skills add https://github.com/acme/tidy --skill tidy" },
+    { label: "手动安装到 Claude Code", command: "git clone https://github.com/acme/tidy.git ~/.claude/skills/tidy" },
+  ]);
+  assert.equal(plan.sourceUrl, "https://github.com/acme/tidy");
+});
+
+test("the WorkBuddy request needs no SKILL.md, so a list row is enough", () => {
+  const plan = skillInstallPlan({ name: "pdf", github_url: "https://github.com/acme/tools/tree/main/skills/pdf", skill_md_content: null });
+  assert.equal(plan.installKind, "workbuddy");
+  assert.deepEqual(plan.installAlternatives, []);
+  const official = skillInstallPlan({ name: "pdf", github_url: "https://github.com/anthropics/skills/tree/main/skills/pdf", skill_md_content: null });
+  assert.deepEqual(official.installAlternatives, [{ label: "Claude Code 插件市场", command: "/plugin marketplace add anthropics/skills" }]);
+});
+
+test("the WorkBuddy request flattens and shortens the name", () => {
+  assert.equal(workbuddyPrompt("a\n  b", "https://github.com/acme/x").split("\n")[0], "请帮我安装这个 Skill：a b");
+  assert.equal(workbuddyPrompt("", "https://github.com/acme/x").split("\n")[0], "请帮我安装这个 Skill");
+  assert.equal(Array.from(workbuddyPrompt("名".repeat(100), "https://github.com/acme/x").split("\n")[0]).length, "请帮我安装这个 Skill：".length + 60);
+});
+
+test("mini program examples and unusable sources keep copying the link", () => {
+  assert.equal(skillInstallPlan({ github_url: "https://github.com/acme/tools/pulls", skill_md_content: null }).installKind, "link");
+  assert.equal(skillInstallPlan({ category: "mp-skill", tags: ["mp-example"], github_url: "https://github.com/acme/demo", skill_md_content: null }).installKind, "link");
+  assert.equal(skillInstallPlan({ github_url: "", skill_md_content: null }).installKind, "none");
 });

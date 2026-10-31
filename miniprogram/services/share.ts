@@ -35,6 +35,7 @@ export function skillShareTitle(name: string, description: string | null | undef
 
 /** Toast shown after an install copy succeeds; nudges the user to pass the tool on. */
 export function copyShareNudge(kind: string, target: "primary" | "alternative"): string {
+  if (kind === "workbuddy" && target === "primary") return "已复制，粘贴给WorkBuddy就能装";
   return kind === "link" && target === "primary"
     ? "GitHub 链接已复制，分享给朋友一起看"
     : "安装命令已复制，分享给朋友一起用";

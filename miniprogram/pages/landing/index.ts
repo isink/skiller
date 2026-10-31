@@ -3,8 +3,8 @@ import { trackPageView, trackShare } from "../../services/analytics";
 import { fetchHotTool } from "../../services/recommendations";
 import { APP_TITLE, enableShareMenu, shortPurpose, skillShareTitle } from "../../services/share";
 import { renderShareCard } from "../../services/share-card";
-import { copyInstall, isLinkOnlySkill, skillInstallPlan } from "../../services/skill-install";
-import { cacheSkill, cachedSkill, readCache, writeCache } from "../../services/storage";
+import { copyInstall, skillInstallPlan } from "../../services/skill-install";
+import { cacheSkill, readCache, writeCache } from "../../services/storage";
 import { categoryName } from "../../services/presentation";
 import { skillDescriptionZh } from "../../services/description-zh";
 import { growthLabel } from "../../services/freshness";
@@ -14,10 +14,6 @@ import type { Skill } from "../../types/skill";
 const PAGE = "pages/landing/index";
 const SHARE_CANVAS = "#share-canvas";
 const HOT_CACHE = "landing:hot-tool";
-const COPY_LABEL = "一键复制安装命令";
-const LINK_LABEL = "一键复制 GitHub 链接";
-// Lets the failure toast be read before the detail page replaces it.
-const TOAST_BEFORE_NAVIGATE_MS = 1200;
 
 type HotPick = { skill: Skill; hot: boolean };
 
@@ -27,10 +23,7 @@ function hotLabel(hot: boolean): string {
 
 Page({
   _hot: null as Skill | null,
-  _linkOnly: false,
-  _copying: false,
-  _planId: "",
-  _planPromise: null as Promise<InstallPlan | null> | null,
+  _plan: null as InstallPlan | null,
   _cardKey: "",
   _cardPath: "",
   _cardPromise: null as Promise<string | null> | null,
@@ -38,7 +31,7 @@ Page({
     hotLoading: true,
     hotLabel: "今日热门工具",
     hotTool: null as { id: string; name: string; purpose: string; growth: string } | null,
-    hotCopyLabel: COPY_LABEL,
+    hotCopyLabel: "",
   },
 
   onLoad(options: Record<string, string>) {
@@ -77,7 +70,9 @@ Page({
 
   showHotTool(skill: Skill, label: string, growth: string) {
     this._hot = skill;
-    this._linkOnly = isLinkOnlySkill(skill);
+    // The list row is enough: the WorkBuddy request needs only the name and source link.
+    this._plan = skillInstallPlan(skill);
+    const copyLabel = this._plan.installCopyLabel;
     this.setData({
       hotLoading: false,
       hotLabel: label,
@@ -87,54 +82,16 @@ Page({
         purpose: shortPurpose(skillDescriptionZh(skill), 40),
         growth,
       },
-      hotCopyLabel: this._linkOnly ? LINK_LABEL : COPY_LABEL,
+      hotCopyLabel: copyLabel ? `一键${copyLabel}` : "",
     }, () => { this.ensureShareCard(); });
   },
 
-  /** The list row has no SKILL.md, so the install command needs the full skill; fetched only when the user asks to copy. */
-  ensurePlan(): Promise<InstallPlan | null> {
+  onCopyHotInstall() {
     const skill = this._hot;
-    if (!skill) return Promise.resolve(null);
-    if (this._planPromise && this._planId === skill.id) return this._planPromise;
-    this._planId = skill.id;
-    const cached = cachedSkill(skill.id);
-    const full = cached?.skill_md_content
-      ? Promise.resolve(cached)
-      : fetchSkill(skill.id).then((fetched) => { if (fetched) cacheSkill(fetched); return fetched; });
-    const promise = full.then((loaded) => (loaded ? skillInstallPlan(loaded) : null)).catch(() => null).then((plan) => {
-      if (!plan && this._planId === skill.id) this._planPromise = null;
-      return plan;
-    });
-    this._planPromise = promise;
-    return promise;
-  },
-
-  async onCopyHotInstall() {
-    const skill = this._hot;
-    if (!skill || this._copying) return;
-    this._copying = true;
-    try {
-      let plan: InstallPlan | null;
-      if (this._linkOnly) {
-        plan = skillInstallPlan(skill);
-      } else {
-        wx.showLoading({ title: "正在获取安装命令", mask: true });
-        try { plan = await this.ensurePlan(); }
-        finally { wx.hideLoading(); }
-      }
-      if (!plan || !plan.installCommand) {
-        this.openHotToolAfterNotice(plan ? "暂无安装命令，带你去详情页看看" : "网络不佳，带你去详情页复制");
-        return;
-      }
-      await copyInstall(skill, plan.installCommand, plan.installKind, "primary", PAGE);
-    } finally {
-      this._copying = false;
-    }
-  },
-
-  openHotToolAfterNotice(title: string) {
-    wx.showToast({ title, icon: "none", duration: TOAST_BEFORE_NAVIGATE_MS });
-    setTimeout(() => this.openHotTool(), TOAST_BEFORE_NAVIGATE_MS);
+    const plan = this._plan;
+    if (!skill || !plan) return;
+    if (!plan.installCommand) { this.openHotTool(); return; }
+    copyInstall(skill, plan.installCommand, plan.installKind, "primary", PAGE);
   },
 
   openHotTool() {
