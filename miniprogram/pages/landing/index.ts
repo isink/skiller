@@ -1,7 +1,7 @@
 import { fetchSkill } from "../../services/api";
 import { trackPageView, trackShare } from "../../services/analytics";
 import { fetchDailyPick, fetchHotTool } from "../../services/recommendations";
-import { SCENES } from "../../services/scenes";
+import { SCENES, scenePick, skillDisplayName } from "../../services/scenes";
 import { APP_TITLE, enableShareMenu, shortPurpose, skillShareTitle } from "../../services/share";
 import { renderShareCard } from "../../services/share-card";
 import { copyInstall, skillInstallPlan } from "../../services/skill-install";
@@ -90,7 +90,7 @@ Page({
       hotLabel: label,
       hotTool: {
         id: skill.id,
-        name: skill.name,
+        name: skillDisplayName(skill),
         purpose: headline || shortPurpose(skillDescriptionZh(skill), 40),
         growth,
       },
@@ -113,7 +113,8 @@ Page({
 
   shareTitle(): string {
     const skill = this._hot;
-    return skill ? skillShareTitle(skill.name, skillDescriptionZh(skill)) : `${APP_TITLE}：按岗位挑 WorkBuddy 技能`;
+    if (!skill) return `${APP_TITLE}：按岗位挑 WorkBuddy 技能`;
+    return skillShareTitle(skillDisplayName(skill), scenePick(skill.slug)?.pick.headline || skillDescriptionZh(skill));
   },
 
   sharePath(): string {
@@ -153,7 +154,7 @@ Page({
     this._cardKey = key;
     this._cardPath = "";
     const promise = renderShareCard(SHARE_CANVAS, {
-      name: skill.name,
+      name: skillDisplayName(skill),
       purpose: shortPurpose(skillDescriptionZh(skill), 56) || APP_TITLE,
       stars: skill.github_stars ?? null,
       category: categoryName(skill.category),

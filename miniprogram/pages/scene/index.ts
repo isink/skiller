@@ -12,7 +12,7 @@ import type { Skill } from "../../types/skill";
 const PAGE = "pages/scene/index";
 const SHARE_CANVAS = "#share-canvas";
 
-type MustSkill = { id: string; name: string; headline: string; say: string; copyLabel: string };
+type MustSkill = { id: string; name: string; englishName: string; headline: string; prepare: string; say: string; copyLabel: string };
 type MoreSkill = { id: string; name: string; headline: string };
 
 Page({
@@ -80,12 +80,14 @@ Page({
       bundleReady: Boolean(workbuddyBundlePrompt(scene.title, this._must)),
       must: must.map(({ pick, skill }) => ({
         id: skill.id,
-        name: skill.name,
+        name: pick.nameZh || skill.name,
+        englishName: pick.nameZh ? skill.name : "",
         headline: pick.headline,
+        prepare: pick.prepare || "",
         say: pick.say[0] || "",
         copyLabel: skillInstallPlan(skill).installCopyLabel,
       })),
-      more: more.map(({ pick, skill }) => ({ id: skill.id, name: skill.name, headline: pick.headline })),
+      more: more.map(({ pick, skill }) => ({ id: skill.id, name: pick.nameZh || skill.name, headline: pick.headline })),
     }, () => { this.ensureShareCard(); });
   },
 

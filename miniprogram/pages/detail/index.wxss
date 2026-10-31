@@ -80,3 +80,6 @@ rich-text strong { color: var(--color-text); font-weight: var(--weight-bold); }
 .markdown-toggle { display: flex; flex-direction: row; align-items: center; justify-content: space-between; min-height: var(--tap-min); margin: calc(-1 * var(--space-2)) 0; }
 .markdown-toggle-action { color: var(--color-accent); font-size: var(--text-sm); font-weight: var(--weight-medium); }
 .markdown-toggle + .md-heading, .markdown-toggle + .md-paragraph, .markdown-toggle + .md-list, .markdown-toggle + .md-quote, .markdown-toggle + .md-code, .markdown-toggle + .md-rule { margin-top: var(--space-3); padding-top: var(--space-2); border-top: 1rpx solid var(--color-border); }
+.detail-english { display: block; margin-top: 4rpx; color: var(--color-text-3); font-size: var(--text-xs); word-break: break-all; }
+.detail-source-note { display: block; margin-top: var(--space-2); color: var(--color-text-3); font-size: var(--text-xs); }
+.usage-prepare { display: block; margin-top: var(--space-1); color: var(--color-text-2); font-size: var(--text-sm); line-height: 1.6; }

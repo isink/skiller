@@ -16,8 +16,9 @@
         <text class="scene-rank">{{index + 1}}</text>
         <text class="scene-headline">{{item.headline}}</text>
       </view>
-      <text class="scene-skill-name">{{item.name}}</text>
+      <text class="scene-skill-name">{{item.name}}<text wx:if="{{item.englishName}}" class="scene-skill-en"> · {{item.englishName}}</text></text>
       <view wx:if="{{item.say}}" class="scene-say">
+        <text wx:if="{{item.prepare}}" class="scene-prepare">先准备：{{item.prepare}}</text>
         <text class="scene-say-label">装好后这样说</text>
         <text class="scene-say-text">“{{item.say}}”</text>
       </view>

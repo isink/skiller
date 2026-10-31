@@ -210,6 +210,11 @@ test("a curated skill shows what to say to WorkBuddy and links back to its colle
   assert.equal(page.data.usageSay.length, 2);
   assert.deepEqual(page.data.usageScene, { slug: "docs", title: "会议与写作" });
   assert.equal(page.data.usageHeadline, "会议记录 → 结论、待办、负责人");
+  assert.equal(page.data.displayName, "会议纪要助手");
+  assert.equal(page.data.englishName, skill.name);
+  assert.match(page.data.displayDescription, /^开完会要发纪要时用/);
+  assert.equal(page.data.usagePrepare, "会议记录或录音转写稿");
+  assert.equal(page.onShareAppMessage().title, "会议纪要助手｜会议记录 → 结论、待办、负责人");
   assert.equal(page.data.usageExample, null);
   assert.equal(page.data.markdownOpen, false);
   (page as unknown as { onToggleMarkdown(): void }).onToggleMarkdown();
@@ -233,5 +238,7 @@ test("a skill outside the collections shows no usage block", (t) => {
   assert.deepEqual(page.data.usageSay, []);
   assert.equal(page.data.usageScene, null);
   assert.equal(page.data.usageHeadline, "");
+  assert.equal(page.data.displayName, page.data.skill.name);
+  assert.equal(page.data.englishName, "");
   assert.equal(page.data.markdownOpen, true);
 });

@@ -1,6 +1,10 @@
 import { MUST_COUNT, scenePicks, type Scene } from "../../../miniprogram/services/scenes";
 
 const MAX_HEADLINE = 20;
+const MAX_NAME = 10;
+const MAX_INTRO = 60;
+const MAX_PREPARE = 20;
+const within = (text: string | undefined, max: number) => Boolean(text?.trim()) && Array.from(text as string).length <= max;
 
 /** Human-readable problems with the scene collections; empty when everything checks out. */
 export function sceneProblems(scenes: Scene[], catalog: Array<{ slug: string; description_zh: string | null; github_stars?: number | null }>): string[] {
@@ -12,6 +16,11 @@ export function sceneProblems(scenes: Scene[], catalog: Array<{ slug: string; de
     if (sceneSlugs.has(scene.slug)) problems.push(`scene ${scene.slug} is listed twice`);
     sceneSlugs.add(scene.slug);
     if (scene.must.length !== MUST_COUNT) problems.push(`scene ${scene.slug} needs exactly ${MUST_COUNT} must-have skills`);
+    for (const pick of scene.must) {
+      if (!within(pick.nameZh, MAX_NAME)) problems.push(`${scene.slug}/${pick.slug} needs a Chinese name of 1-${MAX_NAME} characters`);
+      if (!within(pick.intro, MAX_INTRO)) problems.push(`${scene.slug}/${pick.slug} needs an intro of 1-${MAX_INTRO} characters`);
+      if (!within(pick.prepare, MAX_PREPARE)) problems.push(`${scene.slug}/${pick.slug} needs a prepare line of 1-${MAX_PREPARE} characters`);
+    }
     for (const pick of scenePicks(scene)) {
       if (seen.has(pick.slug)) problems.push(`${pick.slug} appears in more than one place`);
       seen.add(pick.slug);

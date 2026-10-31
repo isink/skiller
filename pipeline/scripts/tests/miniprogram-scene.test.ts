@@ -86,7 +86,9 @@ test("a scene leads with three numbered must-haves and lists the rest below", as
   page.onLoad({ slug: "finance" });
   await settle();
   assert.equal(page.data.scene.title, "财务与税务");
-  assert.deepEqual(page.data.must.map((skill: { name: string }) => skill.name), finance.must.map((pick) => pick.slug));
+  assert.deepEqual(page.data.must.map((skill: { name: string }) => skill.name), finance.must.map((pick) => pick.nameZh));
+  assert.deepEqual(page.data.must.map((skill: { englishName: string }) => skill.englishName), finance.must.map((pick) => pick.slug));
+  assert.equal(page.data.must[0].prepare, finance.must[0].prepare);
   assert.equal(page.data.must[0].headline, finance.must[0].headline);
   assert.equal(page.data.must[0].say, finance.must[0].say[0]);
   assert.equal(page.data.must[0].copyLabel, "复制给 WorkBuddy");

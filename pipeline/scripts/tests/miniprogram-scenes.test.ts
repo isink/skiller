@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { SCENES, dailyPick, sceneBySlug, scenePick, scenePicks } from "../../../miniprogram/services/scenes";
+import { SCENES, dailyPick, sceneBySlug, scenePick, scenePicks, skillDisplayName } from "../../../miniprogram/services/scenes";
 import { workbuddyBundlePrompt } from "../../../miniprogram/services/skill-install";
 import { sceneProblems } from "../lib/scenes-check";
 
@@ -19,7 +19,7 @@ test("the curated collections are well formed", () => {
 });
 
 test("the checker reports missing skills, empty summaries, duplicates and bad copy", () => {
-  const pick = (slug: string, extra: Record<string, unknown> = {}) => ({ slug, headline: "一句话", say: ["做点事"], ...extra });
+  const pick = (slug: string, extra: Record<string, unknown> = {}) => ({ slug, nameZh: "名字", intro: "适合谁", prepare: "材料", headline: "一句话", say: ["做点事"], ...extra });
   const scenes = [
     { slug: "a", title: "A", tagline: "", shareTitle: "", must: [pick("x"), pick("y", { say: [] }), pick("w", { headline: "" })], more: [] },
     { slug: "a", title: "B", tagline: "", shareTitle: "", must: [pick("x")], more: [pick("z", { example: { input: "说", output: " " } })] },
@@ -38,11 +38,28 @@ test("the checker reports missing skills, empty summaries, duplicates and bad co
 });
 
 test("the checker asks for a re-sort when a lower skill has more stars", () => {
-  const pick = (slug: string) => ({ slug, headline: "一句话", say: ["做点事"] });
+  const pick = (slug: string) => ({ slug, nameZh: "名字", intro: "适合谁", prepare: "材料", headline: "一句话", say: ["做点事"] });
   const scene = { slug: "s", title: "S", tagline: "", shareTitle: "", must: [pick("a"), pick("b"), pick("c")], more: [pick("d")] };
   const catalog = (stars: number[]) => ["a", "b", "c", "d"].map((slug, index) => ({ slug, description_zh: "简介", github_stars: stars[index] }));
   assert.deepEqual(sceneProblems([scene], catalog([9, 9, 5, 5])), []);
   assert.deepEqual(sceneProblems([scene], catalog([9, 5, 5, 7])), ["scene s is not sorted by stars: d (7) should come before c (5)"]);
+});
+
+test("must-haves need a short Chinese name, intro and prepare line", () => {
+  const scene = { slug: "s", title: "S", tagline: "", shareTitle: "", more: [], must: [
+    { slug: "a", nameZh: "名字", intro: "适合谁", prepare: "材料", headline: "一句话", say: ["说"] },
+    { slug: "b", nameZh: "一个特别特别长的中文名字", intro: "适合谁", prepare: "材料", headline: "一句话", say: ["说"] },
+    { slug: "c", headline: "一句话", say: ["说"] },
+  ] };
+  const catalog = ["a", "b", "c"].map((slug) => ({ slug, description_zh: "简介" }));
+  assert.deepEqual(sceneProblems([scene], catalog), [
+    "s/b needs a Chinese name of 1-10 characters",
+    "s/c needs a Chinese name of 1-10 characters",
+    "s/c needs an intro of 1-60 characters",
+    "s/c needs a prepare line of 1-20 characters",
+  ]);
+  assert.equal(skillDisplayName({ slug: "meeting-notes", name: "Meeting Notes" }), "会议纪要助手");
+  assert.equal(skillDisplayName({ slug: "not-curated", name: "Other" }), "Other");
 });
 
 test("lookups find a scene by slug and a skill's scene and examples", () => {

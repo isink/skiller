@@ -35,6 +35,9 @@ Page({
     sourceUrl: "",
     usageSay: [] as string[],
     usageHeadline: "",
+    displayName: "",
+    englishName: "",
+    usagePrepare: "",
     usageExample: null as { input: string; output: string } | null,
     markdownOpen: true,
     usageScene: null as { slug: string; title: string } | null,
@@ -73,7 +76,8 @@ Page({
 
   shareTitle(): string {
     const skill = this.data.skill as Skill | null;
-    return skill ? skillShareTitle(skill.name, this.data.displayDescription) : APP_TITLE;
+    if (!skill) return APP_TITLE;
+    return skillShareTitle(this.data.displayName || skill.name, this.data.usageHeadline || this.data.displayDescription);
   },
 
   onShareAppMessage(event?: { from?: string }) {
@@ -114,7 +118,7 @@ Page({
     this._cardKey = key;
     this._cardPath = "";
     const promise = renderShareCard(SHARE_CANVAS, {
-      name: skill.name,
+      name: this.data.displayName || skill.name,
       purpose: shortPurpose(this.data.displayDescription, 56) || APP_TITLE,
       stars: skill.github_stars ?? null,
       category: categoryName(skill.category),
@@ -130,18 +134,23 @@ Page({
   },
 
   showSkill(skill: Skill, clearError: boolean) {
-    wx.setNavigationBarTitle({ title: skill.name });
     const curated = scenePick(skill.slug);
+    const displayName = curated?.pick.nameZh || skill.name;
+    wx.setNavigationBarTitle({ title: displayName });
     this.setData({
       usageSay: curated ? curated.pick.say : [],
       usageHeadline: curated ? curated.pick.headline : "",
+      displayName,
+      englishName: curated?.pick.nameZh ? skill.name : "",
+      usagePrepare: curated?.pick.prepare || "",
       usageExample: curated?.pick.example || null,
       // Curated skills lead with the Chinese copy; the English SKILL.md starts folded.
       // A refresh after the cached copy keeps whatever the reader chose.
       markdownOpen: this.data.skill ? this.data.markdownOpen : !curated,
       usageScene: curated ? { slug: curated.scene.slug, title: curated.scene.title } : null,
       skill,
-      displayDescription: skillDescriptionZh(skill),
+      // Curated skills read the hand-written intro instead of the machine summary.
+      displayDescription: curated?.pick.intro || skillDescriptionZh(skill),
       displayCategory: categoryName(skill.category),
       displayLicense: skillLicense(skill.skill_md_content),
       ...skillMetadata(skill),

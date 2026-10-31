@@ -158,7 +158,7 @@ const MP_SKILL_STEPS = [
   "把 SKILL 分包放进你的小程序工程，在 app.json 的 agent.skills 里登记，再用开发者工具的 AI 开发模式调试",
 ];
 
-const WORKBUDDY_HINT = "粘贴给 WorkBuddy 等能联网的 AI 助手，它会自己下载并安装；用终端安装见下方命令。";
+const WORKBUDDY_HINT = "粘贴给电脑上的 WorkBuddy，它会自己下载安装。";
 const MAX_PROMPT_NAME = 60;
 
 /**
