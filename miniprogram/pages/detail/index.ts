@@ -1,4 +1,4 @@
-import { fetchSkill } from "../../services/api";
+import { fetchSkill, fetchSkillBySlug } from "../../services/api";
 import { cacheSkill, cachedSkill, getFavoriteIds, toggleFavorite } from "../../services/storage";
 import { trackCopyInstall, trackFeedback, trackPageView, trackShare } from "../../services/analytics";
 import { saveSkillVote, skillVote } from "../../services/skill-votes";
@@ -18,6 +18,7 @@ const SHARE_CANVAS = "#share-canvas";
 
 Page({
   _id: "",
+  _slug: "",
   _cardKey: "",
   _cardPath: "",
   _cardPromise: null as Promise<string | null> | null,
@@ -54,10 +55,11 @@ Page({
     error: "",
   },
 
-  onLoad(options: { id?: string }) {
+  onLoad(options: { id?: string; slug?: string }) {
     const id = options.id || "";
     this._id = id;
     enableShareMenu();
+    if (!id && options.slug) { this._slug = options.slug; this.loadBySlug(options.slug); return; }
     if (!id) { this.setData({ loading: false, error: "没有找到这个技能。" }); return; }
     const cached = cachedSkill(id);
     if (cached) this.showSkill(cached, false);
@@ -71,7 +73,23 @@ Page({
     });
   },
 
+  /** 公众号 menus and articles link `?slug=`; once loaded the page works by id like any other. */
+  loadBySlug(slug: string) {
+    fetchSkillBySlug(slug).then((skill) => {
+      if (!skill) { this.setData({ loading: false, error: "这个技能不存在或已下架。" }); return; }
+      this._id = skill.id;
+      cacheSkill(skill);
+      this.setData({ favorited: getFavoriteIds().includes(skill.id) });
+      this.showSkill(skill, true);
+      trackPageView("pages/detail/index", { id: skill.id, slug });
+    }).catch(() => {
+      this.setData({ loading: false, error: "加载失败，请返回后重试。" });
+    });
+  },
+
   onShow() {
+    // A `?slug=` open reports its view once the skill is found (loadBySlug).
+    if (!this._id && this._slug) return;
     trackPageView("pages/detail/index", this._id ? { id: this._id } : undefined);
   },
 

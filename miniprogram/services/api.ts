@@ -156,6 +156,13 @@ export async function fetchSkill(id: string): Promise<Skill | null> {
   return rows[0] || null;
 }
 
+/** The full skill for a catalog slug; lets 公众号 menus and articles link by a readable, stable name. */
+export async function fetchSkillBySlug(slug: string): Promise<Skill | null> {
+  if (!SLUG_PATTERN.test(slug)) return null;
+  const rows = await request<Skill[]>("/rest/v1/skills", { select: "*", slug: `eq.${slug}`, limit: 1 });
+  return rows[0] || null;
+}
+
 export async function fetchSkillsByIds(ids: string[]): Promise<Skill[]> {
   const validIds = [...new Set(ids.filter((id) => /^[0-9a-f-]{36}$/i.test(id)))];
   if (!validIds.length) return [];

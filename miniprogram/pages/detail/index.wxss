@@ -96,3 +96,4 @@ rich-text strong { color: var(--color-text); font-weight: var(--weight-bold); }
 .vote-thanks { display: block; color: var(--color-text-2); font-size: var(--text-sm); line-height: 1.6; }
 .alts-toggle { display: flex; flex-direction: row; align-items: center; justify-content: space-between; min-height: var(--tap-min); margin-top: var(--space-1); color: var(--color-text-3); font-size: var(--text-xs); }
 .alts-toggle-action { color: var(--color-accent); font-size: var(--text-xs); font-weight: var(--weight-medium); }
+.official-account { display: block; margin-top: var(--space-3); }

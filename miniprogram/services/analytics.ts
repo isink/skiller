@@ -189,8 +189,22 @@ export async function trackEvent(event: MpEventName, fields: MpEventFields = {})
   } catch { /* Reporting must never break the caller. */ }
 }
 
+/**
+ * How this visit opened the mini program, as WeChat's scene value: 1035 公众号自定义菜单,
+ * 1058 公众号文章, 1074 / 1082 公众号会话里的卡片 / 文字链, 1007 / 1008 好友 / 群分享, 1011 扫码.
+ * Empty when the API is unavailable.
+ */
+export function entryMeta(): Record<string, number> {
+  try {
+    const options = typeof wx.getEnterOptionsSync === "function" ? wx.getEnterOptionsSync() : null;
+    return typeof options?.scene === "number" ? { entry_scene: options.scene } : {};
+  } catch { return {}; }
+}
+
+/** Page views carry the entry scene so a device's first view tells where it came from (公众号, share, search…). */
 export function trackPageView(page: string, meta?: Record<string, unknown>): Promise<void> {
-  return trackEvent("page_view", { page, meta });
+  const entry = entryMeta();
+  return trackEvent("page_view", { page, meta: Object.keys(entry).length ? { ...meta, ...entry } : meta });
 }
 
 export type InstallCopyTarget = "primary" | "alternative" | "source_link" | "usage" | "bundle";

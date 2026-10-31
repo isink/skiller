@@ -31,6 +31,9 @@
     </view>
   </view>
 
+  <!-- Shown by WeChat only in some entry scenes (e.g. a scanned code); renders nothing otherwise. -->
+  <official-account class="official-account"></official-account>
+
   <view class="more-links">
     <text class="more-label">更多</text>
     <text class="more-link" bindtap="navigateToSkills">全部 AI 技能库</text>

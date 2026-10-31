@@ -102,6 +102,8 @@
         <view wx:elif="{{item.type === 'rule'}}" class="md-rule"></view>
       </block>
     </view>
+    <!-- Shown by WeChat only in some entry scenes (e.g. a scanned code); renders nothing otherwise. -->
+    <official-account class="official-account"></official-account>
     <canvas type="2d" id="share-canvas" class="share-canvas"></canvas>
   </block>
 </view>

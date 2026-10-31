@@ -53,6 +53,13 @@ CloudBase 云函数和迁移脚本保留为可选后备方案；当前小程序�
 
 - **详情页的数据量**：`setData` 里的 `skill` 不带 `skill_md_content`（原文留在页面实例的 `_markdown`），SKILL.md 只在「技术说明」展开时才解析成 `blocks` 并发送，内容没变的刷新不会重发。精选技能默认折叠，打开详情页每次只传约 2 KB；以前 `pptx-official` 这类长说明每次要传 100 KB 以上，且缓存和网络各传一次。
 
+## 公众号联动
+
+- 公众号与小程序同一主体。关联步骤、菜单 / 关键词回复 / 文章卡片可直接复制的路径见 `docs/wechat-official-account.md`。
+- 详情页支持 `pages/detail/index?slug=<技能 slug>`（`fetchSkillBySlug`），公众号里用技能名链接，重新导入后路径不变；加载后按 id 工作，分享路径仍用 id。
+- 欢迎页和详情页底部放了 `<official-account>`，需在小程序后台「设置 → 关注公众号」选好公众号；由微信决定何时显示（主要是扫码进入），其他场景不渲染。
+- `page_view` 埋点带 `meta.entry_scene`（微信场景值，如 1035 公众号菜单、1058 公众号文章），用来统计公众号带来的访问。
+
 ## 搜索无结果与「微信小程序 SKILL」专题
 
 - 首页搜索无结果时显示「已记录，我们会尽快收录」，并推荐本周热门（不足 3 条则用精选）。`search_empty` 事件由 `pipeline/scripts/empty-search-report.ts` 汇总补录。

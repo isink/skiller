@@ -290,3 +290,12 @@ test("feedback events carry the skill and the vote", async (t) => {
   assert.equal(requests[0].data.page, "pages/detail/index");
   assert.equal((requests[0].data.meta as Record<string, unknown>).vote, "up");
 });
+
+test("page views carry the entry scene; other events do not", async (t) => {
+  const { requests } = mockWx(t);
+  (globals.wx as Record<string, unknown>).getEnterOptionsSync = () => ({ scene: 1058 });
+  await trackPageView(unique("pages/scene/index"), { scene: "finance" });
+  await trackShare(null, "menu", false, unique("pages/scene/index"));
+  assert.deepEqual(requests[0].data.meta, { scene: "finance", entry_scene: 1058 });
+  assert.equal((requests[1].data.meta as Record<string, unknown>).entry_scene, undefined);
+});

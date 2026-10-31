@@ -297,3 +297,26 @@ test("terminal commands start folded under the WorkBuddy request and open on tap
   (page as unknown as { onToggleAlternatives(): void }).onToggleAlternatives();
   assert.equal(page.data.altsOpen, true);
 });
+
+test("a 公众号 link by slug loads the skill, then works by id and reports one view", async (t) => {
+  const { page, events } = harness(t);
+  const skill = makeSkill({ slug: "meeting-notes" });
+  const wx = globals.wx as { request: unknown };
+  const queries: string[] = [];
+  wx.request = ({ url, data, success }: { url: string; data: Record<string, any>; success(r: { statusCode: number; data?: unknown }): void }) => {
+    if (url.endsWith("/rest/v1/mp_events")) { events.push(data); success({ statusCode: 201 }); return; }
+    queries.push(new URL(url).searchParams.get("slug") || "");
+    success({ statusCode: 200, data: [skill] });
+  };
+  const detail = page as unknown as { onLoad(o: { slug: string }): void; onShow(): void };
+  detail.onLoad({ slug: "meeting-notes" });
+  detail.onShow();
+  await settle();
+  await settle();
+  assert.deepEqual(queries, ["eq.meeting-notes"]);
+  assert.equal(page.data.displayName, "会议纪要助手");
+  assert.equal((page as unknown as { sharePath(): string }).sharePath(), `/pages/detail/index?id=${skill.id}`);
+  const views = events.filter((row) => row.event === "page_view");
+  assert.equal(views.length, 1);
+  assert.deepEqual(views[0].meta, { id: skill.id, slug: "meeting-notes" });
+});
