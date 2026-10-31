@@ -37,6 +37,14 @@ test("the checker reports missing skills, empty summaries, duplicates and bad co
   ]);
 });
 
+test("the checker asks for a re-sort when a lower skill has more stars", () => {
+  const pick = (slug: string) => ({ slug, headline: "一句话", say: ["做点事"] });
+  const scene = { slug: "s", title: "S", tagline: "", shareTitle: "", must: [pick("a"), pick("b"), pick("c")], more: [pick("d")] };
+  const catalog = (stars: number[]) => ["a", "b", "c", "d"].map((slug, index) => ({ slug, description_zh: "简介", github_stars: stars[index] }));
+  assert.deepEqual(sceneProblems([scene], catalog([9, 9, 5, 5])), []);
+  assert.deepEqual(sceneProblems([scene], catalog([9, 5, 5, 7])), ["scene s is not sorted by stars: d (7) should come before c (5)"]);
+});
+
 test("lookups find a scene by slug and a skill's scene and examples", () => {
   assert.equal(sceneBySlug("finance")?.title, "财务与税务");
   assert.equal(sceneBySlug("nope"), null);

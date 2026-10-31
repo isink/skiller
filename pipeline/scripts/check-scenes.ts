@@ -2,7 +2,8 @@
  * Checks the WorkBuddy scene collections (miniprogram/services/scenes.ts):
  * every scene has exactly three must-haves, every slug exists in the catalog
  * with a Chinese summary and appears once, and every skill has a short
- * headline and one to three example requests.
+ * headline and one to three example requests, and each scene is sorted by
+ * GitHub stars (high to low) so the top three are the must-haves.
  *
  *   npm run check:scenes
  *
@@ -15,11 +16,11 @@ import { sceneProblems } from "./lib/scenes-check";
 
 async function main(): Promise<void> {
   const slugs = SCENES.flatMap((scene) => scenePicks(scene).map((pick) => pick.slug));
-  const url = `${process.env.SUPABASE_URL || SUPABASE_URL}/rest/v1/skills?select=slug,description_zh&slug=in.(${slugs.join(",")})`;
+  const url = `${process.env.SUPABASE_URL || SUPABASE_URL}/rest/v1/skills?select=slug,description_zh,github_stars&slug=in.(${slugs.join(",")})`;
   const key = process.env.SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
   const response = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
   if (!response.ok) throw new Error(`Supabase request failed (${response.status})`);
-  const rows = (await response.json()) as Array<{ slug: string; description_zh: string | null }>;
+  const rows = (await response.json()) as Array<{ slug: string; description_zh: string | null; github_stars: number | null }>;
   const problems = sceneProblems(SCENES, rows);
   for (const problem of problems) console.error(`✖ ${problem}`);
   console.log(`${SCENES.length} scenes, ${slugs.length} skills, ${problems.length} problem(s).`);

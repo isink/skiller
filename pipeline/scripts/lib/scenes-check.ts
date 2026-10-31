@@ -3,7 +3,7 @@ import { MUST_COUNT, scenePicks, type Scene } from "../../../miniprogram/service
 const MAX_HEADLINE = 20;
 
 /** Human-readable problems with the scene collections; empty when everything checks out. */
-export function sceneProblems(scenes: Scene[], catalog: Array<{ slug: string; description_zh: string | null }>): string[] {
+export function sceneProblems(scenes: Scene[], catalog: Array<{ slug: string; description_zh: string | null; github_stars?: number | null }>): string[] {
   const problems: string[] = [];
   const known = new Map(catalog.map((row) => [row.slug, row]));
   const seen = new Set<string>();
@@ -21,6 +21,13 @@ export function sceneProblems(scenes: Scene[], catalog: Array<{ slug: string; de
       if (!pick.headline.trim() || Array.from(pick.headline).length > MAX_HEADLINE) problems.push(`${scene.slug}/${pick.slug} needs a headline of 1-${MAX_HEADLINE} characters`);
       if (pick.say.length < 1 || pick.say.length > 3) problems.push(`${scene.slug}/${pick.slug} needs one to three example requests`);
       if (pick.example && (!pick.example.input.trim() || !pick.example.output.trim())) problems.push(`${scene.slug}/${pick.slug} has an incomplete example`);
+    }
+    // Must-haves first, then more, both by stars high to low; ties keep the listed order.
+    const stars = (slug: string) => known.get(slug)?.github_stars ?? 0;
+    const ordered = scenePicks(scene);
+    for (let index = 1; index < ordered.length; index++) {
+      const [above, below] = [ordered[index - 1].slug, ordered[index].slug];
+      if (stars(below) > stars(above)) problems.push(`scene ${scene.slug} is not sorted by stars: ${below} (${stars(below)}) should come before ${above} (${stars(above)})`);
     }
   }
   return problems;

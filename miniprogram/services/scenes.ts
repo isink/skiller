@@ -1,6 +1,7 @@
 /**
  * 「按岗位挑 WorkBuddy 技能」场景合集：人工精选的办公技能，按目录 slug 引用。
- * 每个场景只推 3 个「必装」，其余放进「更多」。每个技能配一句卖点和 2 句
+ * 每个场景只推 3 个「必装」，其余放进「更多」。场景内按目录里的 GitHub 星标从高到低排，
+ * 前 3 个是必装，星标相同的保持现有顺序（`npm run check:scenes` 会校验）。每个技能配一句卖点和 2 句
  * 「装好后对 WorkBuddy 这样说」的示例，详情页和合集页共用。
  * `example` 只填在 WorkBuddy 里真实跑出来的输入和结果，没跑过就不填，页面不显示示例块。
  * 增删技能后运行 `npm run check:scenes`，确认 slug 在目录里存在且有中文简介。
@@ -56,9 +57,9 @@ export const SCENES: Scene[] = [
     tagline: "从方案到成品 PPT，汇报不再熬夜",
     shareTitle: "做 PPT 不熬夜：3 个必装的 WorkBuddy 技能",
     must: [
+      { slug: "nexu-io-open-design-plugins-official-examples-guizang-ppt", headline: "一句话出一份杂志风网页 PPT", say: ["把这份产品介绍做成杂志风的网页 PPT", "生成一份能在手机上横向翻页的分享页"] },
       { slug: "pptx-official", headline: "Word 方案 → 可编辑的 PPT", say: ["根据这份 Word 方案做一份 10 页的汇报 PPT", "把这份 PPT 的字体和配色统一一下"] },
       { slug: "pptx-deck-creation", headline: "先理故事线，再出整套 PPT", say: ["我要给客户讲新产品，先规划 PPT 的故事线，再生成可编辑的 PPTX", "检查这份 PPT 是不是每页只讲一个重点"] },
-      { slug: "nexu-io-open-design-plugins-official-examples-guizang-ppt", headline: "一句话出一份杂志风网页 PPT", say: ["把这份产品介绍做成杂志风的网页 PPT", "生成一份能在手机上横向翻页的分享页"] },
     ],
     more: [
       { slug: "nanobanana-ppt-skills", headline: "文章 → 图文并茂的 PPT", say: ["把这篇文章做成图文并茂的 PPT", "按科技风给这份大纲配图并生成演示文稿"] },
@@ -105,17 +106,17 @@ export const SCENES: Scene[] = [
   {
     slug: "finance",
     title: "财务与税务",
-    tagline: "对账、税务登记、财务预测",
-    shareTitle: "财务人必装的 3 个 WorkBuddy 技能：对账、税务、预测",
+    tagline: "税务登记、财务预测、收款核销",
+    shareTitle: "财务人必装的 3 个 WorkBuddy 技能：税务、预测、收款",
     must: [
-      { slug: "anthropics-knowledge-work-plugins-finance-skills-reconciliation", headline: "银行流水对总账，差异自动列出来", say: ["把这个月的银行流水和总账对一下，列出差异", "把对不上的款项按原因分类"] },
       { slug: "tax-register", headline: "季度税额和申报截止日一表看清", say: ["汇总本季度的销项税和进项税，算出应缴税额", "列出接下来 30 天的申报截止日"] },
       { slug: "startup-financial-modeling", headline: "3 年收入成本预测，一次搭好", say: ["帮我搭一个 3 年的收入和成本预测模型", "做乐观、中性、悲观三种情景的现金流对比"] },
+      { slug: "receipt-accounting", headline: "收款登记与未核销金额", say: ["把这批收款记录整理成收款登记表，标出未核销金额", "区分哪些是客户回款、哪些是预付款"] },
     ],
     more: [
-      { slug: "receipt-accounting", headline: "收款登记与未核销金额", say: ["把这批收款记录整理成收款登记表，标出未核销金额", "区分哪些是客户回款、哪些是预付款"] },
       { slug: "sales-accounting", headline: "销售发票 → 应收台账", say: ["根据这些销售发票生成应收账款台账", "列出超过账期还没收回的发票"] },
       { slug: "startup-business-analyst-financial-projections", headline: "融资用的财务预测", say: ["根据这些假设生成一份融资用的财务预测", "按现在的花钱速度，算算现金还能撑几个月"] },
+      { slug: "anthropics-knowledge-work-plugins-finance-skills-reconciliation", headline: "银行流水对总账，差异自动列出来", say: ["把这个月的银行流水和总账对一下，列出差异", "把对不上的款项按原因分类"] },
     ],
   },
   {
